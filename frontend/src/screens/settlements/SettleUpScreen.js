@@ -14,7 +14,6 @@ import { useFocusEffect } from '@react-navigation/native';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import CardGlass from '../../components/common/CardGlass';
-import AppButton from '../../components/common/AppButton';
 import IconButton from '../../components/common/IconButton';
 import Loader from '../../components/common/Loader';
 import Toast from '../../components/common/Toast';

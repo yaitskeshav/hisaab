@@ -1,7 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 
 const Toast = ({ message, type = 'info', visible, onHide, duration = 3000 }) => {

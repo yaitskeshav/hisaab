@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -6,11 +6,9 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
-  Share,
   Platform,
   Dimensions,
   TextInput,
-  Animated,
   LayoutAnimation,
   UIManager,
   Image,
@@ -29,7 +27,6 @@ import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import CardGlass from '../../components/common/CardGlass';
 import AppButton from '../../components/common/AppButton';
-import IconButton from '../../components/common/IconButton';
 import SectionContainer from '../../components/common/SectionContainer';
 import Loader from '../../components/common/Loader';
 import Toast from '../../components/common/Toast';
@@ -39,7 +36,7 @@ import useExpenseStore from '../../store/expenseStore';
 import useAuthStore from '../../store/authStore';
 import { getCategoryIcon } from '../../constants/categories';
 import { formatCurrency } from '../../utils/currency';
-import apiClient, { BASE_URL } from '../../api/client';
+import { BASE_URL } from '../../api/client';
 import InviteModal from '../../components/InviteModal';
 
 const GroupDetailScreen = ({ route, navigation }) => {

@@ -12,7 +12,7 @@ import CardGlass from './common/CardGlass';
 import AppButton from './common/AppButton';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
-import apiClient, { API_URL } from '../api/client';
+import apiClient from '../api/client';
 import useGroupStore from '../store/groupStore';
 import useInviteStore from '../store/inviteStore';
 import storage from '../utils/storage';
