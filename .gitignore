@@ -1,0 +1,77 @@
+# System Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Root Documentation & Configs
+/*.md
+/*.yml
+
+# IDEs
+.idea/
+.vscode/
+.claude/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+bun.lockb
+
+# Environment Variables & Secrets
+.env*
+!.env.example
+*.jks
+*.p8
+*.p12
+*.keystore
+*.json
+!app.json
+!package.json
+!tsconfig.json
+!next.config.js
+!tailwind.config.js
+!postcss.config.js
+!google-services.json.example
+/backend/priv/
+
+# Specifically ignore expo/mobile secrets if not needed
+**/google-services.json
+GoogleService-Info.plist
+
+# Build Artifacts - Frontend (Expo/React Native)
+frontend/.expo/
+frontend/android/
+frontend/ios/
+frontend/web-build/
+frontend/dist/
+
+# Build Artifacts - Landing Page (Next.js)
+landing-page/.next/
+landing-page/out/
+landing-page/build/
+
+# Build Artifacts - Backend (Go)
+backend/bin/
+backend/dist/
+backend/*.exe
+backend/*.test
+backend/vendor/
+backend/uploads/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Temporary Files
+tmp/
+coverage/
+.temp/
+.cache/
