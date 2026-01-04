@@ -22,7 +22,8 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            git pull origin main
-            cd hisaab/landing-page
+            cd hisaab
+            git pull origin staging
+            cd landing-page
             docker compose down
             docker compose up -d --build
