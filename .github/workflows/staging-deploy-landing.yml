@@ -1,4 +1,4 @@
-name: Deploy Landing Page
+name: Deploy Landing Page on Staging
 
 on:
   push:
@@ -6,7 +6,11 @@ on:
       - staging
     paths:
       - 'landing-page/**'
-      - '.github/workflows/deploy-landing.yml'
+      - 'staging-deploy-landing.yml'
+
+concurrency:
+  group: staging
+  cancel-in-progress: true
 
 jobs:
   deploy:
