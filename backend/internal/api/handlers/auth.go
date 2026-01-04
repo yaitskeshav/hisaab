@@ -280,7 +280,7 @@ func (h *AuthHandler) GoogleLogin(c *fiber.Ctx) error {
 		// Create new user
 		user = models.User{
 			Email:     googleUser.Email,
-			Name:      googleUser.Name,
+			Name:      utils.ToTitleCase(googleUser.Name),
 			GoogleID:  &googleUser.ID,
 			AvatarURL: googleUser.Picture,
 		}
