@@ -394,7 +394,7 @@ func (h *AuthHandler) ForgotPassword(c *fiber.Ctx) error {
 	// Send email
 
 	// Send email
-	apiServiceURL := os.Getenv("API_SERVICE_URL")
+	apiServiceURL := os.Getenv("BACKEND_URL")
 	if apiServiceURL == "" {
 		apiServiceURL = "http://localhost:3000" // Fallback for dev
 	}
