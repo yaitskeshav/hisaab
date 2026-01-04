@@ -18,10 +18,10 @@ desktop.ini
 
 # Dependencies
 node_modules/
-package-lock.json
-yarn.lock
-pnpm-lock.yaml
-bun.lockb
+# package-lock.json (Keep for production builds)
+# yarn.lock
+# pnpm-lock.yaml
+# bun.lockb
 
 # Environment Variables & Secrets
 .env*
