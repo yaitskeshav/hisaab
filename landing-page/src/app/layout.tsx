@@ -10,7 +10,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://hisaab.app"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://digitalhisaab.tech"),
   title: {
     default: "Hisaab - Split Expenses with Friends & Family",
     template: "%s | Hisaab",
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://hisaab.app",
+    url: process.env.NEXT_PUBLIC_APP_URL || "https://digitalhisaab.tech",
     siteName: "Hisaab",
     title: "Hisaab - Split Expenses with Friends & Family",
     description:

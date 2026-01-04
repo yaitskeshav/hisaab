@@ -199,28 +199,6 @@ export default function Home() {
                 </a>
               </div>
 
-              <div className="mt-8 flex items-center gap-6 justify-center lg:justify-start">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-text-primary">
-                    Free
-                  </div>
-                  <div className="text-sm text-text-muted">Forever</div>
-                </div>
-                <div className="w-px h-12 bg-glass-border"></div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-text-primary">
-                    No Ads
-                  </div>
-                  <div className="text-sm text-text-muted">Clean UI</div>
-                </div>
-                <div className="w-px h-12 bg-glass-border"></div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-text-primary">
-                    Open
-                  </div>
-                  <div className="text-sm text-text-muted">Source</div>
-                </div>
-              </div>
             </div>
 
             {/* Right content - Phone mockup */}
