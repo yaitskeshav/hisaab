@@ -3,7 +3,7 @@ name: Deploy Landing Page
 on:
   push:
     branches:
-      - main
+      - staging
     paths:
       - 'landing-page/**'
       - '.github/workflows/deploy-landing.yml'
@@ -22,7 +22,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            cd hisaab/landing-page
             git pull origin main
+            cd hisaab/landing-page
             docker compose down
             docker compose up -d --build
