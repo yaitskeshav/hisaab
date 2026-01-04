@@ -1,0 +1,11 @@
+services:
+  landing-page:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hisaab-landing-page
+    restart: always
+    ports:
+      - "7000:7000"
+    environment:
+      - NODE_ENV=production
