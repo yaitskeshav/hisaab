@@ -230,7 +230,12 @@ export default function TermsOfService() {
                 If you have any questions about these Terms, please contact us
                 at:
               </p>
-              <p className="text-primary mt-2">support@hisaab.app</p>
+              <a
+                href={`mailto:${process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "support@digitalhisaab.tech"}`}
+                className="text-primary mt-2 hover:underline inline-block"
+              >
+                {process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "support@digitalhisaab.tech"}
+              </a>
             </section>
           </div>
         </div>

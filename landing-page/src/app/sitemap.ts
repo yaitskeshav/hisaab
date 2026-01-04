@@ -1,7 +1,7 @@
 import { MetadataRoute } from "next";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = "https://hisaab.app";
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://digitalhisaab.tech";
 
   return [
     {

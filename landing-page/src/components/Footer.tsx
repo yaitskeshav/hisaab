@@ -87,10 +87,18 @@ export default function Footer() {
           <p className="text-text-muted text-sm">
             &copy; {currentYear} Hisaab. All rights reserved.
           </p>
-          <div className="flex items-center gap-4">
-            <span className="text-text-muted text-sm">Made with</span>
-            <span className="text-red-500">&#10084;</span>
-            <span className="text-text-muted text-sm">for simple finances</span>
+          <div className="flex items-center gap-1.5 flex-wrap justify-center">
+            <span className="text-text-muted text-sm">Built with</span>
+            <span className="text-red-500 animate-pulse text-sm">❤️</span>
+            <span className="text-text-muted text-sm">for better finances by</span>
+            <Link 
+              href="https://www.linkedin.com/in/yaitskeshav/" 
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-text-primary hover:text-blue-400 font-medium text-sm transition-colors border-b border-transparent hover:border-blue-400"
+            >
+              Keshav Jha
+            </Link>
           </div>
         </div>
       </div>
