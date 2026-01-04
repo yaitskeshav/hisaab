@@ -27,4 +27,4 @@ COPY --from=builder /app/package.json ./package.json
 
 EXPOSE 7000
 
-CMD ["npm", "start"]
+CMD ["npm", "start", "--", "-p", "7000"]
