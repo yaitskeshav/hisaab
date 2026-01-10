@@ -47,14 +47,9 @@ const ProfileScreen = ({ navigation }) => {
                 style={styles.avatarImage}
               />
             ) : (
-              <LinearGradient
-                colors={[colors.primary, colors.secondary]}
-                style={styles.avatarImage}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              >
-                <Ionicons name="person" size={48} color="rgba(255,255,255,0.9)" />
-              </LinearGradient>
+              <View style={[styles.avatarImage, styles.avatarPlaceholder]}>
+                <Ionicons name="person" size={44} color={colors.textMuted} />
+              </View>
             )}
           </TouchableOpacity>
           <Text style={styles.userName}>{user?.name || 'User'}</Text>
@@ -192,7 +187,6 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.md,
@@ -204,6 +198,11 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  avatarPlaceholder: {
+    backgroundColor: colors.backgroundLight,
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
   },
   avatarText: {
     fontSize: 40,

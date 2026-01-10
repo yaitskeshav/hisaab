@@ -25,6 +25,8 @@ func SetupRoutes(app *fiber.App) {
 	auth.Post("/forgot-password", authHandler.ForgotPassword)
 	auth.Post("/reset-password", authHandler.ResetPassword)
 	auth.Get("/reset-redirect", authHandler.ResetPasswordRedirect)
+	auth.Post("/verify-email", authHandler.VerifyEmail)
+	auth.Post("/resend-verification", authHandler.ResendVerification)
 
 	// Public but token-protected download route (must be before protected group)
 	v1.Get("/downloads/:token", exportHandler.DownloadExport)
@@ -61,6 +63,7 @@ func SetupRoutes(app *fiber.App) {
 	protected.Post("/invites", inviteHandler.CreateInvite)
 	protected.Post("/invites/:token/join", inviteHandler.JoinWithToken)
 	groups.Put("/:id", groupHandler.UpdateGroup)
+	groups.Get("/:id/can-leave", groupHandler.CanLeaveGroup)
 	groups.Post("/:id/leave", groupHandler.LeaveGroup)
 	groups.Delete("/:id", groupHandler.DeleteGroup)
 

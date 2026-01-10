@@ -57,7 +57,9 @@ const RegisterScreen = ({ navigation }) => {
     if (!validateForm()) return;
 
     const result = await register(name, email, password);
-    if (!result.success) {
+    if (result.success && result.needsVerification) {
+      navigation.navigate('EmailVerification', { email: result.email });
+    } else if (!result.success) {
       setToast({ visible: true, message: result.error, type: 'error' });
     }
   };

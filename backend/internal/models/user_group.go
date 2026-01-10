@@ -6,20 +6,23 @@ import (
 )
 
 type User struct {
-	ID                  uint           `gorm:"primaryKey" json:"id"`
-	Email               string         `gorm:"uniqueIndex;not null" json:"email"`
-	Password            string         `json:"-"`
-	Name                string         `json:"name"`
-	AvatarURL           string         `json:"avatar_url"`
-	GoogleID            *string        `gorm:"uniqueIndex" json:"google_id"`
-	FCMToken            string         `json:"fcm_token"`
-	RefreshToken        string         `json:"-"`
-	ResetToken          string         `json:"-"`
-	ResetTokenExpiresAt time.Time      `json:"-"`
-	CreatedAt           time.Time      `json:"created_at"`
-	UpdatedAt           time.Time      `json:"updated_at"`
-	DeletedAt           gorm.DeletedAt `gorm:"index" json:"-"`
-	Groups              []Group        `gorm:"many2many:group_members;" json:"groups"`
+	ID                         uint           `gorm:"primaryKey" json:"id"`
+	Email                      string         `gorm:"uniqueIndex;not null" json:"email"`
+	Password                   string         `json:"-"`
+	Name                       string         `json:"name"`
+	AvatarURL                  string         `json:"avatar_url"`
+	GoogleID                   *string        `gorm:"uniqueIndex" json:"google_id"`
+	FCMToken                   string         `json:"fcm_token"`
+	RefreshToken               string         `json:"-"`
+	ResetToken                 string         `json:"-"`
+	ResetTokenExpiresAt        time.Time      `json:"-"`
+	EmailVerificationToken     string         `json:"-"`
+	EmailVerificationExpiresAt time.Time      `json:"-"`
+	IsEmailVerified            bool           `gorm:"default:false" json:"is_email_verified"`
+	CreatedAt                  time.Time      `json:"created_at"`
+	UpdatedAt                  time.Time      `json:"updated_at"`
+	DeletedAt                  gorm.DeletedAt `gorm:"index" json:"-"`
+	Groups                     []Group        `gorm:"many2many:group_members;" json:"groups"`
 }
 
 type Group struct {

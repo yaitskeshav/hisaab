@@ -15,6 +15,7 @@ import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
 import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen';
 import ResetPasswordScreen from '../screens/auth/ResetPasswordScreen';
+import EmailVerificationScreen from '../screens/auth/EmailVerificationScreen';
 
 // Main screens
 import DashboardScreen from '../screens/dashboard/DashboardScreen';
@@ -107,6 +108,8 @@ const AppNavigator = ({ hasSeenOnboarding, initialRoute, initialParams }) => {
             setPendingInviteToken(parsed.params.token);
             navigationRef.current?.navigate('Login');
           }
+        } else if (parsed.screen === 'VerifyEmail') {
+          // Handled by App.js - don't navigate here
         } else if (navigationRef.current) {
           navigationRef.current.navigate(parsed.screen, parsed.params);
         }
@@ -163,6 +166,7 @@ const AppNavigator = ({ hasSeenOnboarding, initialRoute, initialParams }) => {
             )}
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="Register" component={RegisterScreen} />
+            <Stack.Screen name="EmailVerification" component={EmailVerificationScreen} />
             <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
             <Stack.Screen
               name="ResetPassword"

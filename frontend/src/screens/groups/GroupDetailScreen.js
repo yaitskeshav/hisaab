@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,9 @@ import {
   LayoutAnimation,
   UIManager,
   Image,
+  Modal,
+  Animated,
+  ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { PieChart } from 'react-native-chart-kit';
@@ -41,7 +44,7 @@ import InviteModal from '../../components/InviteModal';
 
 const GroupDetailScreen = ({ route, navigation }) => {
   const { groupId } = route.params;
-  const { currentGroup, fetchGroupDetails, isLoading: groupLoading } = useGroupStore();
+  const { currentGroup, fetchGroupDetails, isLoading: groupLoading, checkCanLeave, leaveGroup } = useGroupStore();
   const { expenses, fetchGroupExpenses, deleteExpense, isLoading: expensesLoading } = useExpenseStore();
   const [refreshing, setRefreshing] = useState(false);
   const [toast, setToast] = useState({ visible: false, message: '', type: 'info' });
@@ -54,6 +57,23 @@ const GroupDetailScreen = ({ route, navigation }) => {
   // Delete modal
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [expenseToDelete, setExpenseToDelete] = useState(null);
+
+  // Leave group modal
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [leaveCheckLoading, setLeaveCheckLoading] = useState(false);
+  const [leaveInfo, setLeaveInfo] = useState({
+    canLeave: true,
+    pendingCount: 0,
+    balance: 0,
+    blockReason: '',
+    willDelete: false
+  });
+  const [isLeaving, setIsLeaving] = useState(false);
+  const leaveModalAnim = useRef(new Animated.Value(0)).current;
+  const leaveIconAnim = useRef(new Animated.Value(0)).current;
+
+  // Options menu
+  const [showOptionsMenu, setShowOptionsMenu] = useState(false);
 
   // Expense filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -79,6 +99,102 @@ const GroupDetailScreen = ({ route, navigation }) => {
     setRefreshing(true);
     await loadData();
     setRefreshing(false);
+  };
+
+  // Leave modal animation
+  useEffect(() => {
+    if (showLeaveModal) {
+      Animated.parallel([
+        Animated.spring(leaveModalAnim, {
+          toValue: 1,
+          tension: 65,
+          friction: 10,
+          useNativeDriver: true,
+        }),
+        Animated.spring(leaveIconAnim, {
+          toValue: 1,
+          tension: 50,
+          friction: 8,
+          delay: 200,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      leaveModalAnim.setValue(0);
+      leaveIconAnim.setValue(0);
+    }
+  }, [showLeaveModal]);
+
+  const handleLeaveGroupPress = async () => {
+    setShowOptionsMenu(false);
+    setLeaveCheckLoading(true);
+    setShowLeaveModal(true);
+
+    const result = await checkCanLeave(groupId);
+    setLeaveInfo({
+      canLeave: result.canLeave,
+      pendingCount: result.pendingCount || 0,
+      balance: result.balance || 0,
+      blockReason: result.blockReason || '',
+      willDelete: result.willDelete || false,
+      isLastMember: result.isLastMember || false,
+    });
+    setLeaveCheckLoading(false);
+  };
+
+  const getLeaveBlockMessage = () => {
+    const { blockReason, pendingCount, balance } = leaveInfo;
+    const absBalance = Math.abs(balance).toFixed(2);
+
+    switch (blockReason) {
+      case 'pending_settlements':
+        return `You have ${pendingCount} pending settlement${pendingCount > 1 ? 's' : ''} awaiting confirmation. Please confirm or cancel them before leaving.`;
+      case 'you_owe':
+        return `You owe ₹${absBalance} to other members. Please settle your balance before leaving the group.`;
+      case 'owed_to_you':
+        return `Other members owe you ₹${absBalance}. Please have them settle up before leaving, or the balance will be lost.`;
+      default:
+        return 'Unable to leave group at this time.';
+    }
+  };
+
+  const getLeaveBlockTitle = () => {
+    const { blockReason } = leaveInfo;
+    switch (blockReason) {
+      case 'pending_settlements':
+        return 'Pending Settlements';
+      case 'you_owe':
+        return 'Outstanding Balance';
+      case 'owed_to_you':
+        return 'Money Owed to You';
+      default:
+        return 'Cannot Leave';
+    }
+  };
+
+  const handleConfirmLeave = async () => {
+    setIsLeaving(true);
+    const result = await leaveGroup(groupId);
+    setIsLeaving(false);
+
+    if (result.success) {
+      setShowLeaveModal(false);
+      navigation.goBack();
+      // Show toast after navigation
+      setTimeout(() => {
+        setToast({
+          visible: true,
+          message: result.deleted ? 'Group deleted' : 'Left group successfully',
+          type: 'success',
+        });
+      }, 100);
+    } else {
+      setToast({
+        visible: true,
+        message: result.error || 'Failed to leave group',
+        type: 'error',
+      });
+    }
   };
 
   const handleShareInvite = () => {
@@ -270,12 +386,69 @@ const GroupDetailScreen = ({ route, navigation }) => {
           </Text>
           <TouchableOpacity
             style={styles.headerButton}
-            onPress={handleShareInvite}
+            onPress={() => setShowOptionsMenu(true)}
             activeOpacity={0.7}
           >
-            <Ionicons name="person-add-outline" size={22} color={colors.textPrimary} />
+            <Ionicons name="ellipsis-vertical" size={22} color={colors.textPrimary} />
           </TouchableOpacity>
         </View>
+
+        {/* Options Menu Modal */}
+        <Modal
+          visible={showOptionsMenu}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowOptionsMenu(false)}
+        >
+          <TouchableOpacity
+            style={styles.optionsOverlay}
+            activeOpacity={1}
+            onPress={() => setShowOptionsMenu(false)}
+          >
+            <View style={styles.optionsMenu}>
+              <TouchableOpacity
+                style={styles.optionItem}
+                onPress={() => {
+                  setShowOptionsMenu(false);
+                  handleShareInvite();
+                }}
+              >
+                <Ionicons name="person-add-outline" size={20} color={colors.textPrimary} />
+                <Text style={styles.optionText}>Invite Members</Text>
+              </TouchableOpacity>
+              <View style={styles.optionDivider} />
+              <TouchableOpacity
+                style={styles.optionItem}
+                onPress={() => {
+                  setShowOptionsMenu(false);
+                  navigation.navigate('Activity', { groupId });
+                }}
+              >
+                <Ionicons name="time-outline" size={20} color={colors.textPrimary} />
+                <Text style={styles.optionText}>Activity</Text>
+              </TouchableOpacity>
+              <View style={styles.optionDivider} />
+              <TouchableOpacity
+                style={styles.optionItem}
+                onPress={() => {
+                  setShowOptionsMenu(false);
+                  navigation.navigate('Analytics', { groupId, groupName: currentGroup?.name });
+                }}
+              >
+                <Ionicons name="analytics-outline" size={20} color={colors.textPrimary} />
+                <Text style={styles.optionText}>Analytics</Text>
+              </TouchableOpacity>
+              <View style={styles.optionDivider} />
+              <TouchableOpacity
+                style={[styles.optionItem, styles.optionItemDanger]}
+                onPress={handleLeaveGroupPress}
+              >
+                <Ionicons name="exit-outline" size={20} color={colors.error} />
+                <Text style={[styles.optionText, styles.optionTextDanger]}>Leave Group</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </Modal>
         {/* Group Info */}
         <CardGlass style={styles.infoCard}>
           <View style={styles.infoRow}>
@@ -291,21 +464,29 @@ const GroupDetailScreen = ({ route, navigation }) => {
             <View style={styles.dividerVertical} />
             <View style={styles.infoItem}>
               <Text style={styles.infoLabel}>Total</Text>
-              <Text style={styles.infoValue}>{formatCurrency(totalExpense)}</Text>
+              <Text style={styles.infoValue} numberOfLines={1} adjustsFontSizeToFit>
+                {formatCurrency(totalExpense)}
+              </Text>
             </View>
           </View>
           <View style={[styles.infoRow, styles.infoRowSecond]}>
             <View style={styles.infoItem}>
               <Text style={styles.infoLabel}>You Paid</Text>
-              <Text style={styles.infoValue}>{formatCurrency(amountIPaid)}</Text>
+              <Text style={styles.infoValue} numberOfLines={1} adjustsFontSizeToFit>
+                {formatCurrency(amountIPaid)}
+              </Text>
             </View>
             <View style={styles.dividerVertical} />
             <View style={styles.infoItem}>
               <Text style={styles.infoLabel}>{amountIOweToGet > 0 ? 'You Get' : 'You Owe'}</Text>
-              <Text style={[
-                styles.infoValue,
-                amountIOweToGet > 0 ? styles.balanceOwed : styles.balanceOwe
-              ]}>
+              <Text
+                style={[
+                  styles.infoValue,
+                  amountIOweToGet > 0 ? styles.balanceOwed : styles.balanceOwe
+                ]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+              >
                 {formatCurrency(amountIOweToGet > 0 ? amountIOweToGet : amountINeedToPay)}
               </Text>
             </View>
@@ -672,6 +853,164 @@ const GroupDetailScreen = ({ route, navigation }) => {
         onClose={() => setShareModalVisible(false)}
         group={currentGroup}
       />
+
+      {/* Leave Group Modal */}
+      <Modal
+        visible={showLeaveModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => !isLeaving && setShowLeaveModal(false)}
+      >
+        <View style={styles.leaveModalOverlay}>
+          <TouchableOpacity
+            style={styles.leaveModalBackdrop}
+            activeOpacity={1}
+            onPress={() => !isLeaving && setShowLeaveModal(false)}
+          />
+          <Animated.View
+            style={[
+              styles.leaveModalContainer,
+              {
+                opacity: leaveModalAnim,
+                transform: [
+                  {
+                    scale: leaveModalAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0.8, 1],
+                    }),
+                  },
+                ],
+              },
+            ]}
+          >
+            <LinearGradient
+              colors={['rgba(30, 41, 59, 0.98)', 'rgba(15, 23, 42, 0.98)']}
+              style={styles.leaveModalContent}
+            >
+              {leaveCheckLoading ? (
+                <View style={styles.leaveModalLoading}>
+                  <ActivityIndicator size="large" color={colors.primary} />
+                  <Text style={styles.leaveModalLoadingText}>Checking...</Text>
+                </View>
+              ) : (
+                <>
+                  {/* Icon */}
+                  <Animated.View
+                    style={[
+                      styles.leaveModalIconContainer,
+                      leaveInfo.canLeave ? styles.leaveIconWarning : styles.leaveIconError,
+                      {
+                        transform: [
+                          {
+                            scale: leaveIconAnim.interpolate({
+                              inputRange: [0, 0.5, 1],
+                              outputRange: [0, 1.2, 1],
+                            }),
+                          },
+                        ],
+                      },
+                    ]}
+                  >
+                    <Ionicons
+                      name={
+                        leaveInfo.canLeave
+                          ? 'exit-outline'
+                          : leaveInfo.blockReason === 'owed_to_you'
+                          ? 'wallet-outline'
+                          : leaveInfo.blockReason === 'you_owe'
+                          ? 'card-outline'
+                          : 'time-outline'
+                      }
+                      size={40}
+                      color={leaveInfo.canLeave ? colors.warning : colors.error}
+                    />
+                  </Animated.View>
+
+                  {/* Title */}
+                  <Text style={styles.leaveModalTitle}>
+                    {leaveInfo.canLeave
+                      ? leaveInfo.willDelete
+                        ? 'Delete Group?'
+                        : 'Leave Group?'
+                      : getLeaveBlockTitle()}
+                  </Text>
+
+                  {/* Message */}
+                  <Text style={styles.leaveModalMessage}>
+                    {!leaveInfo.canLeave
+                      ? getLeaveBlockMessage()
+                      : leaveInfo.willDelete
+                      ? "You're the last member. Leaving will permanently delete this group and all its data."
+                      : `Are you sure you want to leave "${currentGroup?.name}"? You can rejoin later with an invite.`}
+                  </Text>
+
+                  {/* Actions */}
+                  <View style={[styles.leaveModalActions, !leaveInfo.canLeave && styles.leaveModalActionsVertical]}>
+                    {leaveInfo.canLeave ? (
+                      <>
+                        <TouchableOpacity
+                          style={[styles.leaveModalButton, styles.leaveModalCancelButton]}
+                          onPress={() => setShowLeaveModal(false)}
+                          disabled={isLeaving}
+                        >
+                          <Text style={styles.leaveModalCancelText}>Cancel</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={[
+                            styles.leaveModalButton,
+                            styles.leaveModalConfirmButton,
+                            isLeaving && styles.leaveModalButtonDisabled,
+                          ]}
+                          onPress={handleConfirmLeave}
+                          disabled={isLeaving}
+                        >
+                          {isLeaving ? (
+                            <ActivityIndicator size="small" color="#fff" />
+                          ) : (
+                            <Text style={styles.leaveModalConfirmText}>
+                              {leaveInfo.willDelete ? 'Delete' : 'Leave'}
+                            </Text>
+                          )}
+                        </TouchableOpacity>
+                      </>
+                    ) : (
+                      <>
+                        <TouchableOpacity
+                          style={[styles.leaveModalButton, styles.leaveModalFullButton]}
+                          onPress={() => {
+                            setShowLeaveModal(false);
+                            if (leaveInfo.blockReason === 'pending_settlements') {
+                              navigation.navigate('PendingSettlements');
+                            } else {
+                              navigation.navigate('SettleUp', { groupId, groupName: currentGroup?.name });
+                            }
+                          }}
+                        >
+                          <Ionicons
+                            name={leaveInfo.blockReason === 'pending_settlements' ? 'time-outline' : 'wallet-outline'}
+                            size={18}
+                            color="#fff"
+                            style={{ marginRight: 8 }}
+                          />
+                          <Text style={styles.leaveModalConfirmText}>
+                            {leaveInfo.blockReason === 'pending_settlements' ? 'View Pending' : 'Settle Up'}
+                          </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={[styles.leaveModalButton, styles.leaveModalCloseButton]}
+                          onPress={() => setShowLeaveModal(false)}
+                        >
+                          <Text style={styles.leaveModalCancelText}>Close</Text>
+                        </TouchableOpacity>
+                      </>
+                    )}
+                  </View>
+                </>
+              )}
+            </LinearGradient>
+          </Animated.View>
+        </View>
+      </Modal>
     </LinearGradient>
   );
 };
@@ -704,6 +1043,51 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginHorizontal: spacing.md,
   },
+  // Options Menu
+  optionsOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-start',
+    alignItems: 'flex-end',
+    paddingTop: spacing['3xl'] + spacing.xl,
+    paddingRight: spacing.lg,
+  },
+  optionsMenu: {
+    backgroundColor: colors.backgroundLight,
+    borderRadius: 16,
+    paddingVertical: spacing.xs,
+    minWidth: 180,
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  optionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    gap: spacing.sm,
+  },
+  optionItemDanger: {
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+  },
+  optionText: {
+    fontSize: 15,
+    color: colors.textPrimary,
+    fontWeight: '500',
+  },
+  optionTextDanger: {
+    color: colors.error,
+  },
+  optionDivider: {
+    height: 1,
+    backgroundColor: colors.glassBorder,
+    marginHorizontal: spacing.sm,
+  },
   scrollContent: {
     padding: spacing.lg,
     paddingTop: spacing['3xl'],
@@ -733,9 +1117,10 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   infoValue: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '700',
     color: colors.textPrimary,
+    textAlign: 'center',
   },
   balanceOwe: {
     color: colors.error,
@@ -1052,6 +1437,107 @@ const styles = StyleSheet.create({
   divider: {
     height: 1,
     backgroundColor: colors.cardBorder,
+  },
+  // Leave Modal Styles
+  leaveModalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+  },
+  leaveModalBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  leaveModalContainer: {
+    width: Dimensions.get('window').width - spacing.xl * 2,
+    maxWidth: 400,
+  },
+  leaveModalContent: {
+    borderRadius: 24,
+    padding: spacing.xl,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
+  },
+  leaveModalLoading: {
+    paddingVertical: spacing.xl,
+    alignItems: 'center',
+  },
+  leaveModalLoadingText: {
+    marginTop: spacing.md,
+    fontSize: 14,
+    color: colors.textMuted,
+  },
+  leaveModalIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.lg,
+  },
+  leaveIconWarning: {
+    backgroundColor: 'rgba(245, 158, 11, 0.15)',
+  },
+  leaveIconError: {
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+  },
+  leaveModalTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: colors.textPrimary,
+    marginBottom: spacing.sm,
+    textAlign: 'center',
+  },
+  leaveModalMessage: {
+    fontSize: 15,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: spacing.xl,
+  },
+  leaveModalActions: {
+    width: '100%',
+    flexDirection: 'row',
+  },
+  leaveModalActionsVertical: {
+    flexDirection: 'column',
+  },
+  leaveModalButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+    borderRadius: 12,
+  },
+  leaveModalCancelButton: {
+    flex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    marginRight: spacing.sm,
+  },
+  leaveModalConfirmButton: {
+    flex: 1,
+    backgroundColor: colors.error,
+  },
+  leaveModalFullButton: {
+    backgroundColor: colors.primary,
+  },
+  leaveModalCloseButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    marginTop: spacing.sm,
+  },
+  leaveModalButtonDisabled: {
+    opacity: 0.6,
+  },
+  leaveModalCancelText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.textPrimary,
+  },
+  leaveModalConfirmText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
   },
 });
 

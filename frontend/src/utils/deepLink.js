@@ -43,6 +43,15 @@ export const parseDeepLink = (url) => {
             return { screen: 'Invite', params: { token } };
         }
 
+        // Handle Email Verification
+        // Format: hisaab://verify-email?token=TOKEN
+        if (parsed.path === 'verify-email' || parsed.hostname === 'verify-email') {
+            return {
+                screen: 'VerifyEmail',
+                params: { token: parsed.queryParams?.token },
+            };
+        }
+
         return null;
     } catch (e) {
         console.error('deepLinkUtil: Error parsing deep link:', e);

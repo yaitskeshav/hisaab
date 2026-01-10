@@ -51,7 +51,9 @@ const LoginScreen = ({ navigation }) => {
     }
 
     const result = await login(email, password);
-    if (!result.success) {
+    if (result.needsVerification) {
+      navigation.navigate('EmailVerification', { email: result.email });
+    } else if (!result.success) {
       setToast({ visible: true, message: result.error, type: 'error' });
     }
   };

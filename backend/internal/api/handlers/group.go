@@ -209,10 +209,48 @@ func (h *GroupHandler) LeaveGroup(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "you are not a member of this group"})
 	}
 
+	isLastMember := len(group.Members) == 1
+
+	// Check for pending settlements where user is involved (as payer or receiver)
+	var pendingCount int64
+	database.DB.Model(&models.Settlement{}).
+		Where("group_id = ? AND status = ? AND (payer_id = ? OR receiver_id = ?)",
+			group.ID, models.SettlementPending, userID, userID).
+		Count(&pendingCount)
+
+	if pendingCount > 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error":         "pending_settlements",
+			"message":       "You have pending settlements. Please confirm or cancel them before leaving.",
+			"pending_count": pendingCount,
+		})
+	}
+
+	// Check outstanding balance (skip for last member - they can delete the group)
+	if !isLastMember {
+		balance := calculateUserBalance(group.ID, userID)
+		if balance < -0.01 {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error":   "you_owe",
+				"message": "You have an outstanding balance to pay. Please settle up before leaving.",
+				"balance": round(abs(balance), 2),
+			})
+		}
+		if balance > 0.01 {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error":   "owed_to_you",
+				"message": "Other members owe you money. Please have them settle up before leaving.",
+				"balance": round(balance, 2),
+			})
+		}
+	}
+
 	// If this is the last member, delete the entire group
-	if len(group.Members) == 1 {
+	if isLastMember {
 		// Delete all activities first
 		database.DB.Where("group_id = ?", group.ID).Delete(&models.Activity{})
+		// Delete all settlements
+		database.DB.Where("group_id = ?", group.ID).Delete(&models.Settlement{})
 		// Delete all expenses first
 		database.DB.Where("group_id = ?", group.ID).Delete(&models.Expense{})
 		// Delete all members
@@ -237,6 +275,113 @@ func (h *GroupHandler) LeaveGroup(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(fiber.Map{"message": "successfully left group", "deleted": false})
+}
+
+// CanLeaveGroup checks if user can leave a group (no pending settlements or outstanding balance)
+func (h *GroupHandler) CanLeaveGroup(c *fiber.Ctx) error {
+	userID := c.Locals("user_id").(uint)
+	groupID := c.Params("id")
+
+	var group models.Group
+	if err := database.DB.Preload("Members").First(&group, groupID).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "group not found"})
+	}
+
+	// Check if user is a member
+	var memberCount int64
+	database.DB.Model(&models.GroupMember{}).Where("group_id = ? AND user_id = ?", group.ID, userID).Count(&memberCount)
+	if memberCount == 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "you are not a member of this group"})
+	}
+
+	// Check for pending settlements
+	var pendingCount int64
+	database.DB.Model(&models.Settlement{}).
+		Where("group_id = ? AND status = ? AND (payer_id = ? OR receiver_id = ?)",
+			group.ID, models.SettlementPending, userID, userID).
+		Count(&pendingCount)
+
+	// Calculate user's outstanding balance
+	balance := calculateUserBalance(group.ID, userID)
+
+	isLastMember := len(group.Members) == 1
+
+	// User can leave if: no pending settlements AND (balance is ~0 OR they're the last member)
+	canLeave := pendingCount == 0 && (abs(balance) < 0.01 || isLastMember)
+
+	// Determine block reason
+	blockReason := ""
+	if pendingCount > 0 {
+		blockReason = "pending_settlements"
+	} else if balance < -0.01 {
+		blockReason = "you_owe" // User owes money
+	} else if balance > 0.01 {
+		blockReason = "owed_to_you" // Others owe user money
+	}
+
+	return c.JSON(fiber.Map{
+		"can_leave":      canLeave,
+		"pending_count":  pendingCount,
+		"balance":        round(balance, 2),
+		"block_reason":   blockReason,
+		"is_last_member": isLastMember,
+		"will_delete":    isLastMember,
+	})
+}
+
+// calculateUserBalance calculates user's net balance in a group
+// Positive = others owe user, Negative = user owes others
+func calculateUserBalance(groupID uint, userID uint) float64 {
+	balance := 0.0
+
+	// Get unsettled expenses
+	var expenses []models.Expense
+	database.DB.Preload("Splits").
+		Where("group_id = ? AND is_settled = ?", groupID, false).
+		Find(&expenses)
+
+	for _, expense := range expenses {
+		// User paid - gets credit
+		if expense.PaidByID == userID {
+			balance += expense.Amount
+		}
+		// User's share - owes this amount
+		for _, split := range expense.Splits {
+			if split.UserID == userID {
+				balance -= split.Amount
+			}
+		}
+	}
+
+	// Adjust for confirmed settlements
+	var settlements []models.Settlement
+	database.DB.Where("group_id = ? AND status = ?", groupID, models.SettlementConfirmed).Find(&settlements)
+
+	for _, s := range settlements {
+		if s.PayerID == userID {
+			balance += s.Amount // User paid, reduces debt
+		}
+		if s.ReceiverID == userID {
+			balance -= s.Amount // User received, reduces credit
+		}
+	}
+
+	return balance
+}
+
+func abs(x float64) float64 {
+	if x < 0 {
+		return -x
+	}
+	return x
+}
+
+func round(x float64, decimals int) float64 {
+	pow := 1.0
+	for i := 0; i < decimals; i++ {
+		pow *= 10
+	}
+	return float64(int(x*pow+0.5)) / pow
 }
 
 func (h *GroupHandler) DeleteGroup(c *fiber.Ctx) error {
