@@ -15,6 +15,7 @@ import {
   Modal,
   Animated,
   ActivityIndicator,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { PieChart } from 'react-native-chart-kit';
@@ -44,7 +45,7 @@ import InviteModal from '../../components/InviteModal';
 
 const GroupDetailScreen = ({ route, navigation }) => {
   const { groupId } = route.params;
-  const { currentGroup, fetchGroupDetails, isLoading: groupLoading, checkCanLeave, leaveGroup } = useGroupStore();
+  const { currentGroup, fetchGroupDetails, isLoading: groupLoading, checkCanLeave, leaveGroup, updateGroup } = useGroupStore();
   const { expenses, fetchGroupExpenses, deleteExpense, isLoading: expensesLoading } = useExpenseStore();
   const [refreshing, setRefreshing] = useState(false);
   const [toast, setToast] = useState({ visible: false, message: '', type: 'info' });
@@ -74,6 +75,12 @@ const GroupDetailScreen = ({ route, navigation }) => {
 
   // Options menu
   const [showOptionsMenu, setShowOptionsMenu] = useState(false);
+
+  // Edit group modal
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [isUpdating, setIsUpdating] = useState(false);
 
   // Expense filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -199,6 +206,30 @@ const GroupDetailScreen = ({ route, navigation }) => {
 
   const handleShareInvite = () => {
     setShareModalVisible(true);
+  };
+
+  const handleEditGroup = () => {
+    setShowOptionsMenu(false);
+    setEditName(currentGroup?.name || '');
+    setEditDescription(currentGroup?.description || '');
+    setShowEditModal(true);
+  };
+
+  const handleUpdateGroup = async () => {
+    if (!editName.trim()) {
+      setToast({ visible: true, message: 'Group name is required', type: 'error' });
+      return;
+    }
+    setIsUpdating(true);
+    const result = await updateGroup(groupId, editName.trim(), editDescription.trim());
+    setIsUpdating(false);
+    if (result.success) {
+      await fetchGroupDetails(groupId);
+      setShowEditModal(false);
+      setToast({ visible: true, message: 'Group updated', type: 'success' });
+    } else {
+      setToast({ visible: true, message: result.error || 'Failed to update group', type: 'error' });
+    }
   };
 
   const handleAddExpense = () => {
@@ -415,6 +446,14 @@ const GroupDetailScreen = ({ route, navigation }) => {
               >
                 <Ionicons name="person-add-outline" size={20} color={colors.textPrimary} />
                 <Text style={styles.optionText}>Invite Members</Text>
+              </TouchableOpacity>
+              <View style={styles.optionDivider} />
+              <TouchableOpacity
+                style={styles.optionItem}
+                onPress={handleEditGroup}
+              >
+                <Ionicons name="create-outline" size={20} color={colors.textPrimary} />
+                <Text style={styles.optionText}>Edit Group</Text>
               </TouchableOpacity>
               <View style={styles.optionDivider} />
               <TouchableOpacity
@@ -853,6 +892,84 @@ const GroupDetailScreen = ({ route, navigation }) => {
         onClose={() => setShareModalVisible(false)}
         group={currentGroup}
       />
+
+      {/* Edit Group Modal */}
+      <Modal
+        visible={showEditModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => !isUpdating && setShowEditModal(false)}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.editModalOverlay}
+        >
+          <TouchableOpacity
+            style={styles.editModalBackdrop}
+            activeOpacity={1}
+            onPress={() => !isUpdating && setShowEditModal(false)}
+          />
+          <View style={styles.editModalContainer}>
+            <LinearGradient
+              colors={['rgba(30, 41, 59, 0.98)', 'rgba(15, 23, 42, 0.98)']}
+              style={styles.editModalContent}
+            >
+              <Text style={styles.editModalTitle}>Edit Group</Text>
+
+              <View style={styles.editInputContainer}>
+                <Text style={styles.editInputLabel}>Name</Text>
+                <TextInput
+                  style={styles.editInput}
+                  value={editName}
+                  onChangeText={setEditName}
+                  placeholder="Group name"
+                  placeholderTextColor={colors.textMuted}
+                  editable={!isUpdating}
+                />
+              </View>
+
+              <View style={styles.editInputContainer}>
+                <Text style={styles.editInputLabel}>Description</Text>
+                <TextInput
+                  style={[styles.editInput, styles.editInputMultiline]}
+                  value={editDescription}
+                  onChangeText={setEditDescription}
+                  placeholder="Group description (optional)"
+                  placeholderTextColor={colors.textMuted}
+                  multiline
+                  numberOfLines={3}
+                  editable={!isUpdating}
+                />
+              </View>
+
+              <View style={styles.editModalActions}>
+                <TouchableOpacity
+                  style={[styles.editModalButton, styles.editModalCancelButton]}
+                  onPress={() => setShowEditModal(false)}
+                  disabled={isUpdating}
+                >
+                  <Text style={styles.editModalCancelText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.editModalButton,
+                    styles.editModalSaveButton,
+                    isUpdating && styles.editModalButtonDisabled,
+                  ]}
+                  onPress={handleUpdateGroup}
+                  disabled={isUpdating}
+                >
+                  {isUpdating ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Text style={styles.editModalSaveText}>Save</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </LinearGradient>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
 
       {/* Leave Group Modal */}
       <Modal
@@ -1535,6 +1652,88 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   leaveModalConfirmText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  // Edit Modal Styles
+  editModalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+  },
+  editModalBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  editModalContainer: {
+    width: Dimensions.get('window').width - spacing.xl * 2,
+    maxWidth: 400,
+  },
+  editModalContent: {
+    borderRadius: 24,
+    padding: spacing.xl,
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
+  },
+  editModalTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: colors.textPrimary,
+    marginBottom: spacing.lg,
+    textAlign: 'center',
+  },
+  editInputContainer: {
+    marginBottom: spacing.md,
+  },
+  editInputLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: colors.textSecondary,
+    marginBottom: spacing.xs,
+  },
+  editInput: {
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 12,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    fontSize: 16,
+    color: colors.textPrimary,
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
+  },
+  editInputMultiline: {
+    minHeight: 80,
+    textAlignVertical: 'top',
+  },
+  editModalActions: {
+    flexDirection: 'row',
+    marginTop: spacing.md,
+  },
+  editModalButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+    borderRadius: 12,
+  },
+  editModalCancelButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    marginRight: spacing.sm,
+  },
+  editModalSaveButton: {
+    backgroundColor: colors.primary,
+  },
+  editModalButtonDisabled: {
+    opacity: 0.6,
+  },
+  editModalCancelText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.textPrimary,
+  },
+  editModalSaveText: {
     fontSize: 16,
     fontWeight: '600',
     color: '#fff',

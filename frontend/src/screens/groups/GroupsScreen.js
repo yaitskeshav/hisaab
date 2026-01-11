@@ -11,6 +11,8 @@ import {
   Animated,
   ActivityIndicator,
   Dimensions,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -446,7 +448,10 @@ const GroupsScreen = ({ navigation }) => {
         transparent={true}
         onRequestClose={() => setCreateModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalOverlay}
+        >
           <CardGlass style={styles.modalContent}>
             <Text style={styles.modalTitle}>Create New Group</Text>
             <AppInput
@@ -482,7 +487,7 @@ const GroupsScreen = ({ navigation }) => {
               />
             </View>
           </CardGlass>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* Join Group Modal */}
@@ -492,7 +497,10 @@ const GroupsScreen = ({ navigation }) => {
         transparent={true}
         onRequestClose={() => setJoinModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalOverlay}
+        >
           <CardGlass style={styles.modalContent}>
             <Text style={styles.modalTitle}>Join Group</Text>
             <AppInput
@@ -520,7 +528,7 @@ const GroupsScreen = ({ navigation }) => {
               />
             </View>
           </CardGlass>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* Share Invite Modal */}
@@ -537,7 +545,10 @@ const GroupsScreen = ({ navigation }) => {
         transparent={true}
         onRequestClose={() => setEditModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalOverlay}
+        >
           <CardGlass style={styles.modalContent}>
             <Text style={styles.modalTitle}>Edit Group</Text>
             <AppInput
@@ -573,7 +584,7 @@ const GroupsScreen = ({ navigation }) => {
               />
             </View>
           </CardGlass>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* Group Actions Modal */}
@@ -597,7 +608,7 @@ const GroupsScreen = ({ navigation }) => {
               <View style={styles.actionMenuIconContainer}>
                 <Ionicons name="create-outline" size={20} color={colors.textPrimary} />
               </View>
-              <Text style={styles.actionMenuText}>Rename Group</Text>
+              <Text style={styles.actionMenuText}>Edit Group</Text>
             </TouchableOpacity>
             <View style={styles.actionDivider} />
             <TouchableOpacity
