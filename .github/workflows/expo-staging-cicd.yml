@@ -43,7 +43,7 @@ jobs:
 
       - name: Publish OTA update to production channel
         run: |
-          npx eas update \
+            eas update \
             --channel production \
             --message "staging: ${{ github.sha }}"
 
