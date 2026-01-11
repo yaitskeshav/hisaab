@@ -50,6 +50,8 @@ func SetupRoutes(app *fiber.App) {
 	protected.Post("/profile/avatar", authHandler.UploadAvatar)
 	protected.Delete("/profile/avatar", authHandler.DeleteAvatar)
 	protected.Put("/fcm-token", authHandler.UpdateFCMToken)
+	protected.Get("/notification-prefs", authHandler.GetNotificationPrefs)
+	protected.Put("/notification-prefs", authHandler.UpdateNotificationPrefs)
 
 	// Group routes
 	groupHandler := handlers.NewGroupHandler()

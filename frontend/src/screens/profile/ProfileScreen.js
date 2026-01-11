@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Modal, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Modal, Dimensions, Linking } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
@@ -10,6 +10,8 @@ import useAuthStore from '../../store/authStore';
 import { BASE_URL } from '../../api/client';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+
+const SUPPORT_EMAIL = process.env.EXPO_PUBLIC_SUPPORT_EMAIL || 'support@digitalhisaab.tech';
 
 const ProfileScreen = ({ navigation }) => {
   const { user, logout } = useAuthStore();
@@ -98,7 +100,7 @@ const ProfileScreen = ({ navigation }) => {
           <Text style={styles.sectionTitle}>About</Text>
           <TouchableOpacity
             style={styles.menuItem}
-            onPress={() => alert('Help & Support - Coming Soon')}
+            onPress={() => Linking.openURL(`mailto:${SUPPORT_EMAIL}?subject=Hisaab Support Request`)}
           >
             <View style={styles.menuIconContainer}>
               <Ionicons name="help-circle-outline" size={20} color={colors.textPrimary} />
@@ -109,7 +111,7 @@ const ProfileScreen = ({ navigation }) => {
           <View style={styles.divider} />
           <TouchableOpacity
             style={styles.menuItem}
-            onPress={() => alert('Privacy Policy - Coming Soon')}
+            onPress={() => navigation.navigate('PrivacyPolicy')}
           >
             <View style={styles.menuIconContainer}>
               <Ionicons name="shield-checkmark-outline" size={20} color={colors.textPrimary} />
@@ -120,7 +122,7 @@ const ProfileScreen = ({ navigation }) => {
           <View style={styles.divider} />
           <TouchableOpacity
             style={styles.menuItem}
-            onPress={() => alert('Terms of Service - Coming Soon')}
+            onPress={() => navigation.navigate('TermsOfService')}
           >
             <View style={styles.menuIconContainer}>
               <Ionicons name="document-text-outline" size={20} color={colors.textPrimary} />

@@ -24,6 +24,8 @@ import GroupDetailScreen from '../screens/groups/GroupDetailScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
 import EditProfileScreen from '../screens/profile/EditProfileScreen';
 import NotificationsScreen from '../screens/profile/NotificationsScreen';
+import PrivacyPolicyScreen from '../screens/profile/PrivacyPolicyScreen';
+import TermsOfServiceScreen from '../screens/profile/TermsOfServiceScreen';
 import AddExpenseScreen from '../screens/expenses/AddExpenseScreen';
 import ActivityScreen from '../screens/activity/ActivityScreen';
 import JoinInviteModal from '../components/JoinInviteModal';
@@ -182,6 +184,8 @@ const AppNavigator = ({ hasSeenOnboarding, initialRoute, initialParams }) => {
             <Stack.Screen name="Activity" component={ActivityScreen} />
             <Stack.Screen name="EditProfile" component={EditProfileScreen} />
             <Stack.Screen name="Notifications" component={NotificationsScreen} />
+            <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
+            <Stack.Screen name="TermsOfService" component={TermsOfServiceScreen} />
             <Stack.Screen name="SettleUp" component={SettleUpScreen} />
             <Stack.Screen name="SettlePayment" component={SettlePaymentScreen} />
             <Stack.Screen name="PendingSettlements" component={PendingSettlementsScreen} />

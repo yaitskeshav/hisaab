@@ -1509,3 +1509,72 @@ func (h *AuthHandler) ResendVerification(c *fiber.Ctx) error {
 
 	return c.JSON(fiber.Map{"message": "If this email is registered, you will receive a verification link"})
 }
+
+// GetNotificationPrefs returns user's notification preferences
+func (h *AuthHandler) GetNotificationPrefs(c *fiber.Ctx) error {
+	userID := c.Locals("user_id").(uint)
+
+	var user models.User
+	if err := database.DB.First(&user, userID).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "user not found"})
+	}
+
+	return c.JSON(fiber.Map{
+		"notify_member_joined":      user.NotifyMemberJoined,
+		"notify_expense_added":      user.NotifyExpenseAdded,
+		"notify_expense_edited":     user.NotifyExpenseEdited,
+		"notify_settlement_created": user.NotifySettlementCreated,
+		"notify_settlement_confirm": user.NotifySettlementConfirm,
+	})
+}
+
+// UpdateNotificationPrefs updates user's notification preferences
+func (h *AuthHandler) UpdateNotificationPrefs(c *fiber.Ctx) error {
+	userID := c.Locals("user_id").(uint)
+
+	var user models.User
+	if err := database.DB.First(&user, userID).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "user not found"})
+	}
+
+	var body struct {
+		NotifyMemberJoined      *bool `json:"notify_member_joined"`
+		NotifyExpenseAdded      *bool `json:"notify_expense_added"`
+		NotifyExpenseEdited     *bool `json:"notify_expense_edited"`
+		NotifySettlementCreated *bool `json:"notify_settlement_created"`
+		NotifySettlementConfirm *bool `json:"notify_settlement_confirm"`
+	}
+
+	if err := c.BodyParser(&body); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid request"})
+	}
+
+	// Update only provided fields
+	if body.NotifyMemberJoined != nil {
+		user.NotifyMemberJoined = *body.NotifyMemberJoined
+	}
+	if body.NotifyExpenseAdded != nil {
+		user.NotifyExpenseAdded = *body.NotifyExpenseAdded
+	}
+	if body.NotifyExpenseEdited != nil {
+		user.NotifyExpenseEdited = *body.NotifyExpenseEdited
+	}
+	if body.NotifySettlementCreated != nil {
+		user.NotifySettlementCreated = *body.NotifySettlementCreated
+	}
+	if body.NotifySettlementConfirm != nil {
+		user.NotifySettlementConfirm = *body.NotifySettlementConfirm
+	}
+
+	if err := database.DB.Save(&user).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to update preferences"})
+	}
+
+	return c.JSON(fiber.Map{
+		"notify_member_joined":      user.NotifyMemberJoined,
+		"notify_expense_added":      user.NotifyExpenseAdded,
+		"notify_expense_edited":     user.NotifyExpenseEdited,
+		"notify_settlement_created": user.NotifySettlementCreated,
+		"notify_settlement_confirm": user.NotifySettlementConfirm,
+	})
+}
