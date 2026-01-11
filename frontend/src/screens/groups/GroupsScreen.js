@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,10 +8,14 @@ import {
   TextInput,
   Modal,
   RefreshControl,
+  Animated,
+  ActivityIndicator,
+  Dimensions,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import * as Clipboard from 'expo-clipboard';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import CardGlass from '../../components/common/CardGlass';
@@ -45,7 +49,7 @@ const getGroupLastActivity = (group) => {
 };
 
 const GroupsScreen = ({ navigation }) => {
-  const { groups, isLoading, fetchGroups, createGroup, joinGroup, updateGroup, leaveGroup, deleteGroup } = useGroupStore();
+  const { groups, isLoading, fetchGroups, createGroup, joinGroup, updateGroup, leaveGroup, deleteGroup, checkCanLeave } = useGroupStore();
   const [refreshing, setRefreshing] = useState(false);
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [joinModalVisible, setJoinModalVisible] = useState(false);
@@ -62,6 +66,20 @@ const GroupsScreen = ({ navigation }) => {
   const [exportModalVisible, setExportModalVisible] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
   const [toast, setToast] = useState({ visible: false, message: '', type: 'info' });
+
+  // Leave group modal state
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [leaveCheckLoading, setLeaveCheckLoading] = useState(false);
+  const [leaveInfo, setLeaveInfo] = useState({
+    canLeave: true,
+    pendingCount: 0,
+    balance: 0,
+    blockReason: '',
+    willDelete: false
+  });
+  const [isLeaving, setIsLeaving] = useState(false);
+  const leaveModalAnim = useRef(new Animated.Value(0)).current;
+  const leaveIconAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     loadGroups();
@@ -144,10 +162,96 @@ const GroupsScreen = ({ navigation }) => {
     }
   };
 
-  const handleLeaveGroup = () => {
-    setConfirmAction('leave');
+  // Leave modal animation effect
+  useEffect(() => {
+    if (showLeaveModal) {
+      Animated.parallel([
+        Animated.spring(leaveModalAnim, {
+          toValue: 1,
+          tension: 65,
+          friction: 10,
+          useNativeDriver: true,
+        }),
+        Animated.spring(leaveIconAnim, {
+          toValue: 1,
+          tension: 50,
+          friction: 8,
+          delay: 200,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      leaveModalAnim.setValue(0);
+      leaveIconAnim.setValue(0);
+    }
+  }, [showLeaveModal]);
+
+  const handleLeaveGroup = async () => {
     setActionModalVisible(false);
-    setConfirmModalVisible(true);
+    setLeaveCheckLoading(true);
+    setShowLeaveModal(true);
+
+    const result = await checkCanLeave(selectedGroup.id);
+    setLeaveInfo({
+      canLeave: result.canLeave,
+      pendingCount: result.pendingCount || 0,
+      balance: result.balance || 0,
+      blockReason: result.blockReason || '',
+      willDelete: result.willDelete || false,
+      isLastMember: result.isLastMember || false,
+    });
+    setLeaveCheckLoading(false);
+  };
+
+  const handleConfirmLeave = async () => {
+    setIsLeaving(true);
+    const result = await leaveGroup(selectedGroup.id);
+    setIsLeaving(false);
+
+    if (result.success) {
+      setShowLeaveModal(false);
+      setToast({
+        visible: true,
+        message: result.deleted ? 'Group deleted' : 'Left group successfully',
+        type: 'success',
+      });
+    } else {
+      setToast({
+        visible: true,
+        message: result.error || 'Failed to leave group',
+        type: 'error',
+      });
+    }
+  };
+
+  const getLeaveBlockMessage = () => {
+    const { blockReason, pendingCount, balance } = leaveInfo;
+    const absBalance = Math.abs(balance).toFixed(2);
+
+    switch (blockReason) {
+      case 'pending_settlements':
+        return `You have ${pendingCount} pending settlement${pendingCount > 1 ? 's' : ''} awaiting confirmation. Please confirm or cancel them before leaving.`;
+      case 'you_owe':
+        return `You owe ₹${absBalance} to other members. Please settle your balance before leaving the group.`;
+      case 'owed_to_you':
+        return `Other members owe you ₹${absBalance}. Please have them settle up before leaving, or the balance will be lost.`;
+      default:
+        return 'Unable to leave group at this time.';
+    }
+  };
+
+  const getLeaveBlockTitle = () => {
+    const { blockReason } = leaveInfo;
+    switch (blockReason) {
+      case 'pending_settlements':
+        return 'Pending Settlements';
+      case 'you_owe':
+        return 'Outstanding Balance';
+      case 'owed_to_you':
+        return 'Money Owed to You';
+      default:
+        return 'Cannot Leave';
+    }
   };
 
   const handleDeleteGroup = () => {
@@ -157,19 +261,7 @@ const GroupsScreen = ({ navigation }) => {
   };
 
   const handleConfirmAction = async () => {
-    if (confirmAction === 'leave') {
-      const result = await leaveGroup(selectedGroup.id);
-      if (result.success) {
-        setToast({
-          visible: true,
-          message: result.deleted ? 'Group deleted (last member)' : 'Left group successfully',
-          type: 'success'
-        });
-        setConfirmModalVisible(false);
-      } else {
-        setToast({ visible: true, message: result.error, type: 'error' });
-      }
-    } else if (confirmAction === 'delete') {
+    if (confirmAction === 'delete') {
       const result = await deleteGroup(selectedGroup.id);
       if (result.success) {
         setToast({ visible: true, message: 'Group deleted successfully', type: 'success' });
@@ -188,8 +280,6 @@ const GroupsScreen = ({ navigation }) => {
       const bDate = getGroupLastActivity(b);
       return bDate - aDate; // Most recent first
     });
-
-  const isLastMember = selectedGroup?.members?.length === 1;
 
   if (isLoading && !refreshing) {
     return <Loader fullScreen />;
@@ -358,7 +448,10 @@ const GroupsScreen = ({ navigation }) => {
         transparent={true}
         onRequestClose={() => setCreateModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalOverlay}
+        >
           <CardGlass style={styles.modalContent}>
             <Text style={styles.modalTitle}>Create New Group</Text>
             <AppInput
@@ -394,7 +487,7 @@ const GroupsScreen = ({ navigation }) => {
               />
             </View>
           </CardGlass>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* Join Group Modal */}
@@ -404,7 +497,10 @@ const GroupsScreen = ({ navigation }) => {
         transparent={true}
         onRequestClose={() => setJoinModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalOverlay}
+        >
           <CardGlass style={styles.modalContent}>
             <Text style={styles.modalTitle}>Join Group</Text>
             <AppInput
@@ -432,7 +528,7 @@ const GroupsScreen = ({ navigation }) => {
               />
             </View>
           </CardGlass>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* Share Invite Modal */}
@@ -449,7 +545,10 @@ const GroupsScreen = ({ navigation }) => {
         transparent={true}
         onRequestClose={() => setEditModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalOverlay}
+        >
           <CardGlass style={styles.modalContent}>
             <Text style={styles.modalTitle}>Edit Group</Text>
             <AppInput
@@ -485,7 +584,7 @@ const GroupsScreen = ({ navigation }) => {
               />
             </View>
           </CardGlass>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* Group Actions Modal */}
@@ -509,7 +608,7 @@ const GroupsScreen = ({ navigation }) => {
               <View style={styles.actionMenuIconContainer}>
                 <Ionicons name="create-outline" size={20} color={colors.textPrimary} />
               </View>
-              <Text style={styles.actionMenuText}>Rename Group</Text>
+              <Text style={styles.actionMenuText}>Edit Group</Text>
             </TouchableOpacity>
             <View style={styles.actionDivider} />
             <TouchableOpacity
@@ -548,7 +647,7 @@ const GroupsScreen = ({ navigation }) => {
         </TouchableOpacity>
       </Modal>
 
-      {/* Confirmation Modal */}
+      {/* Delete Confirmation Modal */}
       <Modal
         visible={confirmModalVisible}
         animationType="fade"
@@ -557,23 +656,10 @@ const GroupsScreen = ({ navigation }) => {
       >
         <View style={styles.modalOverlay}>
           <CardGlass style={styles.modalContent}>
-            <Text style={styles.modalTitle}>
-              {confirmAction === 'delete' ? 'Delete Group?' : 'Leave Group?'}
+            <Text style={styles.modalTitle}>Delete Group?</Text>
+            <Text style={styles.confirmText}>
+              This will permanently delete the group and all its expenses. This action cannot be undone.
             </Text>
-            {confirmAction === 'leave' && isLastMember ? (
-              <View style={styles.warningBox}>
-                <Ionicons name="warning-outline" size={24} color={colors.error || '#ef4444'} style={styles.warningIcon} />
-                <Text style={styles.warningText}>
-                  You are the last member. The group will be permanently deleted if you leave.
-                </Text>
-              </View>
-            ) : (
-              <Text style={styles.confirmText}>
-                {confirmAction === 'delete'
-                  ? 'This will permanently delete the group and all its expenses. This action cannot be undone.'
-                  : 'Are you sure you want to leave this group?'}
-              </Text>
-            )}
             <View style={styles.modalActions}>
               <AppButton
                 title="Cancel"
@@ -582,7 +668,7 @@ const GroupsScreen = ({ navigation }) => {
                 style={styles.modalButton}
               />
               <AppButton
-                title={confirmAction === 'delete' ? 'Delete' : 'Leave'}
+                title="Delete"
                 onPress={handleConfirmAction}
                 loading={isLoading}
                 variant="outline"
@@ -626,6 +712,164 @@ const GroupsScreen = ({ navigation }) => {
           }
         }}
       />
+
+      {/* Leave Group Modal */}
+      <Modal
+        visible={showLeaveModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => !isLeaving && setShowLeaveModal(false)}
+      >
+        <View style={styles.leaveModalOverlay}>
+          <TouchableOpacity
+            style={styles.leaveModalBackdrop}
+            activeOpacity={1}
+            onPress={() => !isLeaving && setShowLeaveModal(false)}
+          />
+          <Animated.View
+            style={[
+              styles.leaveModalContainer,
+              {
+                opacity: leaveModalAnim,
+                transform: [
+                  {
+                    scale: leaveModalAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0.8, 1],
+                    }),
+                  },
+                ],
+              },
+            ]}
+          >
+            <LinearGradient
+              colors={['rgba(30, 41, 59, 0.98)', 'rgba(15, 23, 42, 0.98)']}
+              style={styles.leaveModalContent}
+            >
+              {leaveCheckLoading ? (
+                <View style={styles.leaveModalLoading}>
+                  <ActivityIndicator size="large" color={colors.primary} />
+                  <Text style={styles.leaveModalLoadingText}>Checking...</Text>
+                </View>
+              ) : (
+                <>
+                  {/* Icon */}
+                  <Animated.View
+                    style={[
+                      styles.leaveModalIconContainer,
+                      leaveInfo.canLeave ? styles.leaveIconWarning : styles.leaveIconError,
+                      {
+                        transform: [
+                          {
+                            scale: leaveIconAnim.interpolate({
+                              inputRange: [0, 0.5, 1],
+                              outputRange: [0, 1.2, 1],
+                            }),
+                          },
+                        ],
+                      },
+                    ]}
+                  >
+                    <Ionicons
+                      name={
+                        leaveInfo.canLeave
+                          ? 'exit-outline'
+                          : leaveInfo.blockReason === 'owed_to_you'
+                          ? 'wallet-outline'
+                          : leaveInfo.blockReason === 'you_owe'
+                          ? 'card-outline'
+                          : 'time-outline'
+                      }
+                      size={40}
+                      color={leaveInfo.canLeave ? colors.warning : colors.error}
+                    />
+                  </Animated.View>
+
+                  {/* Title */}
+                  <Text style={styles.leaveModalTitle}>
+                    {leaveInfo.canLeave
+                      ? leaveInfo.willDelete
+                        ? 'Delete Group?'
+                        : 'Leave Group?'
+                      : getLeaveBlockTitle()}
+                  </Text>
+
+                  {/* Message */}
+                  <Text style={styles.leaveModalMessage}>
+                    {!leaveInfo.canLeave
+                      ? getLeaveBlockMessage()
+                      : leaveInfo.willDelete
+                      ? "You're the last member. Leaving will permanently delete this group and all its data."
+                      : `Are you sure you want to leave "${selectedGroup?.name}"? You can rejoin later with an invite.`}
+                  </Text>
+
+                  {/* Actions */}
+                  <View style={[styles.leaveModalActions, !leaveInfo.canLeave && styles.leaveModalActionsVertical]}>
+                    {leaveInfo.canLeave ? (
+                      <>
+                        <TouchableOpacity
+                          style={[styles.leaveModalButton, styles.leaveModalCancelButton]}
+                          onPress={() => setShowLeaveModal(false)}
+                          disabled={isLeaving}
+                        >
+                          <Text style={styles.leaveModalCancelText}>Cancel</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={[
+                            styles.leaveModalButton,
+                            styles.leaveModalConfirmButton,
+                            isLeaving && styles.leaveModalButtonDisabled,
+                          ]}
+                          onPress={handleConfirmLeave}
+                          disabled={isLeaving}
+                        >
+                          {isLeaving ? (
+                            <ActivityIndicator size="small" color="#fff" />
+                          ) : (
+                            <Text style={styles.leaveModalConfirmText}>
+                              {leaveInfo.willDelete ? 'Delete' : 'Leave'}
+                            </Text>
+                          )}
+                        </TouchableOpacity>
+                      </>
+                    ) : (
+                      <>
+                        <TouchableOpacity
+                          style={[styles.leaveModalButton, styles.leaveModalFullButton]}
+                          onPress={() => {
+                            setShowLeaveModal(false);
+                            if (leaveInfo.blockReason === 'pending_settlements') {
+                              navigation.navigate('PendingSettlements');
+                            } else {
+                              navigation.navigate('GroupDetail', { groupId: selectedGroup?.id });
+                            }
+                          }}
+                        >
+                          <Ionicons
+                            name={leaveInfo.blockReason === 'pending_settlements' ? 'time-outline' : 'wallet-outline'}
+                            size={18}
+                            color="#fff"
+                            style={{ marginRight: 8 }}
+                          />
+                          <Text style={styles.leaveModalConfirmText}>
+                            {leaveInfo.blockReason === 'pending_settlements' ? 'View Pending' : 'View Group'}
+                          </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={[styles.leaveModalButton, styles.leaveModalCloseButton]}
+                          onPress={() => setShowLeaveModal(false)}
+                        >
+                          <Text style={styles.leaveModalCancelText}>Close</Text>
+                        </TouchableOpacity>
+                      </>
+                    )}
+                  </View>
+                </>
+              )}
+            </LinearGradient>
+          </Animated.View>
+        </View>
+      </Modal>
 
       <Toast {...toast} onHide={() => setToast({ ...toast, visible: false })} />
     </LinearGradient>
@@ -951,6 +1195,107 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textPrimary,
     lineHeight: 20,
+  },
+  // Leave Modal Styles
+  leaveModalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+  },
+  leaveModalBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  leaveModalContainer: {
+    width: Dimensions.get('window').width - spacing.xl * 2,
+    maxWidth: 400,
+  },
+  leaveModalContent: {
+    borderRadius: 24,
+    padding: spacing.xl,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
+  },
+  leaveModalLoading: {
+    paddingVertical: spacing.xl,
+    alignItems: 'center',
+  },
+  leaveModalLoadingText: {
+    marginTop: spacing.md,
+    fontSize: 14,
+    color: colors.textMuted,
+  },
+  leaveModalIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.lg,
+  },
+  leaveIconWarning: {
+    backgroundColor: 'rgba(245, 158, 11, 0.15)',
+  },
+  leaveIconError: {
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+  },
+  leaveModalTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: colors.textPrimary,
+    marginBottom: spacing.sm,
+    textAlign: 'center',
+  },
+  leaveModalMessage: {
+    fontSize: 15,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: spacing.xl,
+  },
+  leaveModalActions: {
+    width: '100%',
+    flexDirection: 'row',
+  },
+  leaveModalActionsVertical: {
+    flexDirection: 'column',
+  },
+  leaveModalButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+    borderRadius: 12,
+  },
+  leaveModalCancelButton: {
+    flex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    marginRight: spacing.sm,
+  },
+  leaveModalConfirmButton: {
+    flex: 1,
+    backgroundColor: colors.error,
+  },
+  leaveModalFullButton: {
+    backgroundColor: colors.primary,
+  },
+  leaveModalCloseButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    marginTop: spacing.sm,
+  },
+  leaveModalButtonDisabled: {
+    opacity: 0.6,
+  },
+  leaveModalCancelText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.textPrimary,
+  },
+  leaveModalConfirmText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
   },
 });
 

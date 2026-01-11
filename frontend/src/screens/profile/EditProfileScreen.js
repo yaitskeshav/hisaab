@@ -168,14 +168,9 @@ const EditProfileScreen = ({ navigation }) => {
               {avatarSource ? (
                 <Image source={avatarSource} style={styles.avatarImage} />
               ) : (
-                <LinearGradient
-                  colors={[colors.primary, colors.secondary]}
-                  style={styles.avatarImage}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                >
-                  <Ionicons name="person" size={48} color="rgba(255,255,255,0.9)" />
-                </LinearGradient>
+                <View style={[styles.avatarImage, styles.avatarPlaceholder]}>
+                  <Ionicons name="person" size={44} color={colors.textMuted} />
+                </View>
               )}
               {(uploadingAvatar || removingAvatar) && (
                 <View style={styles.avatarOverlay}>
@@ -277,7 +272,6 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.md,
@@ -289,6 +283,11 @@ const styles = StyleSheet.create({
     borderRadius: 60,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  avatarPlaceholder: {
+    backgroundColor: colors.backgroundLight,
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
   },
   avatarText: {
     fontSize: 48,

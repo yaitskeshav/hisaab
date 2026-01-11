@@ -22,7 +22,14 @@ const useAuthStore = create((set) => ({
       set({ user: data.user, isAuthenticated: true, isLoading: false });
       return { success: true };
     } catch (error) {
-      const message = error.response?.data?.message || 'Login failed';
+      const errorCode = error.response?.data?.error;
+      const errorEmail = error.response?.data?.email;
+      // Handle email not verified case
+      if (errorCode === 'email_not_verified' && errorEmail) {
+        set({ isLoading: false });
+        return { success: false, needsVerification: true, email: errorEmail };
+      }
+      const message = error.response?.data?.message || error.response?.data?.error || 'Login failed';
       set({ error: message, isLoading: false });
       return { success: false, error: message };
     }
@@ -33,13 +40,11 @@ const useAuthStore = create((set) => ({
     set({ isLoading: true, error: null });
     try {
       const { data } = await apiClient.post('/auth/signup', { name, email, password });
-      await storage.setItem('access_token', data.access_token);
-      await storage.setItem('refresh_token', data.refresh_token);
-      await storage.setItem('user', JSON.stringify(data.user));
-      set({ user: data.user, isAuthenticated: true, isLoading: false });
-      return { success: true };
+      // New signup returns message + email, needs verification
+      set({ isLoading: false });
+      return { success: true, needsVerification: true, email: data.email };
     } catch (error) {
-      const message = error.response?.data?.message || 'Registration failed';
+      const message = error.response?.data?.message || error.response?.data?.error || 'Registration failed';
       set({ error: message, isLoading: false });
       return { success: false, error: message };
     }
@@ -85,6 +90,37 @@ const useAuthStore = create((set) => ({
       return { success: true };
     } catch (error) {
       const message = error.response?.data?.error || 'Failed to reset password';
+      set({ error: message, isLoading: false });
+      return { success: false, error: message };
+    }
+  },
+
+  // Verify Email
+  verifyEmail: async (token) => {
+    set({ isLoading: true, error: null });
+    try {
+      const { data } = await apiClient.post('/auth/verify-email', { token });
+      await storage.setItem('access_token', data.access_token);
+      await storage.setItem('refresh_token', data.refresh_token);
+      await storage.setItem('user', JSON.stringify(data.user));
+      set({ user: data.user, isAuthenticated: true, isLoading: false });
+      return { success: true };
+    } catch (error) {
+      const message = error.response?.data?.error || 'Email verification failed';
+      set({ error: message, isLoading: false });
+      return { success: false, error: message };
+    }
+  },
+
+  // Resend Verification Email
+  resendVerification: async (email) => {
+    set({ isLoading: true, error: null });
+    try {
+      await apiClient.post('/auth/resend-verification', { email });
+      set({ isLoading: false });
+      return { success: true };
+    } catch (error) {
+      const message = error.response?.data?.error || 'Failed to resend verification';
       set({ error: message, isLoading: false });
       return { success: false, error: message };
     }

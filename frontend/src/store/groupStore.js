@@ -80,18 +80,43 @@ const useGroupStore = create((set, get) => ({
     }
   },
 
+  // Check if user can leave a group
+  checkCanLeave: async (groupId) => {
+    try {
+      const { data } = await apiClient.get(`/groups/${groupId}/can-leave`);
+      return {
+        success: true,
+        canLeave: data.can_leave,
+        pendingCount: data.pending_count || 0,
+        balance: data.balance || 0,
+        blockReason: data.block_reason || '',
+        isLastMember: data.is_last_member,
+        willDelete: data.will_delete,
+      };
+    } catch (error) {
+      return { success: false, canLeave: false, pendingCount: 0, balance: 0, blockReason: 'error' };
+    }
+  },
+
   // Leave group
   leaveGroup: async (groupId) => {
     set({ isLoading: true, error: null });
     try {
       const { data } = await apiClient.post(`/groups/${groupId}/leave`);
       const groups = get().groups.filter(g => g.id !== groupId);
-      set({ groups, isLoading: false });
+      set({ groups, currentGroup: null, isLoading: false });
       return { success: true, deleted: data.deleted };
     } catch (error) {
-      const message = error.response?.data?.message || 'Failed to leave group';
+      const errorData = error.response?.data;
+      const isPendingError = errorData?.error === 'pending_settlements';
+      const message = errorData?.message || 'Failed to leave group';
       set({ error: message, isLoading: false });
-      return { success: false, error: message };
+      return {
+        success: false,
+        error: message,
+        isPendingSettlements: isPendingError,
+        pendingCount: errorData?.pending_count || 0,
+      };
     }
   },
 

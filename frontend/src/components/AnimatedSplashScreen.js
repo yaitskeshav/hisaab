@@ -48,12 +48,23 @@ const AnimatedSplashScreen = ({ onFinish }) => {
         if (initialUrl) {
           const parsed = parseDeepLink(initialUrl);
           if (parsed) {
-            initialRoute = parsed.screen;
-            initialParams = parsed.params;
+            // Handle VerifyEmail deep link - call API directly
+            if (parsed.screen === 'VerifyEmail' && parsed.params?.token) {
+              try {
+                const { verifyEmail } = useAuthStore.getState();
+                await verifyEmail(parsed.params.token);
+                // User will be authenticated after this, normal flow continues
+              } catch (e) {
+                console.log('Email verification failed:', e);
+              }
+            } else {
+              initialRoute = parsed.screen;
+              initialParams = parsed.params;
+            }
           }
         }
 
-        // Restore auth session
+        // Restore auth session (will use tokens if verify succeeded)
         await restoreSession();
 
         // Store loaded data

@@ -74,3 +74,4 @@ tmp/
 coverage/
 .temp/
 .cache/
+/raw-assets/

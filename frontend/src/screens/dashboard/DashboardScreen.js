@@ -262,14 +262,9 @@ const DashboardScreen = () => {
                 style={styles.avatarImage}
               />
             ) : (
-              <LinearGradient
-                colors={[colors.primary, colors.secondary]}
-                style={styles.avatarImage}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              >
-                <Ionicons name="person" size={26} color="rgba(255,255,255,0.9)" />
-              </LinearGradient>
+              <View style={[styles.avatarImage, styles.avatarPlaceholder]}>
+                <Ionicons name="person" size={24} color={colors.textMuted} />
+              </View>
             )}
           </TouchableOpacity>
         </View>
@@ -538,7 +533,6 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
@@ -554,6 +548,11 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  avatarPlaceholder: {
+    backgroundColor: colors.backgroundLight,
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
   },
   // Overview Card Styles
   overviewCard: {

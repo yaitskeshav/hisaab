@@ -13,32 +13,28 @@
  * @returns {string} Formatted currency string
  */
 export const formatCurrency = (amount, options = {}) => {
-  const { showSign = false, compact = false, maxDecimals = 2 } = options;
+  const { showSign = false, compact = false, decimals = 2 } = options;
 
   const num = typeof amount === 'string' ? parseFloat(amount) : amount;
 
-  if (isNaN(num)) return '₹0';
+  if (isNaN(num)) return '₹0.00';
 
   const absNum = Math.abs(num);
-
-  // Determine if we need decimals
-  const hasDecimals = absNum % 1 !== 0;
-  const minDecimals = hasDecimals ? 2 : 0;
 
   let formatted;
 
   if (compact && absNum >= 100000) {
     // Compact format for lakhs/crores
     if (absNum >= 10000000) {
-      formatted = `₹${(absNum / 10000000).toFixed(hasDecimals ? 2 : 1)}Cr`;
+      formatted = `₹${(absNum / 10000000).toFixed(2)}Cr`;
     } else {
-      formatted = `₹${(absNum / 100000).toFixed(hasDecimals ? 2 : 1)}L`;
+      formatted = `₹${(absNum / 100000).toFixed(2)}L`;
     }
   } else {
-    // Standard Indian number format
+    // Standard Indian number format - always show 2 decimal places
     formatted = `₹${absNum.toLocaleString('en-IN', {
-      minimumFractionDigits: minDecimals,
-      maximumFractionDigits: maxDecimals,
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
     })}`;
   }
 
@@ -60,13 +56,12 @@ export const formatCurrency = (amount, options = {}) => {
 export const formatAmountShort = (amount) => {
   const num = typeof amount === 'string' ? parseFloat(amount) : amount;
 
-  if (isNaN(num)) return '0';
+  if (isNaN(num)) return '0.00';
 
   const absNum = Math.abs(num);
-  const hasDecimals = absNum % 1 !== 0;
 
   return absNum.toLocaleString('en-IN', {
-    minimumFractionDigits: hasDecimals ? 2 : 0,
+    minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
 };
@@ -80,7 +75,7 @@ export const formatBalance = (amount) => {
   const num = typeof amount === 'string' ? parseFloat(amount) : amount;
 
   if (isNaN(num) || Math.abs(num) < 0.01) {
-    return { text: '₹0', type: 'settled' };
+    return { text: '₹0.00', type: 'settled' };
   }
 
   const formatted = formatCurrency(Math.abs(num));

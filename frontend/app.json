@@ -33,12 +33,13 @@
       }
     },
     "android": {
+      "versionCode": 1,
+      "package": "com.hisaab.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/hisaab-logo-1024.png",
         "backgroundColor": "#0F4C75"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.hisaab.app",
       "googleServicesFile": "./google-services.json",
       "intentFilters": [
         {

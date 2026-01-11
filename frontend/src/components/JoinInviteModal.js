@@ -162,7 +162,7 @@ const JoinInviteModal = ({ token, visible, onHide, onJoined }) => {
 const styles = StyleSheet.create({
     overlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        backgroundColor: 'rgba(0, 0, 0, 0.85)',
         justifyContent: 'center',
         alignItems: 'center',
         padding: spacing.lg,
@@ -172,6 +172,7 @@ const styles = StyleSheet.create({
         maxWidth: 400,
         padding: spacing.xl,
         alignItems: 'center',
+        backgroundColor: colors.backgroundLight,
     },
     closeButton: {
         position: 'absolute',

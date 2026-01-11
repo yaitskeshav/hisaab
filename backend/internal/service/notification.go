@@ -205,6 +205,57 @@ func (s *NotificationService) NotifyGroupMembers(groupID uint, excludeUserID uin
 	}
 }
 
+// NotifyGroupMembersWithPref sends notification to group members respecting their preferences
+func (s *NotificationService) NotifyGroupMembersWithPref(groupID uint, excludeUserID uint, title, body string, data map[string]string, prefType string) {
+	var group models.Group
+	if err := database.DB.Preload("Members").First(&group, groupID).Error; err != nil {
+		log.Printf("Group %d not found for notification", groupID)
+		return
+	}
+
+	for _, member := range group.Members {
+		if member.ID != excludeUserID {
+			go s.SendToUserWithPref(member.ID, title, body, data, prefType)
+		}
+	}
+}
+
+// SendToUserWithPref sends notification to user if they have the preference enabled
+func (s *NotificationService) SendToUserWithPref(userID uint, title, body string, data map[string]string, prefType string) error {
+	var user models.User
+	if err := database.DB.First(&user, userID).Error; err != nil {
+		log.Printf("User %d not found for notification", userID)
+		return err
+	}
+
+	// Check if user has this notification type enabled
+	enabled := true
+	switch prefType {
+	case "member_joined":
+		enabled = user.NotifyMemberJoined
+	case "expense_added":
+		enabled = user.NotifyExpenseAdded
+	case "expense_edited":
+		enabled = user.NotifyExpenseEdited
+	case "settlement_created":
+		enabled = user.NotifySettlementCreated
+	case "settlement_confirm":
+		enabled = user.NotifySettlementConfirm
+	}
+
+	if !enabled {
+		log.Printf("User %d has %s notifications disabled, skipping", userID, prefType)
+		return nil
+	}
+
+	if user.FCMToken == "" {
+		log.Printf("User %d has no FCM token", userID)
+		return nil
+	}
+
+	return s.SendToToken(user.FCMToken, title, body, data)
+}
+
 // Specific notification methods for different events
 
 // NotifyMemberAdded notifies group members when a new member joins
@@ -215,7 +266,7 @@ func (s *NotificationService) NotifyMemberAdded(groupID uint, newMemberID uint, 
 	}
 	title := groupName
 	body := newMemberName + " joined the group"
-	s.NotifyGroupMembers(groupID, newMemberID, title, body, data)
+	s.NotifyGroupMembersWithPref(groupID, newMemberID, title, body, data, "member_joined")
 }
 
 // NotifyExpenseAdded notifies group members when an expense is added
@@ -226,7 +277,7 @@ func (s *NotificationService) NotifyExpenseAdded(groupID uint, actorID uint, act
 	}
 	title := groupName
 	body := actorName + " added \"" + expenseTitle + "\" - ₹" + formatAmount(amount)
-	s.NotifyGroupMembers(groupID, actorID, title, body, data)
+	s.NotifyGroupMembersWithPref(groupID, actorID, title, body, data, "expense_added")
 }
 
 // NotifyExpenseEdited notifies group members when an expense is edited
@@ -240,7 +291,7 @@ func (s *NotificationService) NotifyExpenseEdited(groupID uint, actorID uint, ac
 	if changes != "" {
 		body += " - " + changes
 	}
-	s.NotifyGroupMembers(groupID, actorID, title, body, data)
+	s.NotifyGroupMembersWithPref(groupID, actorID, title, body, data, "expense_edited")
 }
 
 // NotifySettlementCreated notifies the receiver when a settlement request is created
@@ -251,7 +302,7 @@ func (s *NotificationService) NotifySettlementCreated(receiverID uint, payerName
 	}
 	title := "Payment Received"
 	body := payerName + " recorded a payment of ₹" + formatAmount(amount) + " in " + groupName
-	s.SendToUser(receiverID, title, body, data)
+	s.SendToUserWithPref(receiverID, title, body, data, "settlement_created")
 }
 
 // NotifySettlementConfirmed notifies the payer when their settlement is confirmed
@@ -262,7 +313,7 @@ func (s *NotificationService) NotifySettlementConfirmed(payerID uint, receiverNa
 	}
 	title := "Payment Confirmed"
 	body := receiverName + " confirmed your payment of ₹" + formatAmount(amount) + " in " + groupName
-	s.SendToUser(payerID, title, body, data)
+	s.SendToUserWithPref(payerID, title, body, data, "settlement_confirm")
 }
 
 // Helper functions

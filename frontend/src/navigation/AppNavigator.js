@@ -15,6 +15,7 @@ import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
 import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen';
 import ResetPasswordScreen from '../screens/auth/ResetPasswordScreen';
+import EmailVerificationScreen from '../screens/auth/EmailVerificationScreen';
 
 // Main screens
 import DashboardScreen from '../screens/dashboard/DashboardScreen';
@@ -23,6 +24,8 @@ import GroupDetailScreen from '../screens/groups/GroupDetailScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
 import EditProfileScreen from '../screens/profile/EditProfileScreen';
 import NotificationsScreen from '../screens/profile/NotificationsScreen';
+import PrivacyPolicyScreen from '../screens/profile/PrivacyPolicyScreen';
+import TermsOfServiceScreen from '../screens/profile/TermsOfServiceScreen';
 import AddExpenseScreen from '../screens/expenses/AddExpenseScreen';
 import ActivityScreen from '../screens/activity/ActivityScreen';
 import JoinInviteModal from '../components/JoinInviteModal';
@@ -107,6 +110,8 @@ const AppNavigator = ({ hasSeenOnboarding, initialRoute, initialParams }) => {
             setPendingInviteToken(parsed.params.token);
             navigationRef.current?.navigate('Login');
           }
+        } else if (parsed.screen === 'VerifyEmail') {
+          // Handled by App.js - don't navigate here
         } else if (navigationRef.current) {
           navigationRef.current.navigate(parsed.screen, parsed.params);
         }
@@ -163,6 +168,7 @@ const AppNavigator = ({ hasSeenOnboarding, initialRoute, initialParams }) => {
             )}
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="Register" component={RegisterScreen} />
+            <Stack.Screen name="EmailVerification" component={EmailVerificationScreen} />
             <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
             <Stack.Screen
               name="ResetPassword"
@@ -178,6 +184,8 @@ const AppNavigator = ({ hasSeenOnboarding, initialRoute, initialParams }) => {
             <Stack.Screen name="Activity" component={ActivityScreen} />
             <Stack.Screen name="EditProfile" component={EditProfileScreen} />
             <Stack.Screen name="Notifications" component={NotificationsScreen} />
+            <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
+            <Stack.Screen name="TermsOfService" component={TermsOfServiceScreen} />
             <Stack.Screen name="SettleUp" component={SettleUpScreen} />
             <Stack.Screen name="SettlePayment" component={SettlePaymentScreen} />
             <Stack.Screen name="PendingSettlements" component={PendingSettlementsScreen} />

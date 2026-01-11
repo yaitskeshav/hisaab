@@ -39,28 +39,28 @@ func (h *AuthHandler) Signup(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to hash password"})
 	}
 
+	// Generate email verification token
+	verificationToken := utils.GenerateRandomString(32)
+
 	user := models.User{
-		Email:    req.Email,
-		Password: string(hashedPassword),
-		Name:     req.Name,
+		Email:                      req.Email,
+		Password:                   string(hashedPassword),
+		Name:                       utils.ToTitleCase(req.Name),
+		EmailVerificationToken:     verificationToken,
+		EmailVerificationExpiresAt: time.Now().Add(24 * time.Hour),
+		IsEmailVerified:            false,
 	}
 
 	if err := database.DB.Create(&user).Error; err != nil {
 		return c.Status(fiber.StatusConflict).JSON(fiber.Map{"error": "user already exists"})
 	}
 
-	accessToken, refreshToken, err := utils.GenerateTokens(user.ID)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to generate tokens"})
-	}
-
-	user.RefreshToken = refreshToken
-	database.DB.Save(&user)
+	// Send verification email async
+	go h.sendVerificationEmail(user.Email, user.Name, verificationToken)
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
-		"user":          user,
-		"access_token":  accessToken,
-		"refresh_token": refreshToken,
+		"message": "Verification email sent. Please check your inbox.",
+		"email":   user.Email,
 	})
 }
 
@@ -82,6 +82,14 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "invalid credentials"})
+	}
+
+	// Block login if email not verified (only for non-Google users)
+	if user.GoogleID == nil && !user.IsEmailVerified {
+		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
+			"error": "email_not_verified",
+			"email": user.Email,
+		})
 	}
 
 	accessToken, refreshToken, err := utils.GenerateTokens(user.ID)
@@ -1292,4 +1300,281 @@ func (h *AuthHandler) UpdateFCMToken(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(fiber.Map{"message": "FCM token updated"})
+}
+
+// sendVerificationEmail sends verification email to user
+func (h *AuthHandler) sendVerificationEmail(email, name, token string) {
+	verifyLink := fmt.Sprintf("hisaab://verify-email?token=%s", token)
+
+	emailBody := fmt.Sprintf(`
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Your Email - Hisaab</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #0F172A; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+    <table role="presentation" width="100%%" cellspacing="0" cellpadding="0" style="background-color: #0F172A;">
+        <tr>
+            <td align="center" style="padding: 40px 20px;">
+                <table role="presentation" width="100%%" cellspacing="0" cellpadding="0" style="max-width: 480px;">
+                    <!-- Logo -->
+                    <tr>
+                        <td align="center" style="padding-bottom: 32px;">
+                            <div style="width: 64px; height: 64px; background: linear-gradient(135deg, #00F3D1 0%%, #0099F7 100%%); border-radius: 16px; display: inline-block;">
+                                <table role="presentation" width="64" height="64" cellspacing="0" cellpadding="0">
+                                    <tr>
+                                        <td align="center" valign="middle" style="color: white; font-size: 28px;">
+                                            ≡
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <p style="margin: 12px 0 0 0; font-size: 20px; font-weight: 700; color: #F8FAFC;">hisaab</p>
+                        </td>
+                    </tr>
+
+                    <!-- Card -->
+                    <tr>
+                        <td style="background: rgba(30, 41, 59, 0.95); border-radius: 24px; border: 1px solid rgba(255, 255, 255, 0.1);">
+                            <table role="presentation" width="100%%" cellspacing="0" cellpadding="0">
+                                <tr>
+                                    <td style="padding: 40px 32px;">
+                                        <!-- Icon -->
+                                        <table role="presentation" width="100%%" cellspacing="0" cellpadding="0">
+                                            <tr>
+                                                <td align="center" style="padding-bottom: 24px;">
+                                                    <div style="width: 56px; height: 56px; background: rgba(16, 185, 129, 0.2); border-radius: 50%%; display: inline-block;">
+                                                        <table role="presentation" width="56" height="56" cellspacing="0" cellpadding="0">
+                                                            <tr>
+                                                                <td align="center" valign="middle" style="color: #10B981; font-size: 24px;">
+                                                                    ✉️
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </table>
+
+                                        <!-- Title -->
+                                        <h1 style="margin: 0 0 8px 0; font-size: 24px; font-weight: 700; color: #F8FAFC; text-align: center;">
+                                            Verify Your Email
+                                        </h1>
+
+                                        <!-- Greeting -->
+                                        <p style="margin: 0 0 20px 0; font-size: 15px; color: #94A3B8; text-align: center; line-height: 1.5;">
+                                            Hi %s, welcome to Hisaab! Please verify your email address to get started.
+                                        </p>
+
+                                        <!-- Button -->
+                                        <table role="presentation" width="100%%" cellspacing="0" cellpadding="0">
+                                            <tr>
+                                                <td align="center" style="padding: 24px 0;">
+                                                    <a href="%s" style="display: inline-block; padding: 16px 32px; background: linear-gradient(135deg, #10B981 0%%, #059669 100%%); color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 600; border-radius: 12px;">
+                                                        Verify Email
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        </table>
+
+                                        <!-- Info box -->
+                                        <table role="presentation" width="100%%" cellspacing="0" cellpadding="0" style="background: rgba(255, 255, 255, 0.05); border-radius: 12px;">
+                                            <tr>
+                                                <td style="padding: 16px;">
+                                                    <p style="margin: 0 0 8px 0; font-size: 12px; color: #64748B; text-align: center;">
+                                                        Or copy this link to your browser:
+                                                    </p>
+                                                    <p style="margin: 0; font-size: 12px; color: #10B981; text-align: center; word-break: break-all;">
+                                                        %s
+                                                    </p>
+                                                </td>
+                                            </tr>
+                                        </table>
+
+                                        <!-- Expiry note -->
+                                        <p style="margin: 24px 0 0 0; font-size: 13px; color: #64748B; text-align: center;">
+                                            ⏱️ This link expires in 24 hours
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Security note -->
+                    <tr>
+                        <td style="padding: 24px 0;">
+                            <p style="margin: 0; font-size: 13px; color: #475569; text-align: center; line-height: 1.5;">
+                                If you didn't create an account with Hisaab, you can safely ignore this email.
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td align="center" style="padding-top: 16px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                            <p style="margin: 0; font-size: 12px; color: #475569;">
+                                © %d Hisaab · Split today. Settle tomorrow.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+	`, name, verifyLink, verifyLink, time.Now().Year())
+
+	if err := utils.SendEmail(email, "Verify Your Email - Hisaab", emailBody); err != nil {
+		fmt.Printf("Failed to send verification email to %s: %v\n", email, err)
+	} else {
+		fmt.Printf("Verification email sent to %s\n", email)
+	}
+}
+
+type VerifyEmailRequest struct {
+	Token string `json:"token"`
+}
+
+// VerifyEmail verifies user's email address
+func (h *AuthHandler) VerifyEmail(c *fiber.Ctx) error {
+	req := new(VerifyEmailRequest)
+	if err := c.BodyParser(req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid request"})
+	}
+
+	var user models.User
+	if err := database.DB.Where("email_verification_token = ?", req.Token).First(&user).Error; err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid or expired token"})
+	}
+
+	if time.Now().After(user.EmailVerificationExpiresAt) {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "token expired"})
+	}
+
+	// Mark email as verified and clear token
+	user.IsEmailVerified = true
+	user.EmailVerificationToken = ""
+	user.EmailVerificationExpiresAt = time.Time{}
+
+	// Generate tokens for the user
+	accessToken, refreshToken, err := utils.GenerateTokens(user.ID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to generate tokens"})
+	}
+
+	user.RefreshToken = refreshToken
+	database.DB.Save(&user)
+
+	return c.JSON(fiber.Map{
+		"message":       "Email verified successfully",
+		"user":          user,
+		"access_token":  accessToken,
+		"refresh_token": refreshToken,
+	})
+}
+
+type ResendVerificationRequest struct {
+	Email string `json:"email"`
+}
+
+// ResendVerification resends verification email
+func (h *AuthHandler) ResendVerification(c *fiber.Ctx) error {
+	req := new(ResendVerificationRequest)
+	if err := c.BodyParser(req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid request"})
+	}
+
+	var user models.User
+	if err := database.DB.Where("email = ?", req.Email).First(&user).Error; err != nil {
+		// Don't reveal if user exists
+		return c.JSON(fiber.Map{"message": "If this email is registered, you will receive a verification link"})
+	}
+
+	if user.IsEmailVerified {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "email already verified"})
+	}
+
+	// Generate new verification token
+	verificationToken := utils.GenerateRandomString(32)
+	user.EmailVerificationToken = verificationToken
+	user.EmailVerificationExpiresAt = time.Now().Add(24 * time.Hour)
+	database.DB.Save(&user)
+
+	// Send verification email async
+	go h.sendVerificationEmail(user.Email, user.Name, verificationToken)
+
+	return c.JSON(fiber.Map{"message": "If this email is registered, you will receive a verification link"})
+}
+
+// GetNotificationPrefs returns user's notification preferences
+func (h *AuthHandler) GetNotificationPrefs(c *fiber.Ctx) error {
+	userID := c.Locals("user_id").(uint)
+
+	var user models.User
+	if err := database.DB.First(&user, userID).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "user not found"})
+	}
+
+	return c.JSON(fiber.Map{
+		"notify_member_joined":      user.NotifyMemberJoined,
+		"notify_expense_added":      user.NotifyExpenseAdded,
+		"notify_expense_edited":     user.NotifyExpenseEdited,
+		"notify_settlement_created": user.NotifySettlementCreated,
+		"notify_settlement_confirm": user.NotifySettlementConfirm,
+	})
+}
+
+// UpdateNotificationPrefs updates user's notification preferences
+func (h *AuthHandler) UpdateNotificationPrefs(c *fiber.Ctx) error {
+	userID := c.Locals("user_id").(uint)
+
+	var user models.User
+	if err := database.DB.First(&user, userID).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "user not found"})
+	}
+
+	var body struct {
+		NotifyMemberJoined      *bool `json:"notify_member_joined"`
+		NotifyExpenseAdded      *bool `json:"notify_expense_added"`
+		NotifyExpenseEdited     *bool `json:"notify_expense_edited"`
+		NotifySettlementCreated *bool `json:"notify_settlement_created"`
+		NotifySettlementConfirm *bool `json:"notify_settlement_confirm"`
+	}
+
+	if err := c.BodyParser(&body); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid request"})
+	}
+
+	// Update only provided fields
+	if body.NotifyMemberJoined != nil {
+		user.NotifyMemberJoined = *body.NotifyMemberJoined
+	}
+	if body.NotifyExpenseAdded != nil {
+		user.NotifyExpenseAdded = *body.NotifyExpenseAdded
+	}
+	if body.NotifyExpenseEdited != nil {
+		user.NotifyExpenseEdited = *body.NotifyExpenseEdited
+	}
+	if body.NotifySettlementCreated != nil {
+		user.NotifySettlementCreated = *body.NotifySettlementCreated
+	}
+	if body.NotifySettlementConfirm != nil {
+		user.NotifySettlementConfirm = *body.NotifySettlementConfirm
+	}
+
+	if err := database.DB.Save(&user).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to update preferences"})
+	}
+
+	return c.JSON(fiber.Map{
+		"notify_member_joined":      user.NotifyMemberJoined,
+		"notify_expense_added":      user.NotifyExpenseAdded,
+		"notify_expense_edited":     user.NotifyExpenseEdited,
+		"notify_settlement_created": user.NotifySettlementCreated,
+		"notify_settlement_confirm": user.NotifySettlementConfirm,
+	})
 }

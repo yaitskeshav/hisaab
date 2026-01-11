@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Modal, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Modal, Dimensions, Linking } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import Constants from 'expo-constants';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import CardGlass from '../../components/common/CardGlass';
@@ -10,6 +11,8 @@ import useAuthStore from '../../store/authStore';
 import { BASE_URL } from '../../api/client';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+
+const SUPPORT_EMAIL = process.env.EXPO_PUBLIC_SUPPORT_EMAIL || 'support@digitalhisaab.tech';
 
 const ProfileScreen = ({ navigation }) => {
   const { user, logout } = useAuthStore();
@@ -47,14 +50,9 @@ const ProfileScreen = ({ navigation }) => {
                 style={styles.avatarImage}
               />
             ) : (
-              <LinearGradient
-                colors={[colors.primary, colors.secondary]}
-                style={styles.avatarImage}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              >
-                <Ionicons name="person" size={48} color="rgba(255,255,255,0.9)" />
-              </LinearGradient>
+              <View style={[styles.avatarImage, styles.avatarPlaceholder]}>
+                <Ionicons name="person" size={44} color={colors.textMuted} />
+              </View>
             )}
           </TouchableOpacity>
           <Text style={styles.userName}>{user?.name || 'User'}</Text>
@@ -103,7 +101,7 @@ const ProfileScreen = ({ navigation }) => {
           <Text style={styles.sectionTitle}>About</Text>
           <TouchableOpacity
             style={styles.menuItem}
-            onPress={() => alert('Help & Support - Coming Soon')}
+            onPress={() => Linking.openURL(`mailto:${SUPPORT_EMAIL}?subject=Hisaab Support Request`)}
           >
             <View style={styles.menuIconContainer}>
               <Ionicons name="help-circle-outline" size={20} color={colors.textPrimary} />
@@ -114,7 +112,7 @@ const ProfileScreen = ({ navigation }) => {
           <View style={styles.divider} />
           <TouchableOpacity
             style={styles.menuItem}
-            onPress={() => alert('Privacy Policy - Coming Soon')}
+            onPress={() => navigation.navigate('PrivacyPolicy')}
           >
             <View style={styles.menuIconContainer}>
               <Ionicons name="shield-checkmark-outline" size={20} color={colors.textPrimary} />
@@ -125,7 +123,7 @@ const ProfileScreen = ({ navigation }) => {
           <View style={styles.divider} />
           <TouchableOpacity
             style={styles.menuItem}
-            onPress={() => alert('Terms of Service - Coming Soon')}
+            onPress={() => navigation.navigate('TermsOfService')}
           >
             <View style={styles.menuIconContainer}>
               <Ionicons name="document-text-outline" size={20} color={colors.textPrimary} />
@@ -142,7 +140,7 @@ const ProfileScreen = ({ navigation }) => {
           style={styles.logoutButton}
         />
 
-        <Text style={styles.version}>Version 1.0.0</Text>
+        <Text style={styles.version}>Version {Constants.expoConfig?.version || '1.0.0'}</Text>
       </ScrollView>
 
       {/* Fullscreen Image Modal */}
@@ -192,7 +190,6 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.md,
@@ -204,6 +201,11 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  avatarPlaceholder: {
+    backgroundColor: colors.backgroundLight,
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
   },
   avatarText: {
     fontSize: 40,

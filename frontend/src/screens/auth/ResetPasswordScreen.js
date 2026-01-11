@@ -296,6 +296,8 @@ const ResetPasswordScreen = ({ navigation, route }) => {
                                 }}
                                 placeholder="Enter new password"
                                 secureTextEntry={!showPassword}
+                                autoCapitalize="none"
+                                autoCorrect={false}
                                 error={errors.password}
                                 leftIcon={
                                     <Ionicons name="lock-closed-outline" size={20} color={colors.textMuted} />
@@ -343,6 +345,8 @@ const ResetPasswordScreen = ({ navigation, route }) => {
                                 }}
                                 placeholder="Confirm new password"
                                 secureTextEntry={!showConfirmPassword}
+                                autoCapitalize="none"
+                                autoCorrect={false}
                                 error={errors.confirmPassword}
                                 leftIcon={
                                     <Ionicons name="lock-closed-outline" size={20} color={colors.textMuted} />

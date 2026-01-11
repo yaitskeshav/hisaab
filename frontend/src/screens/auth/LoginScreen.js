@@ -51,7 +51,9 @@ const LoginScreen = ({ navigation }) => {
     }
 
     const result = await login(email, password);
-    if (!result.success) {
+    if (result.needsVerification) {
+      navigation.navigate('EmailVerification', { email: result.email });
+    } else if (!result.success) {
       setToast({ visible: true, message: result.error, type: 'error' });
     }
   };
@@ -106,6 +108,7 @@ const LoginScreen = ({ navigation }) => {
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
           <View style={styles.header}>
             <Text style={styles.logo}>💰</Text>
@@ -129,15 +132,16 @@ const LoginScreen = ({ navigation }) => {
               onChangeText={setPassword}
               placeholder="••••••••"
               secureTextEntry={!showPassword}
+              autoCapitalize="none"
+              autoCorrect={false}
               rightIcon={
-                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                  <Ionicons
-                    name={showPassword ? 'eye-outline' : 'eye-off-outline'}
-                    size={20}
-                    color={colors.textMuted}
-                  />
-                </TouchableOpacity>
+                <Ionicons
+                  name={showPassword ? 'eye-outline' : 'eye-off-outline'}
+                  size={20}
+                  color={colors.textMuted}
+                />
               }
+              onRightIconPress={() => setShowPassword(!showPassword)}
             />
 
             <TouchableOpacity style={styles.forgotPassword} onPress={() => navigation.navigate('ForgotPassword')}>
