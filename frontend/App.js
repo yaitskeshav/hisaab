@@ -9,6 +9,8 @@ import useInviteStore from './src/store/inviteStore';
 import useAuthStore from './src/store/authStore';
 import AnimatedSplashScreen from './src/components/AnimatedSplashScreen';
 import SuccessModal from './src/components/common/SuccessModal';
+import UpdateBanner from './src/components/common/UpdateBanner';
+import useOTAUpdates from './src/hooks/useOTAUpdates';
 
 export default function App() {
   const [splashData, setSplashData] = useState(null);
@@ -16,6 +18,7 @@ export default function App() {
   const setPendingInviteToken = useInviteStore(state => state.setPendingInviteToken);
   const verifyEmail = useAuthStore(state => state.verifyEmail);
   const navigatorRef = useRef(null);
+  const { updateAvailable, reloadApp, dismissUpdate } = useOTAUpdates();
 
   // Global deep link listener
   React.useEffect(() => {
@@ -67,6 +70,11 @@ export default function App() {
           type={verifyModal.success ? 'success' : 'error'}
           icon={verifyModal.success ? 'checkmark-circle' : 'close-circle'}
           onClose={() => setVerifyModal({ ...verifyModal, visible: false })}
+        />
+        <UpdateBanner
+          visible={updateAvailable}
+          onRestart={reloadApp}
+          onDismiss={dismissUpdate}
         />
         <StatusBar style="light" />
       </ToastProvider>
