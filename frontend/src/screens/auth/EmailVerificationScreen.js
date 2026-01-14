@@ -13,6 +13,7 @@ import { spacing } from '../../theme/spacing';
 import AppButton from '../../components/common/AppButton';
 import Toast from '../../components/common/Toast';
 import useAuthStore from '../../store/authStore';
+import { useAccentColor } from '../../store/themeStore';
 
 const EmailVerificationScreen = ({ navigation, route }) => {
     const email = route.params?.email || '';
@@ -20,6 +21,7 @@ const EmailVerificationScreen = ({ navigation, route }) => {
     const [resendCooldown, setResendCooldown] = useState(0);
 
     const { resendVerification, isLoading } = useAuthStore();
+    const accent = useAccentColor();
 
     // Animations
     const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -107,7 +109,7 @@ const EmailVerificationScreen = ({ navigation, route }) => {
                     <Text style={styles.subtitle}>
                         We've sent a verification link to
                     </Text>
-                    <Text style={styles.email}>{email}</Text>
+                    <Text style={[styles.email, { color: accent.primary }]}>{email}</Text>
 
                     {/* Instructions */}
                     <View style={styles.instructionBox}>
@@ -150,8 +152,8 @@ const EmailVerificationScreen = ({ navigation, route }) => {
                         onPress={() => navigation.navigate('Login')}
                         style={styles.loginLink}
                     >
-                        <Ionicons name="arrow-back" size={16} color={colors.primary} />
-                        <Text style={styles.loginLinkText}>Back to Login</Text>
+                        <Ionicons name="arrow-back" size={16} color={accent.primary} />
+                        <Text style={[styles.loginLinkText, { color: accent.primary }]}>Back to Login</Text>
                     </TouchableOpacity>
                 </Animated.View>
             </View>

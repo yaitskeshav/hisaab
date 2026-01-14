@@ -1,6 +1,7 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { colors as themeColors } from '../../theme/colors';
+import { useAccentColor } from '../../store/themeStore';
 
 const AppButton = ({
   title,
@@ -13,20 +14,40 @@ const AppButton = ({
   style,
   textStyle,
 }) => {
+  const accent = useAccentColor();
+
   const getVariantStyles = () => {
     switch (variant) {
       case 'primary':
-        return styles.primary;
+        return {
+          backgroundColor: accent.primary,
+          shadowColor: accent.primary,
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.3,
+          shadowRadius: 8,
+          elevation: 6,
+        };
       case 'secondary':
         return styles.secondary;
       case 'outline':
-        return styles.outline;
+        return {
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          borderColor: accent.primary,
+        };
       case 'ghost':
         return styles.ghost;
       case 'glass':
         return styles.glass;
       default:
-        return styles.primary;
+        return {
+          backgroundColor: accent.primary,
+          shadowColor: accent.primary,
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.3,
+          shadowRadius: 8,
+          elevation: 6,
+        };
     }
   };
 
@@ -43,6 +64,13 @@ const AppButton = ({
     }
   };
 
+  const getTextColor = () => {
+    if (variant === 'outline' || variant === 'ghost') {
+      return accent.primary;
+    }
+    return themeColors.textPrimary;
+  };
+
   return (
     <TouchableOpacity
       style={[
@@ -57,14 +85,13 @@ const AppButton = ({
       activeOpacity={0.7}
     >
       {loading ? (
-        <ActivityIndicator color={variant === 'outline' ? themeColors.primary : themeColors.textPrimary} />
+        <ActivityIndicator color={variant === 'outline' ? accent.primary : themeColors.textPrimary} />
       ) : (
         <>
           {icon && icon}
           <Text style={[
             styles.text,
-            variant === 'outline' && styles.outlineText,
-            variant === 'ghost' && styles.ghostText,
+            { color: getTextColor() },
             textStyle,
           ]}>
             {title}
@@ -84,14 +111,6 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   // Variants
-  primary: {
-    backgroundColor: themeColors.primary,
-    shadowColor: themeColors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
-  },
   secondary: {
     backgroundColor: themeColors.secondary,
     shadowColor: themeColors.secondary,
@@ -99,11 +118,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 6,
-  },
-  outline: {
-    backgroundColor: 'transparent',
-    borderWidth: 2,
-    borderColor: themeColors.primary,
   },
   ghost: {
     backgroundColor: 'transparent',
@@ -132,15 +146,8 @@ const styles = StyleSheet.create({
   },
   // Text
   text: {
-    color: themeColors.textPrimary,
     fontSize: 16,
     fontWeight: '600',
-  },
-  outlineText: {
-    color: themeColors.primary,
-  },
-  ghostText: {
-    color: themeColors.primary,
   },
 });
 

@@ -10,6 +10,7 @@ import SectionContainer from '../../components/common/SectionContainer';
 import AppButton from '../../components/common/AppButton';
 import Loader from '../../components/common/Loader';
 import apiClient from '../../api/client';
+import { useAccentColor } from '../../store/themeStore';
 
 const screenWidth = Dimensions.get('window').width - spacing.lg * 2;
 
@@ -17,6 +18,7 @@ const AnalyticsScreen = ({ route }) => {
   const { groupId } = route.params || {};
   const [analytics, setAnalytics] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const accent = useAccentColor();
 
   useEffect(() => {
     loadAnalytics();
@@ -172,14 +174,14 @@ const AnalyticsScreen = ({ route }) => {
               title="Export CSV"
               onPress={handleExportCSV}
               variant="outline"
-              icon={<Ionicons name="document-text-outline" size={20} color={colors.primary} />}
+              icon={<Ionicons name="document-text-outline" size={20} color={accent.primary} />}
               style={styles.exportButton}
             />
             <AppButton
               title="Export XLSX"
               onPress={handleExportXLSX}
               variant="outline"
-              icon={<Ionicons name="grid-outline" size={20} color={colors.primary} />}
+              icon={<Ionicons name="grid-outline" size={20} color={accent.primary} />}
               style={styles.exportButton}
             />
           </View>

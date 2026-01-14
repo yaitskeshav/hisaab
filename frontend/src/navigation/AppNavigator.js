@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
 import useAuthStore from '../store/authStore';
 import useInviteStore from '../store/inviteStore';
+import { useAccentColor } from '../store/themeStore';
 import useNotifications from '../hooks/useNotifications';
 import { parseDeepLink } from '../utils/deepLink';
 
@@ -26,6 +27,7 @@ import EditProfileScreen from '../screens/profile/EditProfileScreen';
 import NotificationsScreen from '../screens/profile/NotificationsScreen';
 import PrivacyPolicyScreen from '../screens/profile/PrivacyPolicyScreen';
 import TermsOfServiceScreen from '../screens/profile/TermsOfServiceScreen';
+import AppearanceScreen from '../screens/profile/AppearanceScreen';
 import AddExpenseScreen from '../screens/expenses/AddExpenseScreen';
 import ActivityScreen from '../screens/activity/ActivityScreen';
 import JoinInviteModal from '../components/JoinInviteModal';
@@ -43,6 +45,9 @@ const MainTabs = () => {
   // Initialize notifications when user is authenticated
   useNotifications();
 
+  // Get accent color for tab bar (reactive)
+  const accent = useAccentColor();
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -51,7 +56,7 @@ const MainTabs = () => {
           backgroundColor: '#1B262C',
           borderTopColor: 'rgba(255, 255, 255, 0.18)',
         },
-        tabBarActiveTintColor: '#3282B8',
+        tabBarActiveTintColor: accent.primary,
         tabBarInactiveTintColor: '#7A8A95',
       }}
     >
@@ -186,6 +191,7 @@ const AppNavigator = ({ hasSeenOnboarding, initialRoute, initialParams }) => {
             <Stack.Screen name="Notifications" component={NotificationsScreen} />
             <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
             <Stack.Screen name="TermsOfService" component={TermsOfServiceScreen} />
+            <Stack.Screen name="Appearance" component={AppearanceScreen} />
             <Stack.Screen name="SettleUp" component={SettleUpScreen} />
             <Stack.Screen name="SettlePayment" component={SettlePaymentScreen} />
             <Stack.Screen name="PendingSettlements" component={PendingSettlementsScreen} />

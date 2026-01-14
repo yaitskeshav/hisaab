@@ -7,8 +7,10 @@ import { spacing } from '../../theme/spacing';
 import CardGlass from '../../components/common/CardGlass';
 import IconButton from '../../components/common/IconButton';
 import apiClient from '../../api/client';
+import { useAccentColor } from '../../store/themeStore';
 
 const NotificationsScreen = ({ navigation }) => {
+  const accent = useAccentColor();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [settings, setSettings] = useState({
@@ -69,7 +71,7 @@ const NotificationsScreen = ({ navigation }) => {
           <View style={{ width: 40 }} />
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
+          <ActivityIndicator size="large" color={accent.primary} />
         </View>
       </LinearGradient>
     );
@@ -88,7 +90,7 @@ const NotificationsScreen = ({ navigation }) => {
         />
         <Text style={styles.title}>Notifications</Text>
         <View style={{ width: 40 }}>
-          {saving && <ActivityIndicator size="small" color={colors.primary} />}
+          {saving && <ActivityIndicator size="small" color={accent.primary} />}
         </View>
       </View>
 
@@ -104,7 +106,7 @@ const NotificationsScreen = ({ navigation }) => {
             <Switch
               value={settings.notify_member_joined}
               onValueChange={() => toggleSetting('notify_member_joined')}
-              trackColor={{ false: colors.textMuted, true: colors.primary }}
+              trackColor={{ false: colors.textMuted, true: accent.primary }}
               thumbColor={colors.textPrimary}
             />
           </View>
@@ -121,7 +123,7 @@ const NotificationsScreen = ({ navigation }) => {
             <Switch
               value={settings.notify_expense_added}
               onValueChange={() => toggleSetting('notify_expense_added')}
-              trackColor={{ false: colors.textMuted, true: colors.primary }}
+              trackColor={{ false: colors.textMuted, true: accent.primary }}
               thumbColor={colors.textPrimary}
             />
           </View>
@@ -136,7 +138,7 @@ const NotificationsScreen = ({ navigation }) => {
             <Switch
               value={settings.notify_expense_edited}
               onValueChange={() => toggleSetting('notify_expense_edited')}
-              trackColor={{ false: colors.textMuted, true: colors.primary }}
+              trackColor={{ false: colors.textMuted, true: accent.primary }}
               thumbColor={colors.textPrimary}
             />
           </View>
@@ -153,7 +155,7 @@ const NotificationsScreen = ({ navigation }) => {
             <Switch
               value={settings.notify_settlement_created}
               onValueChange={() => toggleSetting('notify_settlement_created')}
-              trackColor={{ false: colors.textMuted, true: colors.primary }}
+              trackColor={{ false: colors.textMuted, true: accent.primary }}
               thumbColor={colors.textPrimary}
             />
           </View>
@@ -168,7 +170,7 @@ const NotificationsScreen = ({ navigation }) => {
             <Switch
               value={settings.notify_settlement_confirm}
               onValueChange={() => toggleSetting('notify_settlement_confirm')}
-              trackColor={{ false: colors.textMuted, true: colors.primary }}
+              trackColor={{ false: colors.textMuted, true: accent.primary }}
               thumbColor={colors.textPrimary}
             />
           </View>

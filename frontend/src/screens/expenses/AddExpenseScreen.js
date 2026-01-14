@@ -35,6 +35,7 @@ import Loader from '../../components/common/Loader';
 import useExpenseStore from '../../store/expenseStore';
 import useAuthStore from '../../store/authStore';
 import useGroupStore from '../../store/groupStore';
+import { useAccentColor } from '../../store/themeStore';
 import apiClient, { BASE_URL } from '../../api/client';
 import storage from '../../utils/storage';
 import { CATEGORIES } from '../../constants/categories';
@@ -82,6 +83,7 @@ const AddExpenseScreen = ({ route, navigation }) => {
   const { createExpense, updateExpense, deleteExpense, isLoading } = useExpenseStore();
   const { groups } = useGroupStore();
   const { showToast } = useToast();
+  const accent = useAccentColor();
 
   const [editingExpense, setEditingExpense] = useState(passedExpense?.title ? passedExpense : null);
   const [fetchingExpense, setFetchingExpense] = useState(!!(passedExpense?.id && !passedExpense?.title));
@@ -633,7 +635,7 @@ const AddExpenseScreen = ({ route, navigation }) => {
             <Text style={styles.headerSubtitle}>{currentGroup?.name || 'Group'}</Text>
           </View>
           <TouchableOpacity
-            style={styles.headerSaveButton}
+            style={[styles.headerSaveButton, { backgroundColor: accent.primary }]}
             onPress={handleSubmit}
             disabled={isLoading}
           >
@@ -648,7 +650,7 @@ const AddExpenseScreen = ({ route, navigation }) => {
           <CardGlass style={styles.amountCard}>
             <Text style={styles.sectionLabel}>Amount</Text>
             <View style={styles.amountInputContainer}>
-              <Text style={styles.currencySymbol}>₹</Text>
+              <Text style={[styles.currencySymbol, { color: accent.primary }]}>₹</Text>
               <AppInput
                 value={amount}
                 onChangeText={setAmount}
@@ -807,7 +809,7 @@ const AddExpenseScreen = ({ route, navigation }) => {
             <View style={styles.collapsibleLeft}>
               <Ionicons name="git-compare-outline" size={20} color={colors.textPrimary} />
               <Text style={styles.collapsibleTitle}>Split Configuration</Text>
-              <View style={styles.collapsibleBadge}>
+              <View style={[styles.collapsibleBadge, { backgroundColor: accent.primary }]}>
                 <Text style={styles.collapsibleBadgeText}>{SPLIT_TYPES.find(s => s.value === splitType)?.label}</Text>
               </View>
             </View>
@@ -886,8 +888,8 @@ const AddExpenseScreen = ({ route, navigation }) => {
                             style={styles.splitActionButton}
                             onPress={distributeEqually}
                           >
-                            <Ionicons name="git-compare-outline" size={14} color={colors.primary} />
-                            <Text style={styles.splitActionText}>Equal</Text>
+                            <Ionicons name="git-compare-outline" size={14} color={accent.primary} />
+                            <Text style={[styles.splitActionText, { color: accent.primary }]}>Equal</Text>
                           </TouchableOpacity>
                           {Object.keys(customSplits).length > 0 && (
                             <TouchableOpacity
@@ -914,7 +916,7 @@ const AddExpenseScreen = ({ route, navigation }) => {
                         return (
                           <View key={member.id} style={styles.splitInputRow}>
                             <View style={styles.splitMemberInfo}>
-                              <View style={styles.splitAvatar}>
+                              <View style={[styles.splitAvatar, { backgroundColor: accent.primary }]}>
                                 <Text style={styles.splitAvatarText}>
                                   {member.name?.charAt(0).toUpperCase()}
                                 </Text>
@@ -931,10 +933,10 @@ const AddExpenseScreen = ({ route, navigation }) => {
                             <View style={styles.splitInputWrapper}>
                               {showFillButton && (
                                 <TouchableOpacity
-                                  style={styles.fillRemainingButton}
+                                  style={[styles.fillRemainingButton, { backgroundColor: `${accent.primary}20`, borderColor: `${accent.primary}40` }]}
                                   onPress={() => fillRemainingForMember(member.id)}
                                 >
-                                  <Text style={styles.fillRemainingText}>
+                                  <Text style={[styles.fillRemainingText, { color: accent.primary }]}>
                                     +{customSplitMode === 'AMOUNT' ? '₹' : ''}{remaining.formatted}{customSplitMode === 'PERCENTAGE' ? '%' : ''}
                                   </Text>
                                 </TouchableOpacity>
@@ -994,7 +996,7 @@ const AddExpenseScreen = ({ route, navigation }) => {
                                     Total: {formatSplitValue(total, true)}% / 100%
                                   </Text>
                                   {amount && parseFloat(amount) > 0 && (
-                                    <Text style={styles.splitSummaryAmount}>
+                                    <Text style={[styles.splitSummaryAmount, { color: accent.primary }]}>
                                       = ₹{formatSplitValue(parseFloat(amount) * total / 100)}
                                     </Text>
                                   )}
@@ -1028,7 +1030,7 @@ const AddExpenseScreen = ({ route, navigation }) => {
                         <View style={styles.selectorContent}>
                           {selectedMember ? (
                             <>
-                              <View style={styles.miniAvatar}>
+                              <View style={[styles.miniAvatar, { backgroundColor: accent.primary }]}>
                                 <Text style={styles.miniAvatarText}>
                                   {selectedMember.name?.charAt(0).toUpperCase()}
                                 </Text>
@@ -1080,7 +1082,7 @@ const AddExpenseScreen = ({ route, navigation }) => {
                 title="Add Attachment"
                 onPress={handlePickFile}
                 variant="outline"
-                icon={<Ionicons name="attach-outline" size={20} color={colors.primary} />}
+                icon={<Ionicons name="attach-outline" size={20} color={accent.primary} />}
                 style={styles.attachmentButton}
               />
 
@@ -1177,9 +1179,9 @@ const AddExpenseScreen = ({ route, navigation }) => {
                       key={category.id}
                       style={{
                         width: '30%',
-                        backgroundColor: selectedCategory.id === category.id ? 'rgba(50, 130, 184, 0.3)' : 'rgba(255, 255, 255, 0.1)',
+                        backgroundColor: selectedCategory.id === category.id ? `${accent.primary}30` : 'rgba(255, 255, 255, 0.1)',
                         borderWidth: selectedCategory.id === category.id ? 2 : 1,
-                        borderColor: selectedCategory.id === category.id ? colors.primary : 'rgba(255, 255, 255, 0.2)',
+                        borderColor: selectedCategory.id === category.id ? accent.primary : 'rgba(255, 255, 255, 0.2)',
                         borderRadius: 12,
                         padding: 12,
                         alignItems: 'center',
@@ -1223,7 +1225,7 @@ const AddExpenseScreen = ({ route, navigation }) => {
                     key={app.id}
                     style={[
                       styles.listItem,
-                      selectedApp.id === app.id && styles.listItemSelected,
+                      selectedApp.id === app.id && { borderColor: accent.primary, borderWidth: 2, backgroundColor: `${accent.primary}10` },
                     ]}
                     onPress={() => {
                       setSelectedApp(app);
@@ -1244,7 +1246,7 @@ const AddExpenseScreen = ({ route, navigation }) => {
                       </View>
                       <Text style={styles.listItemText}>{app.name}</Text>
                     </View>
-                    {selectedApp.id === app.id && <Ionicons name="checkmark" size={20} color={colors.primary} />}
+                    {selectedApp.id === app.id && <Ionicons name="checkmark" size={20} color={accent.primary} />}
                   </TouchableOpacity>
                 ))}
               </ScrollView>
@@ -1272,7 +1274,7 @@ const AddExpenseScreen = ({ route, navigation }) => {
                   key={type.value}
                   style={[
                     styles.listItem,
-                    splitType === type.value && styles.listItemSelected,
+                    splitType === type.value && { borderColor: accent.primary, borderWidth: 2, backgroundColor: `${accent.primary}10` },
                   ]}
                   onPress={() => {
                     setSplitType(type.value);
@@ -1292,7 +1294,7 @@ const AddExpenseScreen = ({ route, navigation }) => {
                       <Text style={styles.listItemDesc}>{type.desc}</Text>
                     </View>
                   </View>
-                  {splitType === type.value && <Ionicons name="checkmark" size={20} color={colors.primary} />}
+                  {splitType === type.value && <Ionicons name="checkmark" size={20} color={accent.primary} />}
                 </TouchableOpacity>
               ))}
             </CardGlass>
@@ -1319,7 +1321,7 @@ const AddExpenseScreen = ({ route, navigation }) => {
                   key={mode.value}
                   style={[
                     styles.listItem,
-                    customSplitMode === mode.value && styles.listItemSelected,
+                    customSplitMode === mode.value && { borderColor: accent.primary, borderWidth: 2, backgroundColor: `${accent.primary}10` },
                   ]}
                   onPress={() => {
                     setCustomSplitMode(mode.value);
@@ -1339,7 +1341,7 @@ const AddExpenseScreen = ({ route, navigation }) => {
                       <Text style={styles.listItemDesc}>{mode.desc}</Text>
                     </View>
                   </View>
-                  {customSplitMode === mode.value && <Ionicons name="checkmark" size={20} color={colors.primary} />}
+                  {customSplitMode === mode.value && <Ionicons name="checkmark" size={20} color={accent.primary} />}
                 </TouchableOpacity>
               ))}
             </CardGlass>
@@ -1369,7 +1371,7 @@ const AddExpenseScreen = ({ route, navigation }) => {
                       key={member.id}
                       style={[
                         styles.memberItem,
-                        isSelected && styles.memberItemSelected,
+                        isSelected && { borderColor: accent.primary, borderWidth: 2, backgroundColor: `${accent.primary}10` },
                       ]}
                       onPress={() => {
                         setSelectedMember(member);
@@ -1377,14 +1379,14 @@ const AddExpenseScreen = ({ route, navigation }) => {
                       }}
                     >
                       <View style={styles.memberItemContent}>
-                        <View style={styles.memberAvatar}>
+                        <View style={[styles.memberAvatar, { backgroundColor: accent.primary }]}>
                           <Text style={styles.memberAvatarText}>
                             {member.name?.charAt(0).toUpperCase()}
                           </Text>
                         </View>
                         <Text style={styles.memberName}>{member.name}</Text>
                       </View>
-                      {isSelected && <Ionicons name="checkmark" size={20} color={colors.primary} />}
+                      {isSelected && <Ionicons name="checkmark" size={20} color={accent.primary} />}
                     </TouchableOpacity>
                   );
                 })}

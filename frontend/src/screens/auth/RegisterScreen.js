@@ -17,8 +17,10 @@ import AppInput from '../../components/common/AppInput';
 import CardGlass from '../../components/common/CardGlass';
 import Toast from '../../components/common/Toast';
 import useAuthStore from '../../store/authStore';
+import { useAccentColor } from '../../store/themeStore';
 
 const RegisterScreen = ({ navigation }) => {
+  const accent = useAccentColor();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -138,15 +140,15 @@ const RegisterScreen = ({ navigation }) => {
 
             <Text style={styles.termsText}>
               By signing up, you agree to our{' '}
-              <Text style={styles.link}>Terms</Text> and{' '}
-              <Text style={styles.link}>Privacy Policy</Text>
+              <Text style={[styles.link, { color: accent.primary }]}>Terms</Text> and{' '}
+              <Text style={[styles.link, { color: accent.primary }]}>Privacy Policy</Text>
             </Text>
           </CardGlass>
 
           <View style={styles.footer}>
             <Text style={styles.footerText}>Already have an account? </Text>
             <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-              <Text style={styles.loginLink}>Sign In</Text>
+              <Text style={[styles.loginLink, { color: accent.primary }]}>Sign In</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>

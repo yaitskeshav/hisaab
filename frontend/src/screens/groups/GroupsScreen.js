@@ -26,6 +26,7 @@ import Toast from '../../components/common/Toast';
 import Loader from '../../components/common/Loader';
 import ExportModal from '../../components/ExportModal';
 import useGroupStore from '../../store/groupStore';
+import { useAccentColor } from '../../store/themeStore';
 import { formatCurrency } from '../../utils/currency';
 import apiClient from '../../api/client';
 import InviteModal from '../../components/InviteModal';
@@ -50,6 +51,7 @@ const getGroupLastActivity = (group) => {
 
 const GroupsScreen = ({ navigation }) => {
   const { groups, isLoading, fetchGroups, createGroup, joinGroup, updateGroup, leaveGroup, deleteGroup, checkCanLeave } = useGroupStore();
+  const accent = useAccentColor();
   const [refreshing, setRefreshing] = useState(false);
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [joinModalVisible, setJoinModalVisible] = useState(false);
@@ -338,7 +340,7 @@ const GroupsScreen = ({ navigation }) => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor={colors.primary}
+            tintColor={accent.primary}
           />
         }
       >
@@ -380,7 +382,7 @@ const GroupsScreen = ({ navigation }) => {
             >
               <CardGlass style={styles.groupCard}>
                 <View style={styles.groupHeader}>
-                  <View style={styles.groupIcon}>
+                  <View style={[styles.groupIcon, { backgroundColor: accent.primary }]}>
                     <Text style={styles.groupIconText}>
                       {group.name?.charAt(0).toUpperCase() || 'G'}
                     </Text>
@@ -399,7 +401,7 @@ const GroupsScreen = ({ navigation }) => {
                         {group.expenses?.length || 0} expenses
                       </Text>
                     </View>
-                    <Text style={styles.groupTotal}>
+                    <Text style={[styles.groupTotal, { color: accent.primary }]}>
                       {formatCurrency(group.expenses?.reduce((sum, exp) => sum + (exp.amount || 0), 0) || 0)} total
                     </Text>
                   </View>
@@ -425,7 +427,7 @@ const GroupsScreen = ({ navigation }) => {
                     <Text style={styles.actionText}>Invite</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.actionButton, styles.viewButton]}
+                    style={[styles.actionButton, styles.viewButton, { backgroundColor: `${accent.primary}20`, borderColor: accent.primary }]}
                     onPress={(e) => {
                       e.stopPropagation();
                       navigation.navigate('GroupDetail', { groupId: group.id });
@@ -748,7 +750,7 @@ const GroupsScreen = ({ navigation }) => {
             >
               {leaveCheckLoading ? (
                 <View style={styles.leaveModalLoading}>
-                  <ActivityIndicator size="large" color={colors.primary} />
+                  <ActivityIndicator size="large" color={accent.primary} />
                   <Text style={styles.leaveModalLoadingText}>Checking...</Text>
                 </View>
               ) : (
@@ -835,7 +837,7 @@ const GroupsScreen = ({ navigation }) => {
                     ) : (
                       <>
                         <TouchableOpacity
-                          style={[styles.leaveModalButton, styles.leaveModalFullButton]}
+                          style={[styles.leaveModalButton, styles.leaveModalFullButton, { backgroundColor: accent.primary }]}
                           onPress={() => {
                             setShowLeaveModal(false);
                             if (leaveInfo.blockReason === 'pending_settlements') {
@@ -1278,7 +1280,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.error,
   },
   leaveModalFullButton: {
-    backgroundColor: colors.primary,
+    // backgroundColor set dynamically
   },
   leaveModalCloseButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',

@@ -20,6 +20,7 @@ import useGroupStore from '../../store/groupStore';
 import useAuthStore from '../../store/authStore';
 import useActivityStore from '../../store/activityStore';
 import useSettlementStore from '../../store/settlementStore';
+import { useAccentColor } from '../../store/themeStore';
 import { getCategoryIcon } from '../../constants/categories';
 import { BASE_URL } from '../../api/client';
 import { formatCurrency } from '../../utils/currency';
@@ -47,6 +48,7 @@ const getGroupLastActivity = (group) => {
 const DashboardScreen = () => {
   const navigation = useNavigation();
   const { user } = useAuthStore();
+  const accent = useAccentColor();
   const { groups, isLoading, fetchGroups } = useGroupStore();
   const { activities, fetchActivities } = useActivityStore();
   const { pendingSettlements, fetchPendingSettlements, userTotalBalances, fetchUserTotalBalances } = useSettlementStore();
@@ -120,15 +122,15 @@ const DashboardScreen = () => {
       case 'group_created':
         return <Ionicons name="add-circle" size={20} color={colors.success || '#22c55e'} />;
       case 'group_renamed':
-        return <Ionicons name="create-outline" size={20} color={colors.primary} />;
+        return <Ionicons name="create-outline" size={20} color={accent.primary} />;
       case 'member_joined':
         return <Ionicons name="person-add" size={20} color={colors.success || '#22c55e'} />;
       case 'member_left':
         return <Ionicons name="exit-outline" size={20} color={colors.warning || '#f59e0b'} />;
       case 'expense_added':
-        return <Ionicons name="add" size={20} color={colors.primary} />;
+        return <Ionicons name="add" size={20} color={accent.primary} />;
       case 'expense_edited':
-        return <Ionicons name="create-outline" size={20} color={colors.primary} />;
+        return <Ionicons name="create-outline" size={20} color={accent.primary} />;
       case 'expense_deleted':
         return <Ionicons name="trash-outline" size={20} color={colors.error || '#ef4444'} />;
       case 'expense_settled':
@@ -238,7 +240,7 @@ const DashboardScreen = () => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor={colors.primary}
+            tintColor={accent.primary}
           />
         }
       >
@@ -381,7 +383,7 @@ const DashboardScreen = () => {
           rightAction={
             sortedGroups.length > 0 ? (
               <TouchableOpacity onPress={() => navigation.navigate('Groups')}>
-                <Text style={styles.seeAll}>View All</Text>
+                <Text style={[styles.seeAll, { color: accent.primary }]}>View All</Text>
               </TouchableOpacity>
             ) : null
           }
@@ -403,7 +405,7 @@ const DashboardScreen = () => {
                 onPress={() => navigation.navigate('GroupDetail', { groupId: group.id })}
               >
                 <CardGlass style={styles.groupCard}>
-                  <View style={styles.groupIcon}>
+                  <View style={[styles.groupIcon, { backgroundColor: accent.primary }]}>
                     <Text style={styles.groupIconText}>
                       {group.name?.charAt(0).toUpperCase() || 'G'}
                     </Text>
@@ -419,7 +421,7 @@ const DashboardScreen = () => {
                         {group.expenses?.length || 0} expenses
                       </Text>
                     </View>
-                    <Text style={styles.groupTotal}>
+                    <Text style={[styles.groupTotal, { color: accent.primary }]}>
                       {formatCurrency(group.expenses?.reduce((sum, exp) => sum + (exp.amount || 0), 0) || 0)} total
                     </Text>
                   </View>
@@ -436,7 +438,7 @@ const DashboardScreen = () => {
           rightAction={
             activities.length > 0 ? (
               <TouchableOpacity onPress={() => navigation.navigate('Activity')}>
-                <Text style={styles.seeAll}>View All</Text>
+                <Text style={[styles.seeAll, { color: accent.primary }]}>View All</Text>
               </TouchableOpacity>
             ) : null
           }

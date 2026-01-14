@@ -19,9 +19,11 @@ import Loader from '../../components/common/Loader';
 import Toast from '../../components/common/Toast';
 import ConfirmModal from '../../components/common/ConfirmModal';
 import useSettlementStore from '../../store/settlementStore';
+import { useAccentColor } from '../../store/themeStore';
 
 const PendingSettlementsScreen = ({ navigation }) => {
   const { pendingSettlements, fetchPendingSettlements, confirmSettlement, rejectSettlement, fetchUserTotalBalances, isLoading } = useSettlementStore();
+  const accent = useAccentColor();
   const [refreshing, setRefreshing] = useState(false);
   const [toast, setToast] = useState({ visible: false, message: '', type: 'info' });
   const [showRejectModal, setShowRejectModal] = useState(false);
@@ -146,7 +148,7 @@ const PendingSettlementsScreen = ({ navigation }) => {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={accent.primary} />
         }
         showsVerticalScrollIndicator={false}
       >

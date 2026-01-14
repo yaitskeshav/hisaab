@@ -20,10 +20,12 @@ import AppInput from '../../components/common/AppInput';
 import IconButton from '../../components/common/IconButton';
 import Toast from '../../components/common/Toast';
 import useSettlementStore from '../../store/settlementStore';
+import { useAccentColor } from '../../store/themeStore';
 
 const SettlePaymentScreen = ({ route, navigation }) => {
   const { groupId, groupName, debt } = route.params;
   const { createSettlement, isLoading } = useSettlementStore();
+  const accent = useAccentColor();
 
   const [amount, setAmount] = useState(debt.amount.toString());
   const [note, setNote] = useState('');
@@ -220,18 +222,18 @@ const SettlePaymentScreen = ({ route, navigation }) => {
               {/* Quick amount buttons */}
               <View style={styles.quickAmounts}>
                 <TouchableOpacity
-                  style={[styles.quickAmountButton, isFullPayment && styles.quickAmountButtonActive]}
+                  style={[styles.quickAmountButton, isFullPayment && { backgroundColor: accent.primary + '30', borderColor: accent.primary }]}
                   onPress={() => setAmount(debt.amount.toString())}
                 >
-                  <Text style={[styles.quickAmountText, isFullPayment && styles.quickAmountTextActive]}>
+                  <Text style={[styles.quickAmountText, isFullPayment && { color: accent.primary }]}>
                     Full ({formatCurrency(debt.amount)})
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.quickAmountButton, amount === (debt.amount / 2).toFixed(2) && styles.quickAmountButtonActive]}
+                  style={[styles.quickAmountButton, amount === (debt.amount / 2).toFixed(2) && { backgroundColor: accent.primary + '30', borderColor: accent.primary }]}
                   onPress={() => setAmount((debt.amount / 2).toFixed(2))}
                 >
-                  <Text style={[styles.quickAmountText, amount === (debt.amount / 2).toFixed(2) && styles.quickAmountTextActive]}>
+                  <Text style={[styles.quickAmountText, amount === (debt.amount / 2).toFixed(2) && { color: accent.primary }]}>
                     Half ({formatCurrency(debt.amount / 2)})
                   </Text>
                 </TouchableOpacity>

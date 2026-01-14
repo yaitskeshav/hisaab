@@ -20,12 +20,14 @@ import IconButton from '../../components/common/IconButton';
 import CardGlass from '../../components/common/CardGlass';
 import ActionSheet from '../../components/common/ActionSheet';
 import useAuthStore from '../../store/authStore';
+import { useAccentColor } from '../../store/themeStore';
 import { useToast } from '../../context/ToastContext';
 import { BASE_URL } from '../../api/client';
 
 const EditProfileScreen = ({ navigation }) => {
   const { user, updateProfile, uploadAvatar, removeAvatar } = useAuthStore();
   const { showToast } = useToast();
+  const accent = useAccentColor();
   const [name, setName] = useState(user?.name || '');
   const [email] = useState(user?.email || '');
   const [showImagePicker, setShowImagePicker] = useState(false);
@@ -142,7 +144,7 @@ const EditProfileScreen = ({ navigation }) => {
         />
         <Text style={styles.title}>Edit Profile</Text>
         <TouchableOpacity
-          style={styles.saveButton}
+          style={[styles.saveButton, { backgroundColor: accent.primary }]}
           onPress={handleSave}
           disabled={saving}
         >
@@ -178,10 +180,10 @@ const EditProfileScreen = ({ navigation }) => {
                 </View>
               )}
             </View>
-            <View style={styles.editBadge}>
+            <View style={[styles.editBadge, { backgroundColor: accent.primary }]}>
               <Ionicons name="camera" size={14} color="#fff" />
             </View>
-            <Text style={styles.changePhotoText}>Tap to change photo</Text>
+            <Text style={[styles.changePhotoText, { color: accent.primary }]}>Tap to change photo</Text>
           </TouchableOpacity>
 
           <CardGlass style={styles.card}>

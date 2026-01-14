@@ -19,6 +19,7 @@ import AppInput from '../../components/common/AppInput';
 import CardGlass from '../../components/common/CardGlass';
 import Toast from '../../components/common/Toast';
 import useAuthStore from '../../store/authStore';
+import { useAccentColor } from '../../store/themeStore';
 
 const { width } = Dimensions.get('window');
 
@@ -29,6 +30,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
     const [emailError, setEmailError] = useState('');
 
     const { forgotPassword, isLoading } = useAuthStore();
+    const accent = useAccentColor();
 
     // Animations
     const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -140,23 +142,23 @@ const ForgotPasswordScreen = ({ navigation }) => {
                         <Text style={styles.successSubtitle}>
                             We've sent a password reset link to
                         </Text>
-                        <Text style={styles.successEmail}>{email}</Text>
+                        <Text style={[styles.successEmail, { color: accent.primary }]}>{email}</Text>
 
                         <View style={styles.instructionBox}>
                             <View style={styles.instructionRow}>
-                                <View style={styles.instructionNumber}>
+                                <View style={[styles.instructionNumber, { backgroundColor: accent.primary }]}>
                                     <Text style={styles.instructionNumberText}>1</Text>
                                 </View>
                                 <Text style={styles.instructionText}>Open the email on your phone or computer</Text>
                             </View>
                             <View style={styles.instructionRow}>
-                                <View style={styles.instructionNumber}>
+                                <View style={[styles.instructionNumber, { backgroundColor: accent.primary }]}>
                                     <Text style={styles.instructionNumberText}>2</Text>
                                 </View>
                                 <Text style={styles.instructionText}>Click the reset link</Text>
                             </View>
                             <View style={styles.instructionRow}>
-                                <View style={styles.instructionNumber}>
+                                <View style={[styles.instructionNumber, { backgroundColor: accent.primary }]}>
                                     <Text style={styles.instructionNumberText}>3</Text>
                                 </View>
                                 <Text style={styles.instructionText}>Set your new password</Text>
@@ -268,8 +270,8 @@ const ForgotPasswordScreen = ({ navigation }) => {
                             onPress={() => navigation.navigate('Login')}
                             style={styles.loginLink}
                         >
-                            <Ionicons name="arrow-back" size={16} color={colors.primary} />
-                            <Text style={styles.loginLinkText}>Back to Login</Text>
+                            <Ionicons name="arrow-back" size={16} color={accent.primary} />
+                            <Text style={[styles.loginLinkText, { color: accent.primary }]}>Back to Login</Text>
                         </TouchableOpacity>
                     </Animated.View>
                 </ScrollView>

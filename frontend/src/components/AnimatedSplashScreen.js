@@ -4,6 +4,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import * as Linking from 'expo-linking';
 import { parseDeepLink } from '../utils/deepLink';
 import useAuthStore from '../store/authStore';
+import useThemeStore from '../store/themeStore';
 import storage from '../utils/storage';
 
 // Keep the native splash screen visible until we are ready
@@ -66,6 +67,9 @@ const AnimatedSplashScreen = ({ onFinish }) => {
 
         // Restore auth session (will use tokens if verify succeeded)
         await restoreSession();
+
+        // Load theme preferences
+        await useThemeStore.getState().loadPreferences();
 
         // Store loaded data
         setAppData({
