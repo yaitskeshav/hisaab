@@ -28,13 +28,16 @@ const EditProfileScreen = ({ navigation }) => {
   const { user, updateProfile, uploadAvatar, removeAvatar } = useAuthStore();
   const { showToast } = useToast();
   const accent = useAccentColor();
-  const [name, setName] = useState(user?.name || '');
+  const originalName = user?.name || '';
+  const [name, setName] = useState(originalName);
   const [email] = useState(user?.email || '');
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [avatarUri, setAvatarUri] = useState(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [removingAvatar, setRemovingAvatar] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  const hasChanges = name.trim() !== originalName;
 
   const getAvatarSource = () => {
     if (avatarUri) {
@@ -144,9 +147,12 @@ const EditProfileScreen = ({ navigation }) => {
         />
         <Text style={styles.title}>Edit Profile</Text>
         <TouchableOpacity
-          style={[styles.saveButton, { backgroundColor: accent.primary }]}
+          style={[
+            styles.saveButton,
+            { backgroundColor: hasChanges ? accent.primary : colors.textMuted },
+          ]}
           onPress={handleSave}
-          disabled={saving}
+          disabled={saving || !hasChanges}
         >
           {saving ? (
             <Text style={styles.saveButtonText}>...</Text>
@@ -211,6 +217,7 @@ const EditProfileScreen = ({ navigation }) => {
               title="Save Changes"
               onPress={handleSave}
               loading={saving}
+              disabled={!hasChanges}
               style={styles.saveButtonBottom}
             />
           </CardGlass>

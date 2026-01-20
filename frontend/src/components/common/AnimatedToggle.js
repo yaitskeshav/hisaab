@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { TouchableOpacity, Animated, StyleSheet } from 'react-native';
 import { colors } from '../../theme/colors';
+import { hapticLight } from '../../utils/haptics';
 
 const AnimatedToggle = ({
   value,
@@ -28,8 +29,9 @@ const AnimatedToggle = ({
     ]).start();
   }, [value]);
 
-  const handlePress = () => {
+  const handlePress = async () => {
     if (!disabled) {
+      await hapticLight();
       onValueChange(!value);
     }
   };

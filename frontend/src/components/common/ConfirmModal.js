@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import CardGlass from './CardGlass';
+import { hapticWarning, hapticLight } from '../../utils/haptics';
 
 const ConfirmModal = ({
   visible,
@@ -47,6 +48,23 @@ const ConfirmModal = ({
 
   const config = getTypeConfig();
 
+  // Trigger warning haptic when danger/warning modal opens
+  useEffect(() => {
+    if (visible && (type === 'danger' || type === 'warning')) {
+      hapticWarning();
+    }
+  }, [visible, type]);
+
+  const handleCancel = async () => {
+    await hapticLight();
+    onCancel?.();
+  };
+
+  const handleConfirm = async () => {
+    await hapticLight();
+    onConfirm?.();
+  };
+
   return (
     <Modal
       visible={visible}
@@ -73,7 +91,7 @@ const ConfirmModal = ({
           <View style={styles.buttonContainer}>
             <TouchableOpacity
               style={styles.cancelButton}
-              onPress={onCancel}
+              onPress={handleCancel}
               activeOpacity={0.7}
             >
               <Text style={styles.cancelButtonText}>{cancelText}</Text>
@@ -81,7 +99,7 @@ const ConfirmModal = ({
 
             <TouchableOpacity
               style={[styles.confirmButton, { backgroundColor: config.confirmBg }]}
-              onPress={onConfirm}
+              onPress={handleConfirm}
               activeOpacity={0.7}
             >
               <Text style={styles.confirmButtonText}>{confirmText}</Text>

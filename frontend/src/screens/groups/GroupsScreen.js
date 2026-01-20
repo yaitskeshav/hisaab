@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   TextInput,
   Modal,
   RefreshControl,
@@ -13,6 +14,7 @@ import {
   Dimensions,
   KeyboardAvoidingView,
   Platform,
+  Keyboard,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -22,8 +24,8 @@ import CardGlass from '../../components/common/CardGlass';
 import AppButton from '../../components/common/AppButton';
 import AppInput from '../../components/common/AppInput';
 import IconButton from '../../components/common/IconButton';
-import Toast from '../../components/common/Toast';
 import Loader from '../../components/common/Loader';
+import { useToast } from '../../context/ToastContext';
 import ExportModal from '../../components/ExportModal';
 import useGroupStore from '../../store/groupStore';
 import { useAccentColor } from '../../store/themeStore';
@@ -51,6 +53,7 @@ const getGroupLastActivity = (group) => {
 
 const GroupsScreen = ({ navigation }) => {
   const { groups, isLoading, fetchGroups, createGroup, joinGroup, updateGroup, leaveGroup, deleteGroup, checkCanLeave } = useGroupStore();
+  const { showToast } = useToast();
   const accent = useAccentColor();
   const [refreshing, setRefreshing] = useState(false);
   const [createModalVisible, setCreateModalVisible] = useState(false);
@@ -63,11 +66,12 @@ const GroupsScreen = ({ navigation }) => {
   const [groupName, setGroupName] = useState('');
   const [groupDescription, setGroupDescription] = useState('');
   const [joinCode, setJoinCode] = useState('');
+  const [joinError, setJoinError] = useState('');
+  const [joinLoading, setJoinLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [confirmAction, setConfirmAction] = useState(null); // 'leave' or 'delete'
   const [exportModalVisible, setExportModalVisible] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
-  const [toast, setToast] = useState({ visible: false, message: '', type: 'info' });
 
   // Leave group modal state
   const [showLeaveModal, setShowLeaveModal] = useState(false);
@@ -99,34 +103,42 @@ const GroupsScreen = ({ navigation }) => {
 
   const handleCreateGroup = async () => {
     if (!groupName.trim()) {
-      setToast({ visible: true, message: 'Group name is required', type: 'error' });
+      showToast('Group name is required', 'error');
       return;
     }
 
     const result = await createGroup(groupName, groupDescription);
     if (result.success) {
-      setToast({ visible: true, message: 'Group created successfully', type: 'success' });
+      showToast('Group created successfully', 'success');
       setCreateModalVisible(false);
       setGroupName('');
       setGroupDescription('');
     } else {
-      setToast({ visible: true, message: result.error, type: 'error' });
+      showToast(result.error, 'error');
     }
   };
 
   const handleJoinGroup = async () => {
     if (!joinCode.trim()) {
-      setToast({ visible: true, message: 'Invite code is required', type: 'error' });
+      setJoinError('Invite code is required');
       return;
     }
 
-    const result = await joinGroup(joinCode);
-    if (result.success) {
-      setToast({ visible: true, message: 'Joined group successfully', type: 'success' });
+    setJoinError('');
+    setJoinLoading(true);
+
+    try {
+      const { data } = await apiClient.post(`/groups/join/${joinCode}`);
+      // Refresh groups list
+      await fetchGroups();
+      setJoinLoading(false);
       setJoinModalVisible(false);
       setJoinCode('');
-    } else {
-      setToast({ visible: true, message: result.error, type: 'error' });
+      showToast('Joined group successfully', 'success');
+    } catch (error) {
+      setJoinLoading(false);
+      const message = error.response?.data?.message || 'Invalid invite code';
+      setJoinError(message);
     }
   };
 
@@ -149,18 +161,18 @@ const GroupsScreen = ({ navigation }) => {
 
   const handleUpdateGroup = async () => {
     if (!groupName.trim()) {
-      setToast({ visible: true, message: 'Group name is required', type: 'error' });
+      showToast('Group name is required', 'error');
       return;
     }
 
     const result = await updateGroup(selectedGroup.id, groupName, groupDescription);
     if (result.success) {
-      setToast({ visible: true, message: 'Group updated successfully', type: 'success' });
+      showToast('Group updated successfully', 'success');
       setEditModalVisible(false);
       setGroupName('');
       setGroupDescription('');
     } else {
-      setToast({ visible: true, message: result.error, type: 'error' });
+      showToast(result.error, 'error');
     }
   };
 
@@ -212,17 +224,9 @@ const GroupsScreen = ({ navigation }) => {
 
     if (result.success) {
       setShowLeaveModal(false);
-      setToast({
-        visible: true,
-        message: result.deleted ? 'Group deleted' : 'Left group successfully',
-        type: 'success',
-      });
+      showToast(result.deleted ? 'Group deleted' : 'Left group successfully', 'success');
     } else {
-      setToast({
-        visible: true,
-        message: result.error || 'Failed to leave group',
-        type: 'error',
-      });
+      showToast(result.error || 'Failed to leave group', 'error');
     }
   };
 
@@ -266,10 +270,10 @@ const GroupsScreen = ({ navigation }) => {
     if (confirmAction === 'delete') {
       const result = await deleteGroup(selectedGroup.id);
       if (result.success) {
-        setToast({ visible: true, message: 'Group deleted successfully', type: 'success' });
+        showToast('Group deleted successfully', 'success');
         setConfirmModalVisible(false);
       } else {
-        setToast({ visible: true, message: result.error, type: 'error' });
+        showToast(result.error, 'error');
       }
     }
   };
@@ -450,46 +454,59 @@ const GroupsScreen = ({ navigation }) => {
         transparent={true}
         onRequestClose={() => setCreateModalVisible(false)}
       >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.modalOverlay}
-        >
-          <CardGlass style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Create New Group</Text>
-            <AppInput
-              label="Group Name"
-              value={groupName}
-              onChangeText={setGroupName}
-              placeholder="e.g., Roommates, Trip to Goa"
-            />
-            <AppInput
-              label="Description (Optional)"
-              value={groupDescription}
-              onChangeText={setGroupDescription}
-              placeholder="What is this group for?"
-              multiline
-              numberOfLines={3}
-            />
-            <View style={styles.modalActions}>
-              <AppButton
-                title="Cancel"
-                onPress={() => {
-                  setCreateModalVisible(false);
-                  setGroupName('');
-                  setGroupDescription('');
-                }}
-                variant="ghost"
-                style={styles.modalButton}
-              />
-              <AppButton
-                title="Create"
-                onPress={handleCreateGroup}
-                loading={isLoading}
-                style={styles.modalButton}
-              />
-            </View>
-          </CardGlass>
-        </KeyboardAvoidingView>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.modalOverlay}>
+            <TouchableWithoutFeedback>
+              <CardGlass style={styles.modalContent}>
+                <Text style={styles.modalTitle}>Create New Group</Text>
+                <AppInput
+                  label="Group Name"
+                  value={groupName}
+                  onChangeText={setGroupName}
+                  placeholder="e.g., Roommates, Trip to Goa"
+                  returnKeyType="done"
+                  onSubmitEditing={() => {
+                    if (groupName.trim()) {
+                      Keyboard.dismiss();
+                      handleCreateGroup();
+                    }
+                  }}
+                />
+                <AppInput
+                  label="Description (Optional)"
+                  value={groupDescription}
+                  onChangeText={setGroupDescription}
+                  placeholder="What is this group for?"
+                  multiline
+                  numberOfLines={3}
+                />
+                <View style={styles.modalActions}>
+                  <AppButton
+                    title="Cancel"
+                    onPress={() => {
+                      Keyboard.dismiss();
+                      setCreateModalVisible(false);
+                      setGroupName('');
+                      setGroupDescription('');
+                    }}
+                    variant="ghost"
+                    style={styles.modalButton}
+                  />
+                  <AppButton
+                    title="Create"
+                    onPress={() => {
+                      Keyboard.dismiss();
+                      handleCreateGroup();
+                    }}
+                    loading={isLoading}
+                    disabled={!groupName.trim()}
+                    style={styles.modalButton}
+                  />
+                </View>
+              </CardGlass>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
       </Modal>
 
       {/* Join Group Modal */}
@@ -497,40 +514,65 @@ const GroupsScreen = ({ navigation }) => {
         visible={joinModalVisible}
         animationType="slide"
         transparent={true}
-        onRequestClose={() => setJoinModalVisible(false)}
+        onRequestClose={() => {
+          if (!joinLoading) {
+            setJoinModalVisible(false);
+            setJoinCode('');
+            setJoinError('');
+          }
+        }}
       >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.modalOverlay}
-        >
-          <CardGlass style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Join Group</Text>
-            <AppInput
-              label="Invite Code"
-              value={joinCode}
-              onChangeText={setJoinCode}
-              placeholder="Enter invite code"
-              autoCapitalize="characters"
-            />
-            <View style={styles.modalActions}>
-              <AppButton
-                title="Cancel"
-                onPress={() => {
-                  setJoinModalVisible(false);
-                  setJoinCode('');
-                }}
-                variant="ghost"
-                style={styles.modalButton}
-              />
-              <AppButton
-                title="Join"
-                onPress={handleJoinGroup}
-                loading={isLoading}
-                style={styles.modalButton}
-              />
-            </View>
-          </CardGlass>
-        </KeyboardAvoidingView>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.modalOverlay}>
+            <TouchableWithoutFeedback>
+              <CardGlass style={styles.modalContent}>
+                <Text style={styles.modalTitle}>Join Group</Text>
+                <AppInput
+                  label="Invite Code"
+                  value={joinCode}
+                  onChangeText={(text) => {
+                    setJoinCode(text);
+                    if (joinError) setJoinError('');
+                  }}
+                  placeholder="Enter invite code"
+                  autoCapitalize="characters"
+                  returnKeyType="done"
+                  error={joinError}
+                  onSubmitEditing={() => {
+                    if (joinCode.trim()) {
+                      Keyboard.dismiss();
+                      handleJoinGroup();
+                    }
+                  }}
+                />
+                <View style={styles.modalActions}>
+                  <AppButton
+                    title="Cancel"
+                    onPress={() => {
+                      Keyboard.dismiss();
+                      setJoinModalVisible(false);
+                      setJoinCode('');
+                      setJoinError('');
+                    }}
+                    variant="ghost"
+                    disabled={joinLoading}
+                    style={styles.modalButton}
+                  />
+                  <AppButton
+                    title="Join"
+                    onPress={() => {
+                      Keyboard.dismiss();
+                      handleJoinGroup();
+                    }}
+                    loading={joinLoading}
+                    disabled={!joinCode.trim() || joinLoading}
+                    style={styles.modalButton}
+                  />
+                </View>
+              </CardGlass>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
       </Modal>
 
       {/* Share Invite Modal */}
@@ -698,17 +740,9 @@ const GroupsScreen = ({ navigation }) => {
               include_settlements: exportOptions.includeSettlements,
             });
             setExportModalVisible(false);
-            setToast({
-              visible: true,
-              message: response.data.message || 'Export will be sent to your email',
-              type: 'success',
-            });
+            showToast(response.data.message || 'Export will be sent to your email', 'success');
           } catch (error) {
-            setToast({
-              visible: true,
-              message: error.response?.data?.error || 'Failed to request export',
-              type: 'error',
-            });
+            showToast(error.response?.data?.error || 'Failed to request export', 'error');
           } finally {
             setExportLoading(false);
           }
@@ -873,7 +907,6 @@ const GroupsScreen = ({ navigation }) => {
         </View>
       </Modal>
 
-      <Toast {...toast} onHide={() => setToast({ ...toast, visible: false })} />
     </LinearGradient>
   );
 };

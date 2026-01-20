@@ -228,21 +228,27 @@ func (h *ExpenseHandler) UpdateExpense(c *fiber.Ctx) error {
 		oldCategoryName = expense.Category.Name
 	}
 
-	// Update expense fields
-	expense.Title = req.Title
-	expense.Amount = req.Amount
-	expense.Currency = req.Currency
-	expense.Date = req.Date
-	expense.CategoryID = req.CategoryID
-	expense.SplitType = req.SplitType
-	expense.SplitMode = req.SplitMode
-	expense.PaidByID = req.PaidByID
-	expense.ReferenceID = req.ReferenceID
-	expense.AppName = req.AppName
+	// Update expense fields using Updates on a fresh model to avoid GORM association interference
+	updates := map[string]interface{}{
+		"title":        req.Title,
+		"amount":       req.Amount,
+		"currency":     req.Currency,
+		"date":         req.Date,
+		"category_id":  req.CategoryID,
+		"split_type":   req.SplitType,
+		"split_mode":   req.SplitMode,
+		"paid_by_id":   req.PaidByID,
+		"reference_id": req.ReferenceID,
+		"app_name":     req.AppName,
+	}
 
-	if err := database.DB.Save(&expense).Error; err != nil {
+	// Use fresh model to prevent GORM from using preloaded associations
+	if err := database.DB.Model(&models.Expense{}).Where("id = ?", expenseID).Updates(updates).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to update expense"})
 	}
+
+	// Reload expense to get updated values including new category
+	database.DB.Preload("Category").First(&expense, expenseID)
 
 	// Delete old splits
 	database.DB.Where("expense_id = ?", expenseID).Delete(&models.ExpenseSplit{})
@@ -364,7 +370,6 @@ func (h *ExpenseHandler) DeleteExpense(c *fiber.Ctx) error {
 
 	// Delete expense
 	if err := database.DB.Delete(&models.Expense{}, expenseID).Error; err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to delete expense"})
 	}
 
 	// Log activity after successful deletion

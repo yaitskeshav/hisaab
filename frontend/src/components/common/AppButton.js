@@ -2,6 +2,7 @@ import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { colors as themeColors } from '../../theme/colors';
 import { useAccentColor } from '../../store/themeStore';
+import { hapticLight } from '../../utils/haptics';
 
 const AppButton = ({
   title,
@@ -71,6 +72,11 @@ const AppButton = ({
     return themeColors.textPrimary;
   };
 
+  const handlePress = async () => {
+    await hapticLight();
+    onPress?.();
+  };
+
   return (
     <TouchableOpacity
       style={[
@@ -80,7 +86,7 @@ const AppButton = ({
         disabled && styles.disabled,
         style,
       ]}
-      onPress={onPress}
+      onPress={handlePress}
       disabled={disabled || loading}
       activeOpacity={0.7}
     >

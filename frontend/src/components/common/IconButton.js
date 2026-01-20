@@ -3,6 +3,7 @@ import { TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
 import { useAccentColor } from '../../store/themeStore';
+import { hapticLight } from '../../utils/haptics';
 
 const IconButton = ({
   icon,
@@ -45,6 +46,11 @@ const IconButton = ({
     return icon;
   };
 
+  const handlePress = async () => {
+    await hapticLight();
+    onPress?.();
+  };
+
   return (
     <TouchableOpacity
       style={[
@@ -54,7 +60,7 @@ const IconButton = ({
         disabled && styles.disabled,
         style,
       ]}
-      onPress={onPress}
+      onPress={handlePress}
       disabled={disabled}
       activeOpacity={0.7}
     >

@@ -101,6 +101,7 @@ const AddExpenseScreen = ({ route, navigation }) => {
   const [customSplitMode, setCustomSplitMode] = useState('AMOUNT');
   const [selectedMember, setSelectedMember] = useState(null);
   const isInitialLoadRef = useRef(true); // Ref to track if this is initial load
+  const [initialValues, setInitialValues] = useState(null); // Store initial values for edit mode
   const [customSplits, setCustomSplits] = useState({});
   const [attachments, setAttachments] = useState([]); // New files to upload
   const [existingAttachments, setExistingAttachments] = useState([]); // Already saved attachments
@@ -245,7 +246,7 @@ const AddExpenseScreen = ({ route, navigation }) => {
       setSplitType(normalizedSplitType);
       setOrderReference(editingExpense.reference_id || '');
 
-      const category = CATEGORIES.find(c => c.id === editingExpense.category_id);
+      const category = CATEGORIES.find(c => c.id === Number(editingExpense.category_id));
       if (category) setSelectedCategory(category);
 
       const app = APPS.find(a => a.id === editingExpense.app_name);
@@ -295,6 +296,20 @@ const AddExpenseScreen = ({ route, navigation }) => {
         }
       }
 
+      // Store initial values for change detection
+      // For app, use 'none' as default when no app is set (matches APPS[0].id)
+      const initialAppId = editingExpense.app_name || 'none';
+      setInitialValues({
+        title: editingExpense.title || '',
+        amount: String(editingExpense.amount || ''),
+        date: editingExpense.date ? new Date(editingExpense.date).toISOString().split('T')[0] : '',
+        categoryId: Number(editingExpense.category_id),
+        appId: initialAppId,
+        orderReference: editingExpense.reference_id || '',
+        splitType: normalizedSplitType,
+        existingAttachmentsCount: editingExpense.attachments?.length || 0,
+      });
+
       // Allow mode changes to clear values after initial load completes
       setTimeout(() => {
         isInitialLoadRef.current = false;
@@ -302,8 +317,37 @@ const AddExpenseScreen = ({ route, navigation }) => {
     } else {
       // New expense - allow clearing immediately
       isInitialLoadRef.current = false;
+      setInitialValues(null);
     }
   }, [isEditMode, editingExpense, currentGroup]);
+
+  // Check if form has valid data for save
+  const canSave = (() => {
+    // Required fields check
+    const hasRequiredFields = title.trim() && amount && parseFloat(amount) > 0;
+    if (!hasRequiredFields) return false;
+
+    if (isEditMode && initialValues) {
+      // Edit mode: check if anything changed
+      const currentDateStr = selectedDate.toISOString().split('T')[0];
+
+      const hasChanges =
+        title.trim() !== initialValues.title ||
+        amount !== initialValues.amount ||
+        currentDateStr !== initialValues.date ||
+        selectedCategory.id !== initialValues.categoryId ||
+        selectedApp.id !== initialValues.appId ||
+        orderReference !== initialValues.orderReference ||
+        splitType !== initialValues.splitType ||
+        attachments.length > 0 || // New attachments added
+        existingAttachments.length !== initialValues.existingAttachmentsCount; // Attachments removed
+
+      return hasChanges;
+    }
+
+    // Create mode: just need required fields (already checked above)
+    return true;
+  })();
 
   const handlePickImage = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -635,9 +679,12 @@ const AddExpenseScreen = ({ route, navigation }) => {
             <Text style={styles.headerSubtitle}>{currentGroup?.name || 'Group'}</Text>
           </View>
           <TouchableOpacity
-            style={[styles.headerSaveButton, { backgroundColor: accent.primary }]}
+            style={[
+              styles.headerSaveButton,
+              { backgroundColor: canSave ? accent.primary : colors.textMuted },
+            ]}
             onPress={handleSubmit}
-            disabled={isLoading}
+            disabled={isLoading || !canSave}
           >
             {isLoading ? (
               <Text style={styles.headerSaveText}>...</Text>
@@ -1136,6 +1183,7 @@ const AddExpenseScreen = ({ route, navigation }) => {
             title={isEditMode ? 'Update Expense' : 'Create Expense'}
             onPress={handleSubmit}
             loading={isLoading}
+            disabled={!canSave}
             style={styles.submitButton}
           />
         </ScrollView>

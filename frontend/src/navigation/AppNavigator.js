@@ -9,6 +9,7 @@ import useInviteStore from '../store/inviteStore';
 import { useAccentColor } from '../store/themeStore';
 import useNotifications from '../hooks/useNotifications';
 import { parseDeepLink } from '../utils/deepLink';
+import { hapticSelection } from '../utils/haptics';
 
 // Auth screens
 import OnboardingScreen from '../screens/auth/OnboardingScreen';
@@ -48,6 +49,10 @@ const MainTabs = () => {
   // Get accent color for tab bar (reactive)
   const accent = useAccentColor();
 
+  const tabListeners = {
+    tabPress: () => hapticSelection(),
+  };
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -63,6 +68,7 @@ const MainTabs = () => {
       <Tab.Screen
         name="Dashboard"
         component={DashboardScreen}
+        listeners={tabListeners}
         options={{
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'home' : 'home-outline'} size={24} color={color} />
@@ -72,6 +78,7 @@ const MainTabs = () => {
       <Tab.Screen
         name="Groups"
         component={GroupsScreen}
+        listeners={tabListeners}
         options={{
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'people' : 'people-outline'} size={24} color={color} />
@@ -81,6 +88,7 @@ const MainTabs = () => {
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
+        listeners={tabListeners}
         options={{
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'person' : 'person-outline'} size={24} color={color} />
