@@ -94,6 +94,7 @@ jobs:
           eas build \
             -p android \
             --profile production \
+            --non-interactive \
             --wait
 
       - name: Download build artifact

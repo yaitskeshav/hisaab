@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "573451044630",
+    "project_id": "hisaab-expense-tracker",
+    "storage_bucket": "hisaab-expense-tracker.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:573451044630:android:190d388ce978430900f237",
+        "android_client_info": {
+          "package_name": "com.hisaab.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "573451044630-g1oam27a40o9niua3rgrto52b28rtf2i.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.hisaab.app",
+            "certificate_hash": "4be8a9584be186adbe287e4410614042808118cd"
+          }
+        },
+        {
+          "client_id": "573451044630-tm7nsl3asl5rb2i6q6bv2ncs4vdlup4k.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.hisaab.app",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "573451044630-8s9kl8ir5eu2scq2rbm45en40cc22dqp.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA0LyF8__7HNBbiyTz6I6vAs_CRpfljJ-c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "573451044630-8s9kl8ir5eu2scq2rbm45en40cc22dqp.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
