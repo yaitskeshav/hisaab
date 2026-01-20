@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Switch, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import CardGlass from '../../components/common/CardGlass';
 import IconButton from '../../components/common/IconButton';
+import AnimatedToggle from '../../components/common/AnimatedToggle';
 import apiClient from '../../api/client';
+import { useAccentColor } from '../../store/themeStore';
 
 const NotificationsScreen = ({ navigation }) => {
+  const accent = useAccentColor();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [settings, setSettings] = useState({
@@ -69,7 +72,7 @@ const NotificationsScreen = ({ navigation }) => {
           <View style={{ width: 40 }} />
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
+          <ActivityIndicator size="large" color={accent.primary} />
         </View>
       </LinearGradient>
     );
@@ -88,7 +91,7 @@ const NotificationsScreen = ({ navigation }) => {
         />
         <Text style={styles.title}>Notifications</Text>
         <View style={{ width: 40 }}>
-          {saving && <ActivityIndicator size="small" color={colors.primary} />}
+          {saving && <ActivityIndicator size="small" color={accent.primary} />}
         </View>
       </View>
 
@@ -101,11 +104,10 @@ const NotificationsScreen = ({ navigation }) => {
               <Text style={styles.settingLabel}>Member Joined</Text>
               <Text style={styles.settingDesc}>When someone joins your group</Text>
             </View>
-            <Switch
+            <AnimatedToggle
               value={settings.notify_member_joined}
               onValueChange={() => toggleSetting('notify_member_joined')}
-              trackColor={{ false: colors.textMuted, true: colors.primary }}
-              thumbColor={colors.textPrimary}
+              activeColor={accent.primary}
             />
           </View>
         </CardGlass>
@@ -118,11 +120,10 @@ const NotificationsScreen = ({ navigation }) => {
               <Text style={styles.settingLabel}>Expense Added</Text>
               <Text style={styles.settingDesc}>When an expense is added to your group</Text>
             </View>
-            <Switch
+            <AnimatedToggle
               value={settings.notify_expense_added}
               onValueChange={() => toggleSetting('notify_expense_added')}
-              trackColor={{ false: colors.textMuted, true: colors.primary }}
-              thumbColor={colors.textPrimary}
+              activeColor={accent.primary}
             />
           </View>
 
@@ -133,11 +134,10 @@ const NotificationsScreen = ({ navigation }) => {
               <Text style={styles.settingLabel}>Expense Edited</Text>
               <Text style={styles.settingDesc}>When an expense is modified</Text>
             </View>
-            <Switch
+            <AnimatedToggle
               value={settings.notify_expense_edited}
               onValueChange={() => toggleSetting('notify_expense_edited')}
-              trackColor={{ false: colors.textMuted, true: colors.primary }}
-              thumbColor={colors.textPrimary}
+              activeColor={accent.primary}
             />
           </View>
         </CardGlass>
@@ -150,11 +150,10 @@ const NotificationsScreen = ({ navigation }) => {
               <Text style={styles.settingLabel}>Payment Received</Text>
               <Text style={styles.settingDesc}>When someone records a payment to you</Text>
             </View>
-            <Switch
+            <AnimatedToggle
               value={settings.notify_settlement_created}
               onValueChange={() => toggleSetting('notify_settlement_created')}
-              trackColor={{ false: colors.textMuted, true: colors.primary }}
-              thumbColor={colors.textPrimary}
+              activeColor={accent.primary}
             />
           </View>
 
@@ -165,11 +164,10 @@ const NotificationsScreen = ({ navigation }) => {
               <Text style={styles.settingLabel}>Payment Confirmed</Text>
               <Text style={styles.settingDesc}>When your payment is confirmed</Text>
             </View>
-            <Switch
+            <AnimatedToggle
               value={settings.notify_settlement_confirm}
               onValueChange={() => toggleSetting('notify_settlement_confirm')}
-              trackColor={{ false: colors.textMuted, true: colors.primary }}
-              thumbColor={colors.textPrimary}
+              activeColor={accent.primary}
             />
           </View>
         </CardGlass>

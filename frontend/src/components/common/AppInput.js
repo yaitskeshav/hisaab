@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, TextInput, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { colors } from '../../theme/colors';
+import { useAccentColor } from '../../store/themeStore';
 
 const AppInput = ({
   label,
@@ -21,13 +22,14 @@ const AppInput = ({
   ...props
 }) => {
   const [isFocused, setIsFocused] = useState(false);
+  const accent = useAccentColor();
 
   return (
     <View style={[styles.container, style]}>
       {label ? <Text style={styles.label}>{label}</Text> : null}
       <View style={[
         styles.inputContainer,
-        isFocused && styles.inputContainerFocused,
+        isFocused && [styles.inputContainerFocused, { borderColor: accent.primary }],
         error && styles.inputContainerError,
         containerStyle,
       ]}>
@@ -78,7 +80,6 @@ const styles = StyleSheet.create({
     minHeight: 50,
   },
   inputContainerFocused: {
-    borderColor: colors.primary,
     backgroundColor: colors.glassLight,
   },
   inputContainerError: {

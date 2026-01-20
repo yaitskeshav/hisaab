@@ -2,6 +2,8 @@ import React from 'react';
 import { TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
+import { useAccentColor } from '../../store/themeStore';
+import { hapticLight } from '../../utils/haptics';
 
 const IconButton = ({
   icon,
@@ -13,16 +15,18 @@ const IconButton = ({
   style,
   disabled = false,
 }) => {
+  const accent = useAccentColor();
+
   const getVariantStyles = () => {
     switch (variant) {
       case 'primary':
-        return { backgroundColor: colors.primary };
+        return { backgroundColor: accent.primary };
       case 'secondary':
         return { backgroundColor: colors.secondary };
       case 'glass':
         return { backgroundColor: colors.glass, borderWidth: 1, borderColor: colors.glassBorder };
       case 'outline':
-        return { backgroundColor: 'transparent', borderWidth: 2, borderColor: colors.primary };
+        return { backgroundColor: 'transparent', borderWidth: 2, borderColor: accent.primary };
       default:
         return { backgroundColor: colors.glass };
     }
@@ -42,6 +46,11 @@ const IconButton = ({
     return icon;
   };
 
+  const handlePress = async () => {
+    await hapticLight();
+    onPress?.();
+  };
+
   return (
     <TouchableOpacity
       style={[
@@ -51,7 +60,7 @@ const IconButton = ({
         disabled && styles.disabled,
         style,
       ]}
-      onPress={onPress}
+      onPress={handlePress}
       disabled={disabled}
       activeOpacity={0.7}
     >

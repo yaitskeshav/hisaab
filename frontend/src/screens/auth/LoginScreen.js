@@ -23,6 +23,7 @@ import AppInput from '../../components/common/AppInput';
 import CardGlass from '../../components/common/CardGlass';
 import Toast from '../../components/common/Toast';
 import useAuthStore from '../../store/authStore';
+import { useAccentColor } from '../../store/themeStore';
 
 // Configure Google Sign-In
 const GOOGLE_WEB_CLIENT_ID = '573451044630-8s9kl8ir5eu2scq2rbm45en40cc22dqp.apps.googleusercontent.com';
@@ -35,6 +36,7 @@ const LoginScreen = ({ navigation }) => {
   const [googleLoading, setGoogleLoading] = useState(false);
 
   const { login, googleLogin, isLoading } = useAuthStore();
+  const accent = useAccentColor();
 
   useEffect(() => {
     GoogleSignin.configure({
@@ -145,7 +147,7 @@ const LoginScreen = ({ navigation }) => {
             />
 
             <TouchableOpacity style={styles.forgotPassword} onPress={() => navigation.navigate('ForgotPassword')}>
-              <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+              <Text style={[styles.forgotPasswordText, { color: accent.primary }]}>Forgot Password?</Text>
             </TouchableOpacity>
 
             <AppButton
@@ -173,7 +175,7 @@ const LoginScreen = ({ navigation }) => {
           <View style={styles.footer}>
             <Text style={styles.footerText}>Don't have an account? </Text>
             <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-              <Text style={styles.signupLink}>Sign Up</Text>
+              <Text style={[styles.signupLink, { color: accent.primary }]}>Sign Up</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>

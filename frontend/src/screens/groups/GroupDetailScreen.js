@@ -42,6 +42,7 @@ import { getCategoryIcon } from '../../constants/categories';
 import { formatCurrency } from '../../utils/currency';
 import { BASE_URL } from '../../api/client';
 import InviteModal from '../../components/InviteModal';
+import { useAccentColor } from '../../store/themeStore';
 
 const GroupDetailScreen = ({ route, navigation }) => {
   const { groupId } = route.params;
@@ -50,6 +51,7 @@ const GroupDetailScreen = ({ route, navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [toast, setToast] = useState({ visible: false, message: '', type: 'info' });
   const { user } = useAuthStore();
+  const accent = useAccentColor();
 
   // Collapsible sections
   const [showMembers, setShowMembers] = useState(false);
@@ -399,7 +401,7 @@ const GroupDetailScreen = ({ route, navigation }) => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor={colors.primary}
+            tintColor={accent.primary}
           />
         }
       >
@@ -545,7 +547,7 @@ const GroupDetailScreen = ({ route, navigation }) => {
               title="Settle Up"
               onPress={() => navigation.navigate('SettleUp', { groupId, groupName: currentGroup?.name })}
               variant="outline"
-              icon={<Ionicons name="wallet-outline" size={20} color={colors.primary} />}
+              icon={<Ionicons name="wallet-outline" size={20} color={accent.primary} />}
               style={styles.settleButton}
             />
           ) : null}
@@ -560,7 +562,7 @@ const GroupDetailScreen = ({ route, navigation }) => {
           <View style={styles.collapsibleLeft}>
             <Ionicons name="people-outline" size={20} color={colors.textPrimary} />
             <Text style={styles.collapsibleTitle}>Members</Text>
-            <View style={styles.collapsibleBadge}>
+            <View style={[styles.collapsibleBadge, { backgroundColor: accent.primary }]}>
               <Text style={styles.collapsibleBadgeText}>{currentGroup?.members?.length || 0}</Text>
             </View>
           </View>
@@ -578,6 +580,7 @@ const GroupDetailScreen = ({ route, navigation }) => {
                 <View style={styles.memberRow}>
                   <View style={[
                     styles.memberAvatar,
+                    { backgroundColor: accent.primary },
                     member.id === user?.id && styles.memberAvatarSelf
                   ]}>
                     {member.avatar_url ? (
@@ -632,7 +635,7 @@ const GroupDetailScreen = ({ route, navigation }) => {
                   data={memberPayments.map((payment, index) => ({
                     name: payment.name === user?.name ? 'You' : payment.name,
                     amount: payment.amount,
-                    color: index === 0 ? colors.primary :
+                    color: index === 0 ? accent.primary :
                       index === 1 ? colors.success || '#22c55e' :
                         index === 2 ? colors.error || '#ef4444' :
                           index === 3 ? '#f59e0b' :
@@ -685,7 +688,7 @@ const GroupDetailScreen = ({ route, navigation }) => {
                 key={filter.key}
                 style={[
                   styles.filterPill,
-                  filterStatus === filter.key && styles.filterPillActive
+                  filterStatus === filter.key && [styles.filterPillActive, { backgroundColor: accent.primary }]
                 ]}
                 onPress={() => setFilterStatus(filter.key)}
               >
@@ -702,7 +705,7 @@ const GroupDetailScreen = ({ route, navigation }) => {
           {/* Date Range Filter */}
           <View style={styles.dateFilterRow}>
             <TouchableOpacity
-              style={[styles.datePill, fromDate && styles.datePillActive]}
+              style={[styles.datePill, fromDate && [styles.datePillActive, { backgroundColor: accent.primary }]]}
               onPress={() => setShowDatePicker('from')}
             >
               <Ionicons
@@ -726,7 +729,7 @@ const GroupDetailScreen = ({ route, navigation }) => {
             <Ionicons name="arrow-forward" size={16} color={colors.textMuted} style={styles.dateArrowIcon} />
 
             <TouchableOpacity
-              style={[styles.datePill, toDate && styles.datePillActive]}
+              style={[styles.datePill, toDate && [styles.datePillActive, { backgroundColor: accent.primary }]]}
               onPress={() => setShowDatePicker('to')}
             >
               <Ionicons
@@ -752,7 +755,7 @@ const GroupDetailScreen = ({ route, navigation }) => {
           <View style={styles.filterInfoRow}>
             {hasActiveFilters && (
               <TouchableOpacity onPress={clearAllFilters}>
-                <Text style={styles.clearFiltersLink}>Clear filters</Text>
+                <Text style={[styles.clearFiltersLink, { color: accent.primary }]}>Clear filters</Text>
               </TouchableOpacity>
             )}
             <Text style={styles.expenseCount}>
@@ -775,7 +778,7 @@ const GroupDetailScreen = ({ route, navigation }) => {
               </Text>
               {hasActiveFilters && (
                 <TouchableOpacity
-                  style={styles.clearFiltersBtn}
+                  style={[styles.clearFiltersBtn, { backgroundColor: accent.primary }]}
                   onPress={clearAllFilters}
                 >
                   <Text style={styles.clearFiltersBtnText}>Clear Filters</Text>
@@ -954,6 +957,7 @@ const GroupDetailScreen = ({ route, navigation }) => {
                   style={[
                     styles.editModalButton,
                     styles.editModalSaveButton,
+                    { backgroundColor: accent.primary },
                     isUpdating && styles.editModalButtonDisabled,
                   ]}
                   onPress={handleUpdateGroup}
@@ -1006,7 +1010,7 @@ const GroupDetailScreen = ({ route, navigation }) => {
             >
               {leaveCheckLoading ? (
                 <View style={styles.leaveModalLoading}>
-                  <ActivityIndicator size="large" color={colors.primary} />
+                  <ActivityIndicator size="large" color={accent.primary} />
                   <Text style={styles.leaveModalLoadingText}>Checking...</Text>
                 </View>
               ) : (
@@ -1093,7 +1097,7 @@ const GroupDetailScreen = ({ route, navigation }) => {
                     ) : (
                       <>
                         <TouchableOpacity
-                          style={[styles.leaveModalButton, styles.leaveModalFullButton]}
+                          style={[styles.leaveModalButton, styles.leaveModalFullButton, { backgroundColor: accent.primary }]}
                           onPress={() => {
                             setShowLeaveModal(false);
                             if (leaveInfo.blockReason === 'pending_settlements') {
@@ -1723,7 +1727,7 @@ const styles = StyleSheet.create({
     marginRight: spacing.sm,
   },
   editModalSaveButton: {
-    backgroundColor: colors.primary,
+    // backgroundColor set dynamically
   },
   editModalButtonDisabled: {
     opacity: 0.6,

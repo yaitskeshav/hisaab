@@ -20,6 +20,7 @@ import CardGlass from '../../components/common/CardGlass';
 import Loader from '../../components/common/Loader';
 import useActivityStore from '../../store/activityStore';
 import useGroupStore from '../../store/groupStore';
+import { useAccentColor } from '../../store/themeStore';
 import { getCategoryIcon } from '../../constants/categories';
 import { formatCurrency } from '../../utils/currency';
 
@@ -37,6 +38,7 @@ const ActivityScreen = () => {
   const navigation = useNavigation();
   const { groups, fetchGroups } = useGroupStore();
   const { activities, isLoading, hasMore, fetchActivities, loadMore, resetActivities } = useActivityStore();
+  const accent = useAccentColor();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState('all');
@@ -137,15 +139,15 @@ const ActivityScreen = () => {
       case 'group_created':
         return <Ionicons name="add-circle" size={20} color={colors.success || '#22c55e'} />;
       case 'group_renamed':
-        return <Ionicons name="create-outline" size={20} color={colors.primary} />;
+        return <Ionicons name="create-outline" size={20} color={accent.primary} />;
       case 'member_joined':
         return <Ionicons name="person-add" size={20} color={colors.success || '#22c55e'} />;
       case 'member_left':
         return <Ionicons name="exit-outline" size={20} color={colors.warning || '#f59e0b'} />;
       case 'expense_added':
-        return <Ionicons name="add" size={20} color={colors.primary} />;
+        return <Ionicons name="add" size={20} color={accent.primary} />;
       case 'expense_edited':
-        return <Ionicons name="create-outline" size={20} color={colors.primary} />;
+        return <Ionicons name="create-outline" size={20} color={accent.primary} />;
       case 'expense_deleted':
         return <Ionicons name="trash-outline" size={20} color={colors.error || '#ef4444'} />;
       case 'expense_settled':
@@ -330,7 +332,7 @@ const ActivityScreen = () => {
             : 'Activities will appear here as you use the app'}
         </Text>
         {hasActiveFilters && (
-          <TouchableOpacity style={styles.clearFiltersBtn} onPress={clearFilters}>
+          <TouchableOpacity style={[styles.clearFiltersBtn, { backgroundColor: accent.primary }]} onPress={clearFilters}>
             <Text style={styles.clearFiltersBtnText}>Clear Filters</Text>
           </TouchableOpacity>
         )}
@@ -397,7 +399,7 @@ const ActivityScreen = () => {
           {ACTIVITY_TYPES.map(type => (
             <TouchableOpacity
               key={type.key}
-              style={[styles.typePill, selectedType === type.key && styles.typePillActive]}
+              style={[styles.typePill, selectedType === type.key && { backgroundColor: accent.primary }]}
               onPress={() => setSelectedType(type.key)}
             >
               <Text style={[styles.typePillText, selectedType === type.key && styles.typePillTextActive]}>
@@ -407,7 +409,7 @@ const ActivityScreen = () => {
           ))}
 
           <TouchableOpacity
-            style={[styles.typePill, styles.filterPill, selectedGroupId && styles.typePillActive]}
+            style={[styles.typePill, styles.filterPill, selectedGroupId && { backgroundColor: accent.primary }]}
             onPress={() => setShowFilters(true)}
           >
             <Ionicons
@@ -424,7 +426,7 @@ const ActivityScreen = () => {
         {/* Date Range Filter */}
         <View style={styles.dateFilterRow}>
           <TouchableOpacity
-            style={[styles.datePill, fromDate && styles.datePillActive]}
+            style={[styles.datePill, fromDate && { backgroundColor: accent.primary }]}
             onPress={() => setShowDatePicker('from')}
           >
             <Ionicons name="calendar-outline" size={14} color={fromDate ? colors.textPrimary : colors.textMuted} />
@@ -441,7 +443,7 @@ const ActivityScreen = () => {
           <Ionicons name="arrow-forward" size={16} color={colors.textMuted} style={styles.dateArrowIcon} />
 
           <TouchableOpacity
-            style={[styles.datePill, toDate && styles.datePillActive]}
+            style={[styles.datePill, toDate && { backgroundColor: accent.primary }]}
             onPress={() => setShowDatePicker('to')}
           >
             <Ionicons name="calendar-outline" size={14} color={toDate ? colors.textPrimary : colors.textMuted} />
@@ -458,7 +460,7 @@ const ActivityScreen = () => {
 
         {hasActiveFilters && (
           <TouchableOpacity style={styles.clearFilters} onPress={clearFilters}>
-            <Text style={styles.clearFiltersText}>Clear filters</Text>
+            <Text style={[styles.clearFiltersText, { color: accent.primary }]}>Clear filters</Text>
           </TouchableOpacity>
         )}
 
@@ -482,7 +484,7 @@ const ActivityScreen = () => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor={colors.primary}
+            tintColor={accent.primary}
           />
         }
       />
@@ -505,7 +507,7 @@ const ActivityScreen = () => {
 
             <ScrollView style={styles.groupList}>
               <TouchableOpacity
-                style={[styles.groupOption, !selectedGroupId && styles.groupOptionActive]}
+                style={[styles.groupOption, !selectedGroupId && { backgroundColor: accent.primary + '30' }]}
                 onPress={() => handleGroupFilterChange(null)}
               >
                 <View style={styles.groupOptionAllIcon}>
@@ -514,16 +516,16 @@ const ActivityScreen = () => {
                 <Text style={[styles.groupOptionText, !selectedGroupId && styles.groupOptionTextActive]}>
                   All Groups
                 </Text>
-                {!selectedGroupId && <Ionicons name="checkmark" size={20} color={colors.primary} />}
+                {!selectedGroupId && <Ionicons name="checkmark" size={20} color={accent.primary} />}
               </TouchableOpacity>
 
               {groups.map(group => (
                 <TouchableOpacity
                   key={group.id}
-                  style={[styles.groupOption, selectedGroupId === group.id && styles.groupOptionActive]}
+                  style={[styles.groupOption, selectedGroupId === group.id && { backgroundColor: accent.primary + '30' }]}
                   onPress={() => handleGroupFilterChange(group.id)}
                 >
-                  <View style={styles.groupOptionIconContainer}>
+                  <View style={[styles.groupOptionIconContainer, { backgroundColor: accent.primary }]}>
                     <Text style={styles.groupOptionIconText}>
                       {group.name?.charAt(0).toUpperCase() || 'G'}
                     </Text>
@@ -531,7 +533,7 @@ const ActivityScreen = () => {
                   <Text style={[styles.groupOptionText, selectedGroupId === group.id && styles.groupOptionTextActive]}>
                     {group.name}
                   </Text>
-                  {selectedGroupId === group.id && <Ionicons name="checkmark" size={20} color={colors.primary} />}
+                  {selectedGroupId === group.id && <Ionicons name="checkmark" size={20} color={accent.primary} />}
                 </TouchableOpacity>
               ))}
             </ScrollView>

@@ -86,7 +86,7 @@ const ProfileScreen = ({ navigation }) => {
           <View style={styles.divider} />
           <TouchableOpacity
             style={styles.menuItem}
-            onPress={() => alert('Appearance - Coming Soon')}
+            onPress={() => navigation.navigate('Appearance')}
           >
             <View style={styles.menuIconContainer}>
               <Ionicons name="color-palette-outline" size={20} color={colors.textPrimary} />

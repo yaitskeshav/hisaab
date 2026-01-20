@@ -18,8 +18,10 @@ import AppInput from '../../components/common/AppInput';
 import CardGlass from '../../components/common/CardGlass';
 import Toast from '../../components/common/Toast';
 import useAuthStore from '../../store/authStore';
+import { useAccentColor } from '../../store/themeStore';
 
 const ResetPasswordScreen = ({ navigation, route }) => {
+    const accent = useAccentColor();
     // Extract token from deep link params
     const tokenFromLink = route?.params?.token || '';
 
@@ -68,7 +70,7 @@ const ResetPasswordScreen = ({ navigation, route }) => {
         if (strength <= 1) return { level: 1, label: 'Weak', color: colors.error };
         if (strength <= 2) return { level: 2, label: 'Fair', color: colors.warning };
         if (strength <= 3) return { level: 3, label: 'Good', color: '#F59E0B' };
-        if (strength <= 4) return { level: 4, label: 'Strong', color: colors.accent };
+        if (strength <= 4) return { level: 4, label: 'Strong', color: accent.primary };
         return { level: 5, label: 'Very Strong', color: colors.success };
     };
 

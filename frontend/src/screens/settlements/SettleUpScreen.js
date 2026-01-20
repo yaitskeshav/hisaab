@@ -19,11 +19,13 @@ import Loader from '../../components/common/Loader';
 import Toast from '../../components/common/Toast';
 import useSettlementStore from '../../store/settlementStore';
 import useAuthStore from '../../store/authStore';
+import { useAccentColor } from '../../store/themeStore';
 
 const SettleUpScreen = ({ route, navigation }) => {
   const { groupId, groupName } = route.params;
   const { balances, fetchGroupBalances, settlements, fetchGroupSettlements, cancelSettlement, isLoading } = useSettlementStore();
   const { user } = useAuthStore();
+  const accent = useAccentColor();
   const [refreshing, setRefreshing] = useState(false);
   const [toast, setToast] = useState({ visible: false, message: '', type: 'info' });
   const [activeTab, setActiveTab] = useState('balances'); // 'balances' or 'history'
@@ -152,7 +154,7 @@ const SettleUpScreen = ({ route, navigation }) => {
         <IconButton
           icon={activeTab === 'balances' ? 'time-outline' : 'wallet-outline'}
           onPress={() => setActiveTab(activeTab === 'balances' ? 'history' : 'balances')}
-          style={[styles.historyButton, activeTab === 'history' && styles.activeTabButton]}
+          style={[styles.historyButton, activeTab === 'history' && { backgroundColor: accent.primary + '30' }]}
         />
       </View>
 
@@ -160,7 +162,7 @@ const SettleUpScreen = ({ route, navigation }) => {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={accent.primary} />
         }
         showsVerticalScrollIndicator={false}
       >
@@ -226,6 +228,7 @@ const SettleUpScreen = ({ route, navigation }) => {
                         getInitials={getInitials}
                         getAvatarColor={getAvatarColor}
                         isOptimized={debt.is_optimized}
+                        accent={accent}
                       />
                     );
                   })}
@@ -249,6 +252,7 @@ const SettleUpScreen = ({ route, navigation }) => {
                         getInitials={getInitials}
                         getAvatarColor={getAvatarColor}
                         isOptimized={debt.is_optimized}
+                        accent={accent}
                       />
                     );
                   })}
@@ -275,6 +279,7 @@ const SettleUpScreen = ({ route, navigation }) => {
                       getAvatarColor={getAvatarColor}
                       isOptimized={debt.is_optimized}
                       compact
+                      accent={accent}
                     />
                   ))}
                 </View>
@@ -346,7 +351,8 @@ const DebtCard = ({
   getInitials,
   getAvatarColor,
   isOptimized,
-  compact
+  compact,
+  accent
 }) => {
   const person = type === 'owe' ? debt.to_user : debt.from_user;
   const showSettleButton = type === 'owe';
@@ -406,7 +412,7 @@ const DebtCard = ({
             {formatCurrency(debt.amount)}
           </Text>
           {showSettleButton && !hasPending ? (
-            <TouchableOpacity style={styles.settleButton} onPress={onSettle}>
+            <TouchableOpacity style={[styles.settleButton, { backgroundColor: accent?.primary || colors.primary }]} onPress={onSettle}>
               <Text style={styles.settleButtonText}>Settle</Text>
             </TouchableOpacity>
           ) : null}

@@ -12,6 +12,7 @@ import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import AppButton from '../../components/common/AppButton';
 import storage from '../../utils/storage';
+import { useAccentColor } from '../../store/themeStore';
 
 const { width } = Dimensions.get('window');
 
@@ -39,6 +40,7 @@ const slides = [
 const OnboardingScreen = ({ navigation }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef(null);
+  const accent = useAccentColor();
 
   const completeOnboarding = async () => {
     await storage.setItem('onboarding_complete', 'true');
@@ -101,7 +103,7 @@ const OnboardingScreen = ({ navigation }) => {
               key={index}
               style={[
                 styles.dot,
-                index === currentIndex && styles.dotActive,
+                index === currentIndex && [styles.dotActive, { backgroundColor: accent.primary }],
               ]}
             />
           ))}

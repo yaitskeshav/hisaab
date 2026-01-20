@@ -20,19 +20,24 @@ import IconButton from '../../components/common/IconButton';
 import CardGlass from '../../components/common/CardGlass';
 import ActionSheet from '../../components/common/ActionSheet';
 import useAuthStore from '../../store/authStore';
+import { useAccentColor } from '../../store/themeStore';
 import { useToast } from '../../context/ToastContext';
 import { BASE_URL } from '../../api/client';
 
 const EditProfileScreen = ({ navigation }) => {
   const { user, updateProfile, uploadAvatar, removeAvatar } = useAuthStore();
   const { showToast } = useToast();
-  const [name, setName] = useState(user?.name || '');
+  const accent = useAccentColor();
+  const originalName = user?.name || '';
+  const [name, setName] = useState(originalName);
   const [email] = useState(user?.email || '');
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [avatarUri, setAvatarUri] = useState(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [removingAvatar, setRemovingAvatar] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  const hasChanges = name.trim() !== originalName;
 
   const getAvatarSource = () => {
     if (avatarUri) {
@@ -142,9 +147,12 @@ const EditProfileScreen = ({ navigation }) => {
         />
         <Text style={styles.title}>Edit Profile</Text>
         <TouchableOpacity
-          style={styles.saveButton}
+          style={[
+            styles.saveButton,
+            { backgroundColor: hasChanges ? accent.primary : colors.textMuted },
+          ]}
           onPress={handleSave}
-          disabled={saving}
+          disabled={saving || !hasChanges}
         >
           {saving ? (
             <Text style={styles.saveButtonText}>...</Text>
@@ -178,10 +186,10 @@ const EditProfileScreen = ({ navigation }) => {
                 </View>
               )}
             </View>
-            <View style={styles.editBadge}>
+            <View style={[styles.editBadge, { backgroundColor: accent.primary }]}>
               <Ionicons name="camera" size={14} color="#fff" />
             </View>
-            <Text style={styles.changePhotoText}>Tap to change photo</Text>
+            <Text style={[styles.changePhotoText, { color: accent.primary }]}>Tap to change photo</Text>
           </TouchableOpacity>
 
           <CardGlass style={styles.card}>
@@ -209,6 +217,7 @@ const EditProfileScreen = ({ navigation }) => {
               title="Save Changes"
               onPress={handleSave}
               loading={saving}
+              disabled={!hasChanges}
               style={styles.saveButtonBottom}
             />
           </CardGlass>

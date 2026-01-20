@@ -6,6 +6,7 @@ import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import CardGlass from '../../components/common/CardGlass';
 import IconButton from '../../components/common/IconButton';
+import { useAccentColor } from '../../store/themeStore';
 
 const SUPPORT_EMAIL = process.env.EXPO_PUBLIC_SUPPORT_EMAIL || 'support@digitalhisaab.tech';
 
@@ -32,6 +33,8 @@ const BulletList = ({ items }) => (
 );
 
 const PrivacyPolicyScreen = ({ navigation }) => {
+  const accent = useAccentColor();
+
   return (
     <LinearGradient
       colors={[colors.background, colors.backgroundDark]}
@@ -142,7 +145,7 @@ const PrivacyPolicyScreen = ({ navigation }) => {
               If you have any questions about this Privacy Policy or our data practices, please contact us at:
             </Paragraph>
             <TouchableOpacity onPress={() => Linking.openURL(`mailto:${SUPPORT_EMAIL}`)}>
-              <Text style={styles.emailLink}>{SUPPORT_EMAIL}</Text>
+              <Text style={[styles.emailLink, { color: accent.primary }]}>{SUPPORT_EMAIL}</Text>
             </TouchableOpacity>
           </Section>
         </CardGlass>
