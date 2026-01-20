@@ -33,7 +33,6 @@
       }
     },
     "android": {
-      "versionCode": 1,
       "package": "com.hisaab.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/hisaab-logo-1024.png",
