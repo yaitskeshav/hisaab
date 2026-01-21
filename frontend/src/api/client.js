@@ -22,6 +22,10 @@ const getBaseUrl = () => {
 const BASE_URL = getBaseUrl();
 const API_URL = `${BASE_URL}/api/v1`;
 
+// Debug: log API URL on startup
+console.log('[API Client] BASE_URL:', BASE_URL);
+console.log('[API Client] EXPO_PUBLIC_API_URL:', process.env.EXPO_PUBLIC_API_URL);
+
 export { BASE_URL, API_URL };
 
 const apiClient = axios.create({
