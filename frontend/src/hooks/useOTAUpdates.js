@@ -2,12 +2,25 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { AppState } from 'react-native';
 import * as Updates from 'expo-updates';
 
+// Check if updates are available in this build
+const isUpdatesAvailable = () => {
+  try {
+    return (
+      !__DEV__ &&
+      typeof Updates.checkForUpdateAsync === 'function' &&
+      typeof Updates.addListener === 'function'
+    );
+  } catch {
+    return false;
+  }
+};
+
 /**
  * Hook to handle OTA updates via EAS Update
  * - Listens for background update downloads
  * - Checks for updates when app comes to foreground
  * - Shows notification only once per downloaded update
- * - Only runs in production builds
+ * - Only runs in production builds with updates enabled
  */
 const useOTAUpdates = () => {
   const [updateAvailable, setUpdateAvailable] = useState(false);
@@ -17,25 +30,21 @@ const useOTAUpdates = () => {
 
   // Check for updates manually
   const checkForUpdates = useCallback(async () => {
-    // Skip in dev mode
-    if (__DEV__) return;
+    if (!isUpdatesAvailable()) return;
 
     try {
       setIsChecking(true);
       const update = await Updates.checkForUpdateAsync();
 
       if (update.isAvailable) {
-        // Download the update
         const result = await Updates.fetchUpdateAsync();
 
-        // Only show notification if this is a new update
         if (result.isNew && result.manifest?.id !== lastUpdateId.current) {
           lastUpdateId.current = result.manifest?.id;
           setUpdateAvailable(true);
         }
       }
     } catch (error) {
-      // Silently fail - don't disrupt user experience
       console.log('OTA update check failed:', error.message);
     } finally {
       setIsChecking(false);
@@ -44,6 +53,7 @@ const useOTAUpdates = () => {
 
   // Reload the app to apply update
   const reloadApp = useCallback(async () => {
+    if (typeof Updates.reloadAsync !== 'function') return;
     try {
       await Updates.reloadAsync();
     } catch (error) {
@@ -58,37 +68,45 @@ const useOTAUpdates = () => {
 
   // Listen for updates downloaded in background
   useEffect(() => {
-    // Skip in dev mode
-    if (__DEV__) return;
+    if (!isUpdatesAvailable()) return;
 
-    const subscription = Updates.addListener((event) => {
-      if (event.type === Updates.UpdateEventType.UPDATE_AVAILABLE) {
-        // Only show if not already shown for this update
-        const updateId = event.manifest?.id;
-        if (updateId !== lastUpdateId.current) {
-          lastUpdateId.current = updateId;
-          setUpdateAvailable(true);
+    let subscription;
+    try {
+      subscription = Updates.addListener((event) => {
+        if (
+          Updates.UpdateEventType &&
+          event.type === Updates.UpdateEventType.UPDATE_AVAILABLE
+        ) {
+          const updateId = event.manifest?.id;
+          if (updateId !== lastUpdateId.current) {
+            lastUpdateId.current = updateId;
+            setUpdateAvailable(true);
+          }
         }
-      }
-    });
+      });
+    } catch (error) {
+      console.log('Failed to add updates listener:', error.message);
+      return;
+    }
 
-    return () => subscription.remove();
+    return () => {
+      if (subscription && typeof subscription.remove === 'function') {
+        subscription.remove();
+      }
+    };
   }, []);
 
   // Check for updates when app comes to foreground
   useEffect(() => {
-    // Skip in dev mode
-    if (__DEV__) return;
+    if (!isUpdatesAvailable()) return;
 
     const subscription = AppState.addEventListener('change', (nextAppState) => {
-      // App came to foreground
       if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
         checkForUpdates();
       }
       appState.current = nextAppState;
     });
 
-    // Also check on initial mount
     checkForUpdates();
 
     return () => subscription.remove();
