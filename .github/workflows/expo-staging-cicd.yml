@@ -49,7 +49,8 @@ jobs:
         run: |
           echo "EXPO_PUBLIC_API_URL=$EXPO_PUBLIC_API_URL"
           echo "EXPO_PUBLIC_SUPPORT_EMAIL=$EXPO_PUBLIC_SUPPORT_EMAIL"
-            eas update \
+
+          eas update \
             --channel production \
             --message "staging: ${{ github.sha }}"
 
@@ -84,8 +85,7 @@ jobs:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
-
-      - name: Build APK (production profile)
+      - name: Build APK (production profile) and capture artifact URL
         env:
           CI: "1"
           EXPO_PUBLIC_API_URL: ${{ secrets.EXPO_PUBLIC_API_URL }}
@@ -95,31 +95,30 @@ jobs:
             -p android \
             --profile production \
             --non-interactive \
-            --wait
+            --wait \
+            --json > eas-build.json
 
-      - name: Download build artifact
+          echo "==== EAS BUILD JSON ===="
+          cat eas-build.json
+
+      - name: Download APK artifact
         run: |
-          eas build:list --platform android --limit 1 --json > builds.json
-          BUILD_URL=$(node -e "const b=require('./builds.json')[0]; console.log(b.artifacts.buildUrl || b.artifacts.applicationArchiveUrl || '')")
+          BUILD_URL=$(node -e "const b=require('./eas-build.json'); console.log(b.artifacts.buildUrl || b.artifacts.applicationArchiveUrl || '')")
           echo "Build URL: $BUILD_URL"
-          if [ -z "$BUILD_URL" ]; then
-            echo "Could not determine artifact URL from EAS output."
-            cat builds.json
-            exit 1
-          fi
-          curl -L "$BUILD_URL" -o app-artifact.tar.gz
-          mkdir -p out
-          tar -xzf app-artifact.tar.gz -C out || true
-          find out -type f
 
-      - name: Locate APK
-        run: |
-          APK_PATH=$(find out -type f -name "*.apk" | head -n 1)
-          if [ -z "$APK_PATH" ]; then
-            echo "No APK found in artifact"
+          if [ -z "$BUILD_URL" ]; then
+            echo "Could not determine artifact URL from eas-build.json"
             exit 1
           fi
-          echo "APK_PATH=$APK_PATH" >> $GITHUB_ENV
+
+          curl -L "$BUILD_URL" -o app.apk
+
+          if [ ! -f app.apk ]; then
+            echo "APK download failed"
+            exit 1
+          fi
+
+          ls -lah app.apk
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -131,4 +130,4 @@ jobs:
             Trigger: push to staging with [build] tag
             OTA: pushed to production channel
           files: |
-            frontend/${{ env.APK_PATH }}
+            frontend/app.apk
