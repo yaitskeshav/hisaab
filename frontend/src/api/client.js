@@ -1,30 +1,22 @@
 import axios from 'axios';
-import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 import storage from '../utils/storage';
 
-// For Android emulator use 10.0.2.2, for physical device use your computer's IP
-// Web uses localhost, Android emulator uses 10.0.2.2 (maps to host localhost)
+// Get API URL from expo config (set in app.config.js from env vars)
 const getBaseUrl = () => {
-  let url = process.env.EXPO_PUBLIC_API_URL;
+  // First try expo config extra (works in all builds)
+  const url = Constants.expoConfig?.extra?.apiUrl;
 
-  if (!url) {
-    url = Platform.OS === 'android' ? 'http://192.168.0.118:3000' : 'http://localhost:3000';
+  if (url) {
+    return url;
   }
 
-  // Sanitize: Remove extra https:// if it was accidentally prepended to http://
-  if (url.startsWith('https://http://')) {
-    url = url.replace('https://http://', 'http://');
-  }
-
-  return url;
+  // Fallback for development
+  return 'https://api.digitalhisaab.tech';
 };
 
 const BASE_URL = getBaseUrl();
 const API_URL = `${BASE_URL}/api/v1`;
-
-// Debug: log API URL on startup
-console.log('[API Client] BASE_URL:', BASE_URL);
-console.log('[API Client] EXPO_PUBLIC_API_URL:', process.env.EXPO_PUBLIC_API_URL);
 
 export { BASE_URL, API_URL };
 
