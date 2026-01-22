@@ -95,6 +95,7 @@ jobs:
             -p android \
             --profile production \
             --non-interactive \
+            --clear-cache \
             --wait \
             --json > eas-build.json
 
