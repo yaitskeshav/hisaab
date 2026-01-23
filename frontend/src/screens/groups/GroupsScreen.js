@@ -34,6 +34,7 @@ import { formatCurrency } from '../../utils/currency';
 import apiClient, { BASE_URL } from '../../api/client';
 import InviteModal from '../../components/InviteModal';
 import GroupIconPicker from '../../components/common/GroupIconPicker';
+import GroupActionMenu from '../../components/common/GroupActionMenu';
 import { PREDEFINED_GROUP_ICONS } from '../../constants/groupIcons';
 
 // Get the most recent activity date for a group (group update or expense activity)
@@ -728,64 +729,21 @@ const GroupsScreen = ({ navigation }) => {
       </Modal>
 
       {/* Group Actions Modal */}
-      <Modal
+      <GroupActionMenu
         visible={actionModalVisible}
-        animationType="fade"
-        transparent={true}
-        onRequestClose={() => setActionModalVisible(false)}
-      >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setActionModalVisible(false)}
-        >
-          <CardGlass style={styles.actionModalContent}>
-            <Text style={styles.actionModalTitle}>{selectedGroup?.name}</Text>
-            <TouchableOpacity
-              style={styles.actionMenuItem}
-              onPress={handleEditGroup}
-            >
-              <View style={styles.actionMenuIconContainer}>
-                <Ionicons name="create-outline" size={20} color={colors.textPrimary} />
-              </View>
-              <Text style={styles.actionMenuText}>Edit Group</Text>
-            </TouchableOpacity>
-            <View style={styles.actionDivider} />
-            <TouchableOpacity
-              style={styles.actionMenuItem}
-              onPress={handleLeaveGroup}
-            >
-              <View style={styles.actionMenuIconContainer}>
-                <Ionicons name="exit-outline" size={20} color={colors.textPrimary} />
-              </View>
-              <Text style={styles.actionMenuText}>Leave Group</Text>
-            </TouchableOpacity>
-            <View style={styles.actionDivider} />
-            <TouchableOpacity
-              style={styles.actionMenuItem}
-              onPress={() => {
-                setActionModalVisible(false);
-                setExportModalVisible(true);
-              }}
-            >
-              <View style={styles.actionMenuIconContainer}>
-                <Ionicons name="download-outline" size={20} color={colors.textPrimary} />
-              </View>
-              <Text style={styles.actionMenuText}>Export Data</Text>
-            </TouchableOpacity>
-            <View style={styles.actionDivider} />
-            <TouchableOpacity
-              style={styles.actionMenuItem}
-              onPress={handleDeleteGroup}
-            >
-              <View style={[styles.actionMenuIconContainer, styles.deleteIconContainer]}>
-                <Ionicons name="trash-outline" size={20} color={colors.error || '#ef4444'} />
-              </View>
-              <Text style={[styles.actionMenuText, styles.deleteText]}>Delete Group</Text>
-            </TouchableOpacity>
-          </CardGlass>
-        </TouchableOpacity>
-      </Modal>
+        onClose={() => setActionModalVisible(false)}
+        group={selectedGroup}
+        context="list"
+        actions={{
+          onInvite: () => handleShareInvite(selectedGroup),
+          onEdit: handleEditGroup,
+          onActivity: () => navigation.navigate('Activity', { groupId: selectedGroup?.id }),
+          onAnalytics: () => navigation.navigate('Analytics', { groupId: selectedGroup?.id, groupName: selectedGroup?.name }),
+          onExport: () => setExportModalVisible(true),
+          onLeave: handleLeaveGroup,
+          onDelete: handleDeleteGroup,
+        }}
+      />
 
       {/* Delete Confirmation Modal */}
       <Modal
@@ -1311,47 +1269,6 @@ const styles = StyleSheet.create({
   menuButton: {
     padding: spacing.sm,
     marginLeft: spacing.sm,
-  },
-  actionModalContent: {
-    padding: spacing.lg,
-    backgroundColor: colors.backgroundLight,
-    margin: spacing.lg,
-    marginTop: 'auto',
-    marginBottom: spacing.xl,
-  },
-  actionModalTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.textPrimary,
-    marginBottom: spacing.md,
-  },
-  actionMenuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-  },
-  actionMenuIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.md,
-  },
-  deleteIconContainer: {
-    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-  },
-  actionMenuText: {
-    fontSize: 16,
-    color: colors.textPrimary,
-  },
-  deleteText: {
-    color: colors.error || '#ef4444',
-  },
-  actionDivider: {
-    height: 1,
-    backgroundColor: colors.glassBorder,
   },
   confirmText: {
     fontSize: 14,
