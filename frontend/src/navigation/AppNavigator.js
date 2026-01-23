@@ -38,6 +38,9 @@ import SettleUpScreen from '../screens/settlements/SettleUpScreen';
 import SettlePaymentScreen from '../screens/settlements/SettlePaymentScreen';
 import PendingSettlementsScreen from '../screens/settlements/PendingSettlementsScreen';
 
+// Analytics
+import AnalyticsScreen from '../screens/analytics/AnalyticsScreen';
+
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
@@ -203,6 +206,7 @@ const AppNavigator = ({ hasSeenOnboarding, initialRoute, initialParams }) => {
             <Stack.Screen name="SettleUp" component={SettleUpScreen} />
             <Stack.Screen name="SettlePayment" component={SettlePaymentScreen} />
             <Stack.Screen name="PendingSettlements" component={PendingSettlementsScreen} />
+            <Stack.Screen name="Analytics" component={AnalyticsScreen} />
           </>
         )}
       </Stack.Navigator>

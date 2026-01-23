@@ -44,6 +44,7 @@ import { formatCurrency } from '../../utils/currency';
 import { BASE_URL } from '../../api/client';
 import InviteModal from '../../components/InviteModal';
 import GroupIconPicker from '../../components/common/GroupIconPicker';
+import GroupActionMenu from '../../components/common/GroupActionMenu';
 import { useAccentColor } from '../../store/themeStore';
 
 const GroupDetailScreen = ({ route, navigation }) => {
@@ -495,69 +496,19 @@ const GroupDetailScreen = ({ route, navigation }) => {
         </View>
 
         {/* Options Menu Modal */}
-        <Modal
+        <GroupActionMenu
           visible={showOptionsMenu}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setShowOptionsMenu(false)}
-        >
-          <TouchableOpacity
-            style={styles.optionsOverlay}
-            activeOpacity={1}
-            onPress={() => setShowOptionsMenu(false)}
-          >
-            <View style={styles.optionsMenu}>
-              <TouchableOpacity
-                style={styles.optionItem}
-                onPress={() => {
-                  setShowOptionsMenu(false);
-                  handleShareInvite();
-                }}
-              >
-                <Ionicons name="person-add-outline" size={20} color={colors.textPrimary} />
-                <Text style={styles.optionText}>Invite Members</Text>
-              </TouchableOpacity>
-              <View style={styles.optionDivider} />
-              <TouchableOpacity
-                style={styles.optionItem}
-                onPress={handleEditGroup}
-              >
-                <Ionicons name="create-outline" size={20} color={colors.textPrimary} />
-                <Text style={styles.optionText}>Edit Group</Text>
-              </TouchableOpacity>
-              <View style={styles.optionDivider} />
-              <TouchableOpacity
-                style={styles.optionItem}
-                onPress={() => {
-                  setShowOptionsMenu(false);
-                  navigation.navigate('Activity', { groupId });
-                }}
-              >
-                <Ionicons name="time-outline" size={20} color={colors.textPrimary} />
-                <Text style={styles.optionText}>Activity</Text>
-              </TouchableOpacity>
-              <View style={styles.optionDivider} />
-              <TouchableOpacity
-                style={styles.optionItem}
-                onPress={() => {
-                  setShowOptionsMenu(false);
-                  navigation.navigate('Analytics', { groupId, groupName: currentGroup?.name });
-                }}
-              >
-                <Ionicons name="analytics-outline" size={20} color={colors.textPrimary} />
-                <Text style={styles.optionText}>Analytics</Text>
-              </TouchableOpacity>
-              <View style={styles.optionDivider} />
-              <TouchableOpacity
-                style={[styles.optionItem, styles.optionItemDanger]}
-                onPress={handleLeaveGroupPress}
-              >
-                <Ionicons name="exit-outline" size={20} color={colors.error} />
-                <Text style={[styles.optionText, styles.optionTextDanger]}>Leave Group</Text>
-              </TouchableOpacity>
-            </View>
-          </TouchableOpacity>
-        </Modal>
+          onClose={() => setShowOptionsMenu(false)}
+          group={currentGroup}
+          context="detail"
+          actions={{
+            onInvite: handleShareInvite,
+            onEdit: handleEditGroup,
+            onActivity: () => navigation.navigate('Activity', { groupId }),
+            onAnalytics: () => navigation.navigate('Analytics', { groupId, groupName: currentGroup?.name }),
+            onLeave: handleLeaveGroupPress,
+          }}
+        />
         {/* Group Info */}
         <CardGlass style={styles.infoCard}>
           <View style={styles.infoRow}>
@@ -1276,51 +1227,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.textPrimary,
     flexShrink: 1,
-  },
-  // Options Menu
-  optionsOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-start',
-    alignItems: 'flex-end',
-    paddingTop: spacing['3xl'] + spacing.xl,
-    paddingRight: spacing.lg,
-  },
-  optionsMenu: {
-    backgroundColor: colors.backgroundLight,
-    borderRadius: 16,
-    paddingVertical: spacing.xs,
-    minWidth: 180,
-    borderWidth: 1,
-    borderColor: colors.glassBorder,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  optionItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    gap: spacing.sm,
-  },
-  optionItemDanger: {
-    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-  },
-  optionText: {
-    fontSize: 15,
-    color: colors.textPrimary,
-    fontWeight: '500',
-  },
-  optionTextDanger: {
-    color: colors.error,
-  },
-  optionDivider: {
-    height: 1,
-    backgroundColor: colors.glassBorder,
-    marginHorizontal: spacing.sm,
   },
   scrollContent: {
     padding: spacing.lg,

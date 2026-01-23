@@ -414,7 +414,7 @@ const DashboardScreen = () => {
                 onPress={() => navigation.navigate('GroupDetail', { groupId: group.id })}
               >
                 <CardGlass style={styles.groupCard}>
-                  <View style={[styles.groupIcon, { backgroundColor: accent.primary }]}>
+                  <View style={styles.groupIcon}>
                     {group.icon_type === 'custom' && group.icon_url ? (
                       <Image
                         source={{ uri: group.icon_url.startsWith('http') ? group.icon_url : `${BASE_URL}${group.icon_url}` }}
@@ -722,7 +722,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: colors.primary,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.md,
