@@ -15,6 +15,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Keyboard,
+  Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -30,8 +31,10 @@ import ExportModal from '../../components/ExportModal';
 import useGroupStore from '../../store/groupStore';
 import { useAccentColor } from '../../store/themeStore';
 import { formatCurrency } from '../../utils/currency';
-import apiClient from '../../api/client';
+import apiClient, { BASE_URL } from '../../api/client';
 import InviteModal from '../../components/InviteModal';
+import GroupIconPicker from '../../components/common/GroupIconPicker';
+import { PREDEFINED_GROUP_ICONS } from '../../constants/groupIcons';
 
 // Get the most recent activity date for a group (group update or expense activity)
 const getGroupLastActivity = (group) => {
@@ -52,7 +55,7 @@ const getGroupLastActivity = (group) => {
 };
 
 const GroupsScreen = ({ navigation }) => {
-  const { groups, isLoading, fetchGroups, createGroup, joinGroup, updateGroup, leaveGroup, deleteGroup, checkCanLeave } = useGroupStore();
+  const { groups, isLoading, fetchGroups, createGroup, joinGroup, updateGroup, leaveGroup, deleteGroup, checkCanLeave, updateGroupIcon, uploadGroupIcon, removeGroupIcon } = useGroupStore();
   const { showToast } = useToast();
   const accent = useAccentColor();
   const [refreshing, setRefreshing] = useState(false);
@@ -86,6 +89,10 @@ const GroupsScreen = ({ navigation }) => {
   const [isLeaving, setIsLeaving] = useState(false);
   const leaveModalAnim = useRef(new Animated.Value(0)).current;
   const leaveIconAnim = useRef(new Animated.Value(0)).current;
+
+  // Icon picker state
+  const [showIconPicker, setShowIconPicker] = useState(false);
+  const [isIconUpdating, setIsIconUpdating] = useState(false);
 
   useEffect(() => {
     loadGroups();
@@ -174,6 +181,65 @@ const GroupsScreen = ({ navigation }) => {
     } else {
       showToast(result.error, 'error');
     }
+  };
+
+  const handleSelectPredefinedIcon = async (iconId) => {
+    setIsIconUpdating(true);
+    const result = await updateGroupIcon(selectedGroup.id, iconId);
+    setIsIconUpdating(false);
+    if (result.success) {
+      // Update selectedGroup with new icon
+      setSelectedGroup({ ...selectedGroup, icon_url: iconId, icon_type: 'predefined' });
+      setShowIconPicker(false);
+      showToast('Icon updated', 'success');
+    } else {
+      showToast(result.error || 'Failed to update icon', 'error');
+    }
+  };
+
+  const handleSelectCustomIcon = async (imageUri) => {
+    setIsIconUpdating(true);
+    const result = await uploadGroupIcon(selectedGroup.id, imageUri);
+    setIsIconUpdating(false);
+    if (result.success) {
+      // Update selectedGroup with new icon
+      setSelectedGroup({ ...selectedGroup, icon_url: result.data.icon_url, icon_type: 'custom' });
+      setShowIconPicker(false);
+      showToast('Icon updated', 'success');
+    } else {
+      showToast(result.error || 'Failed to upload icon', 'error');
+    }
+  };
+
+  const handleRemoveIcon = async () => {
+    setIsIconUpdating(true);
+    const result = await removeGroupIcon(selectedGroup.id);
+    setIsIconUpdating(false);
+    if (result.success) {
+      // Update selectedGroup to remove icon
+      setSelectedGroup({ ...selectedGroup, icon_url: '', icon_type: '' });
+      setShowIconPicker(false);
+      showToast('Icon removed', 'success');
+    } else {
+      showToast(result.error || 'Failed to remove icon', 'error');
+    }
+  };
+
+  // Helper to render group icon
+  const renderSelectedGroupIcon = (size = 56, fontSize = 28) => {
+    if (selectedGroup?.icon_type === 'custom' && selectedGroup?.icon_url) {
+      return (
+        <Image
+          source={{ uri: selectedGroup.icon_url.startsWith('http') ? selectedGroup.icon_url : `${BASE_URL}${selectedGroup.icon_url}` }}
+          style={{ width: size, height: size, borderRadius: size / 2 }}
+        />
+      );
+    }
+    if (selectedGroup?.icon_type === 'predefined' && selectedGroup?.icon_url) {
+      const icon = PREDEFINED_GROUP_ICONS.find(i => i.id === selectedGroup.icon_url);
+      return <Text style={{ fontSize }}>{icon?.emoji || '👥'}</Text>;
+    }
+    return <Text style={{ fontSize }}>{selectedGroup?.name?.charAt(0).toUpperCase() || 'G'}</Text>;
   };
 
   // Leave modal animation effect
@@ -387,9 +453,20 @@ const GroupsScreen = ({ navigation }) => {
               <CardGlass style={styles.groupCard}>
                 <View style={styles.groupHeader}>
                   <View style={[styles.groupIcon, { backgroundColor: accent.primary }]}>
-                    <Text style={styles.groupIconText}>
-                      {group.name?.charAt(0).toUpperCase() || 'G'}
-                    </Text>
+                    {group.icon_type === 'custom' && group.icon_url ? (
+                      <Image
+                        source={{ uri: group.icon_url.startsWith('http') ? group.icon_url : `${BASE_URL}${group.icon_url}` }}
+                        style={styles.groupIconImage}
+                      />
+                    ) : group.icon_type === 'predefined' && group.icon_url ? (
+                      <Text style={styles.groupIconEmoji}>
+                        {PREDEFINED_GROUP_ICONS.find(i => i.id === group.icon_url)?.emoji || '👥'}
+                      </Text>
+                    ) : (
+                      <Text style={styles.groupIconText}>
+                        {group.name?.charAt(0).toUpperCase() || 'G'}
+                      </Text>
+                    )}
                   </View>
                   <View style={styles.groupInfo}>
                     <Text style={styles.groupName}>{group.name}</Text>
@@ -595,6 +672,25 @@ const GroupsScreen = ({ navigation }) => {
         >
           <CardGlass style={styles.modalContent}>
             <Text style={styles.modalTitle}>Edit Group</Text>
+
+            {/* Icon Section */}
+            <TouchableOpacity
+              style={styles.editIconContainer}
+              onPress={() => {
+                setEditModalVisible(false);
+                setShowIconPicker(true);
+              }}
+            >
+              <View style={[styles.editIconPreview, { backgroundColor: accent.primary + '30' }]}>
+                {renderSelectedGroupIcon(48, 24)}
+              </View>
+              <View style={styles.editIconInfo}>
+                <Text style={styles.editIconLabel}>Group Icon</Text>
+                <Text style={styles.editIconHint}>Tap to change</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+            </TouchableOpacity>
+
             <AppInput
               label="Group Name"
               value={groupName}
@@ -907,6 +1003,18 @@ const GroupsScreen = ({ navigation }) => {
         </View>
       </Modal>
 
+      {/* Group Icon Picker */}
+      <GroupIconPicker
+        visible={showIconPicker}
+        onClose={() => setShowIconPicker(false)}
+        currentIcon={selectedGroup?.icon_url}
+        currentIconType={selectedGroup?.icon_type}
+        onSelectPredefined={handleSelectPredefinedIcon}
+        onSelectCustom={handleSelectCustomIcon}
+        onRemove={handleRemoveIcon}
+        isLoading={isIconUpdating}
+      />
+
     </LinearGradient>
   );
 };
@@ -1006,6 +1114,14 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     fontWeight: '600',
   },
+  groupIconImage: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+  },
+  groupIconEmoji: {
+    fontSize: 28,
+  },
   groupInfo: {
     flex: 1,
   },
@@ -1070,6 +1186,38 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     marginBottom: spacing.lg,
     textAlign: 'center',
+  },
+  editIconContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 12,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
+  },
+  editIconPreview: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  editIconInfo: {
+    flex: 1,
+    marginLeft: spacing.md,
+  },
+  editIconLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.textPrimary,
+  },
+  editIconHint: {
+    fontSize: 12,
+    color: colors.textMuted,
+    marginTop: 2,
   },
   modalActions: {
     flexDirection: 'row',

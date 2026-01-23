@@ -135,6 +135,72 @@ const useGroupStore = create((set, get) => ({
     }
   },
 
+  // Update group icon (predefined)
+  updateGroupIcon: async (groupId, predefinedIcon) => {
+    set({ isLoading: true, error: null });
+    try {
+      const formData = new FormData();
+      formData.append('icon_type', 'predefined');
+      formData.append('predefined_icon', predefinedIcon);
+
+      const { data } = await apiClient.put(`/groups/${groupId}/icon`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      const groups = get().groups.map(g => g.id === groupId ? data : g);
+      set({ groups, currentGroup: data, isLoading: false });
+      return { success: true, data };
+    } catch (error) {
+      const message = error.response?.data?.error || 'Failed to update group icon';
+      set({ error: message, isLoading: false });
+      return { success: false, error: message };
+    }
+  },
+
+  // Upload custom group icon
+  uploadGroupIcon: async (groupId, imageUri) => {
+    set({ isLoading: true, error: null });
+    try {
+      const formData = new FormData();
+      formData.append('icon_type', 'custom');
+
+      // Get file extension
+      const uriParts = imageUri.split('.');
+      const fileType = uriParts[uriParts.length - 1];
+
+      formData.append('icon', {
+        uri: imageUri,
+        name: `group_icon.${fileType}`,
+        type: `image/${fileType === 'jpg' ? 'jpeg' : fileType}`,
+      });
+
+      const { data } = await apiClient.put(`/groups/${groupId}/icon`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      const groups = get().groups.map(g => g.id === groupId ? data : g);
+      set({ groups, currentGroup: data, isLoading: false });
+      return { success: true, data };
+    } catch (error) {
+      const message = error.response?.data?.error || 'Failed to upload group icon';
+      set({ error: message, isLoading: false });
+      return { success: false, error: message };
+    }
+  },
+
+  // Remove group icon
+  removeGroupIcon: async (groupId) => {
+    set({ isLoading: true, error: null });
+    try {
+      const { data } = await apiClient.delete(`/groups/${groupId}/icon`);
+      const groups = get().groups.map(g => g.id === groupId ? data : g);
+      set({ groups, currentGroup: data, isLoading: false });
+      return { success: true, data };
+    } catch (error) {
+      const message = error.response?.data?.error || 'Failed to remove group icon';
+      set({ error: message, isLoading: false });
+      return { success: false, error: message };
+    }
+  },
+
   // Clear error
   clearError: () => set({ error: null }),
 }));

@@ -39,14 +39,16 @@ import useGroupStore from '../../store/groupStore';
 import useExpenseStore from '../../store/expenseStore';
 import useAuthStore from '../../store/authStore';
 import { getCategoryIcon } from '../../constants/categories';
+import { PREDEFINED_GROUP_ICONS } from '../../constants/groupIcons';
 import { formatCurrency } from '../../utils/currency';
 import { BASE_URL } from '../../api/client';
 import InviteModal from '../../components/InviteModal';
+import GroupIconPicker from '../../components/common/GroupIconPicker';
 import { useAccentColor } from '../../store/themeStore';
 
 const GroupDetailScreen = ({ route, navigation }) => {
   const { groupId } = route.params;
-  const { currentGroup, fetchGroupDetails, isLoading: groupLoading, checkCanLeave, leaveGroup, updateGroup } = useGroupStore();
+  const { currentGroup, fetchGroupDetails, isLoading: groupLoading, checkCanLeave, leaveGroup, updateGroup, updateGroupIcon, uploadGroupIcon, removeGroupIcon } = useGroupStore();
   const { expenses, fetchGroupExpenses, deleteExpense, isLoading: expensesLoading } = useExpenseStore();
   const [refreshing, setRefreshing] = useState(false);
   const [toast, setToast] = useState({ visible: false, message: '', type: 'info' });
@@ -83,6 +85,10 @@ const GroupDetailScreen = ({ route, navigation }) => {
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
+
+  // Icon picker
+  const [showIconPicker, setShowIconPicker] = useState(false);
+  const [isIconUpdating, setIsIconUpdating] = useState(false);
 
   // Expense filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -232,6 +238,59 @@ const GroupDetailScreen = ({ route, navigation }) => {
     } else {
       setToast({ visible: true, message: result.error || 'Failed to update group', type: 'error' });
     }
+  };
+
+  const handleSelectPredefinedIcon = async (iconId) => {
+    setIsIconUpdating(true);
+    const result = await updateGroupIcon(groupId, iconId);
+    setIsIconUpdating(false);
+    if (result.success) {
+      setShowIconPicker(false);
+      setToast({ visible: true, message: 'Icon updated', type: 'success' });
+    } else {
+      setToast({ visible: true, message: result.error || 'Failed to update icon', type: 'error' });
+    }
+  };
+
+  const handleSelectCustomIcon = async (imageUri) => {
+    setIsIconUpdating(true);
+    const result = await uploadGroupIcon(groupId, imageUri);
+    setIsIconUpdating(false);
+    if (result.success) {
+      setShowIconPicker(false);
+      setToast({ visible: true, message: 'Icon updated', type: 'success' });
+    } else {
+      setToast({ visible: true, message: result.error || 'Failed to upload icon', type: 'error' });
+    }
+  };
+
+  const handleRemoveIcon = async () => {
+    setIsIconUpdating(true);
+    const result = await removeGroupIcon(groupId);
+    setIsIconUpdating(false);
+    if (result.success) {
+      setShowIconPicker(false);
+      setToast({ visible: true, message: 'Icon removed', type: 'success' });
+    } else {
+      setToast({ visible: true, message: result.error || 'Failed to remove icon', type: 'error' });
+    }
+  };
+
+  // Helper to render group icon
+  const renderGroupIcon = (size = 40, fontSize = 20) => {
+    if (currentGroup?.icon_type === 'custom' && currentGroup?.icon_url) {
+      return (
+        <Image
+          source={{ uri: currentGroup.icon_url.startsWith('http') ? currentGroup.icon_url : `${BASE_URL}${currentGroup.icon_url}` }}
+          style={{ width: size, height: size, borderRadius: size / 2 }}
+        />
+      );
+    }
+    if (currentGroup?.icon_type === 'predefined' && currentGroup?.icon_url) {
+      const icon = PREDEFINED_GROUP_ICONS.find(i => i.id === currentGroup.icon_url);
+      return <Text style={{ fontSize }}>{icon?.emoji || '👥'}</Text>;
+    }
+    return <Text style={{ fontSize }}>👥</Text>;
   };
 
   const handleAddExpense = () => {
@@ -414,9 +473,18 @@ const GroupDetailScreen = ({ route, navigation }) => {
           >
             <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
           </TouchableOpacity>
-          <Text style={styles.title} numberOfLines={1}>
-            {currentGroup?.name || 'Group'}
-          </Text>
+          <View style={styles.headerCenter}>
+            <TouchableOpacity
+              style={[styles.headerIcon, { backgroundColor: accent.primary + '30' }]}
+              onPress={() => setShowIconPicker(true)}
+              activeOpacity={0.7}
+            >
+              {renderGroupIcon(36, 18)}
+            </TouchableOpacity>
+            <Text style={styles.title} numberOfLines={1}>
+              {currentGroup?.name || 'Group'}
+            </Text>
+          </View>
           <TouchableOpacity
             style={styles.headerButton}
             onPress={() => setShowOptionsMenu(true)}
@@ -919,6 +987,25 @@ const GroupDetailScreen = ({ route, navigation }) => {
             >
               <Text style={styles.editModalTitle}>Edit Group</Text>
 
+              {/* Icon Section */}
+              <TouchableOpacity
+                style={styles.editIconContainer}
+                onPress={() => {
+                  setShowEditModal(false);
+                  setShowIconPicker(true);
+                }}
+                disabled={isUpdating}
+              >
+                <View style={[styles.editIconPreview, { backgroundColor: accent.primary + '30' }]}>
+                  {renderGroupIcon(56, 28)}
+                </View>
+                <View style={styles.editIconInfo}>
+                  <Text style={styles.editIconLabel}>Group Icon</Text>
+                  <Text style={styles.editIconHint}>Tap to change</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+              </TouchableOpacity>
+
               <View style={styles.editInputContainer}>
                 <Text style={styles.editInputLabel}>Name</Text>
                 <TextInput
@@ -974,6 +1061,18 @@ const GroupDetailScreen = ({ route, navigation }) => {
           </View>
         </KeyboardAvoidingView>
       </Modal>
+
+      {/* Group Icon Picker */}
+      <GroupIconPicker
+        visible={showIconPicker}
+        onClose={() => setShowIconPicker(false)}
+        currentIcon={currentGroup?.icon_url}
+        currentIconType={currentGroup?.icon_type}
+        onSelectPredefined={handleSelectPredefinedIcon}
+        onSelectCustom={handleSelectCustomIcon}
+        onRemove={handleRemoveIcon}
+        isLoading={isIconUpdating}
+      />
 
       {/* Leave Group Modal */}
       <Modal
@@ -1156,13 +1255,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  title: {
+  headerCenter: {
     flex: 1,
-    fontSize: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    marginHorizontal: spacing.sm,
+  },
+  headerIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  title: {
+    fontSize: 18,
     fontWeight: '700',
     color: colors.textPrimary,
-    textAlign: 'center',
-    marginHorizontal: spacing.md,
+    flexShrink: 1,
   },
   // Options Menu
   optionsOverlay: {
@@ -1686,6 +1799,38 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     marginBottom: spacing.lg,
     textAlign: 'center',
+  },
+  editIconContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 12,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
+  },
+  editIconPreview: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  editIconInfo: {
+    flex: 1,
+    marginLeft: spacing.md,
+  },
+  editIconLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.textPrimary,
+  },
+  editIconHint: {
+    fontSize: 12,
+    color: colors.textMuted,
+    marginTop: 2,
   },
   editInputContainer: {
     marginBottom: spacing.md,

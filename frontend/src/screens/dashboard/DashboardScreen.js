@@ -15,13 +15,13 @@ import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import CardGlass from '../../components/common/CardGlass';
 import SectionContainer from '../../components/common/SectionContainer';
-import Loader from '../../components/common/Loader';
 import useGroupStore from '../../store/groupStore';
 import useAuthStore from '../../store/authStore';
 import useActivityStore from '../../store/activityStore';
 import useSettlementStore from '../../store/settlementStore';
 import { useAccentColor } from '../../store/themeStore';
 import { getCategoryIcon } from '../../constants/categories';
+import { PREDEFINED_GROUP_ICONS } from '../../constants/groupIcons';
 import { BASE_URL } from '../../api/client';
 import { formatCurrency } from '../../utils/currency';
 
@@ -49,7 +49,7 @@ const DashboardScreen = () => {
   const navigation = useNavigation();
   const { user } = useAuthStore();
   const accent = useAccentColor();
-  const { groups, isLoading, fetchGroups } = useGroupStore();
+  const { groups, fetchGroups } = useGroupStore();
   const { activities, fetchActivities } = useActivityStore();
   const { pendingSettlements, fetchPendingSettlements, userTotalBalances, fetchUserTotalBalances } = useSettlementStore();
   const [refreshing, setRefreshing] = useState(false);
@@ -81,8 +81,9 @@ const DashboardScreen = () => {
     setRefreshing(false);
   };
 
-  // Sort groups by most recent activity
+  // Sort groups by most recent activity - memoized for stable reference
   const sortedGroups = useMemo(() => {
+    if (!groups || groups.length === 0) return [];
     return [...groups].sort((a, b) => {
       const aDate = getGroupLastActivity(a);
       const bDate = getGroupLastActivity(b);
@@ -90,8 +91,20 @@ const DashboardScreen = () => {
     });
   }, [groups]);
 
-  // Get recent activities from API (already fetched)
-  const displayedActivities = activities.slice(0, MAX_DASHBOARD_ACTIVITIES);
+  // Memoize displayed activities for stable reference
+  const displayedActivities = useMemo(() => {
+    if (!activities || activities.length === 0) return [];
+    return activities.slice(0, MAX_DASHBOARD_ACTIVITIES);
+  }, [activities]);
+
+  // Memoize user balances to prevent unnecessary re-renders
+  const balanceData = useMemo(() => ({
+    totalSpent: userTotalBalances?.total_spent || 0,
+    netBalance: userTotalBalances?.net_balance || 0,
+  }), [userTotalBalances?.total_spent, userTotalBalances?.net_balance]);
+
+  // Memoize pending count
+  const pendingCount = useMemo(() => pendingSettlements?.length || 0, [pendingSettlements?.length]);
 
   const formatActivityDate = (dateStr) => {
     const date = new Date(dateStr);
@@ -224,10 +237,6 @@ const DashboardScreen = () => {
     }
   };
 
-  if (isLoading && !refreshing) {
-    return <Loader fullScreen />;
-  }
-
   return (
     <LinearGradient
       colors={[colors.background, colors.backgroundDark]}
@@ -283,7 +292,7 @@ const DashboardScreen = () => {
                 adjustsFontSizeToFit
                 minimumFontScale={0.6}
               >
-                {formatCurrency(userTotalBalances?.total_spent || 0)}
+                {formatCurrency(balanceData.totalSpent)}
               </Text>
             </View>
 
@@ -293,7 +302,7 @@ const DashboardScreen = () => {
             {/* Net Balance */}
             <View style={styles.overviewBalance}>
               {(() => {
-                const netBalance = userTotalBalances?.net_balance || 0;
+                const netBalance = balanceData.netBalance;
                 const isPositive = netBalance > 0;
                 const isNegative = netBalance < 0;
                 const isSettled = Math.abs(netBalance) < 0.01;
@@ -351,7 +360,7 @@ const DashboardScreen = () => {
         </CardGlass>
 
         {/* Pending Settlements Alert */}
-        {pendingSettlements.length > 0 ? (
+        {pendingCount > 0 ? (
           <TouchableOpacity
             style={styles.pendingCard}
             onPress={() => navigation.navigate('PendingSettlements')}
@@ -366,7 +375,7 @@ const DashboardScreen = () => {
               </View>
               <View style={styles.pendingContent}>
                 <Text style={styles.pendingTitle}>
-                  {pendingSettlements.length} Payment{pendingSettlements.length > 1 ? 's' : ''} Awaiting Confirmation
+                  {pendingCount} Payment{pendingCount > 1 ? 's' : ''} Awaiting Confirmation
                 </Text>
                 <Text style={styles.pendingSubtitle}>
                   Tap to review and confirm
@@ -406,9 +415,20 @@ const DashboardScreen = () => {
               >
                 <CardGlass style={styles.groupCard}>
                   <View style={[styles.groupIcon, { backgroundColor: accent.primary }]}>
-                    <Text style={styles.groupIconText}>
-                      {group.name?.charAt(0).toUpperCase() || 'G'}
-                    </Text>
+                    {group.icon_type === 'custom' && group.icon_url ? (
+                      <Image
+                        source={{ uri: group.icon_url.startsWith('http') ? group.icon_url : `${BASE_URL}${group.icon_url}` }}
+                        style={styles.groupIconImage}
+                      />
+                    ) : group.icon_type === 'predefined' && group.icon_url ? (
+                      <Text style={styles.groupIconEmoji}>
+                        {PREDEFINED_GROUP_ICONS.find(i => i.id === group.icon_url)?.emoji || '👥'}
+                      </Text>
+                    ) : (
+                      <Text style={styles.groupIconText}>
+                        {group.name?.charAt(0).toUpperCase() || 'G'}
+                      </Text>
+                    )}
                   </View>
                   <View style={styles.groupInfo}>
                     <Text style={styles.groupName}>{group.name}</Text>
@@ -711,6 +731,14 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: colors.textPrimary,
     fontWeight: '600',
+  },
+  groupIconImage: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+  },
+  groupIconEmoji: {
+    fontSize: 22,
   },
   groupInfo: {
     flex: 1,
