@@ -149,19 +149,19 @@ const AnalyticsScreen = ({ route, navigation }) => {
         {/* Summary Cards */}
         <View style={styles.statsGrid}>
           <CardGlass style={styles.statCard}>
-            <Text style={[styles.statValue, { color: accent.primary }]}>
+            <Text style={[styles.statValue, { color: accent.primary }]} numberOfLines={1} adjustsFontSizeToFit>
               {formatCurrency(data.total_spent || 0)}
             </Text>
             <Text style={styles.statLabel}>Total Spent</Text>
           </CardGlass>
           <CardGlass style={styles.statCard}>
-            <Text style={[styles.statValue, { color: accent.primary }]}>
+            <Text style={[styles.statValue, { color: accent.primary }]} numberOfLines={1} adjustsFontSizeToFit>
               {data.expense_count || 0}
             </Text>
             <Text style={styles.statLabel}>Expenses</Text>
           </CardGlass>
           <CardGlass style={styles.statCard}>
-            <Text style={[styles.statValue, { color: accent.primary }]}>
+            <Text style={[styles.statValue, { color: accent.primary }]} numberOfLines={1} adjustsFontSizeToFit>
               {formatCurrency(data.average_expense || 0)}
             </Text>
             <Text style={styles.statLabel}>Average</Text>
@@ -390,21 +390,21 @@ const AnalyticsScreen = ({ route, navigation }) => {
         {/* Balance Cards */}
         <View style={styles.statsGrid}>
           <CardGlass style={styles.statCard}>
-            <Text style={[styles.statValue, { color: accent.primary }]}>
+            <Text style={[styles.statValue, { color: accent.primary }]} numberOfLines={1} adjustsFontSizeToFit>
               {formatCurrency(data.your_contribution || 0)}
             </Text>
             <Text style={styles.statLabel}>You Paid</Text>
           </CardGlass>
           <CardGlass style={styles.statCard}>
-            <Text style={[styles.statValue, { color: colors.textMuted }]}>
+            <Text style={[styles.statValue, { color: colors.textMuted }]} numberOfLines={1} adjustsFontSizeToFit>
               {formatCurrency(data.your_share || 0)}
             </Text>
             <Text style={styles.statLabel}>Your Share</Text>
           </CardGlass>
           <CardGlass style={styles.statCard}>
             <View style={styles.balanceRow}>
-              <Ionicons name={netBalanceIcon} size={16} color={netBalanceColor} />
-              <Text style={[styles.statValue, { color: netBalanceColor }]}>
+              <Ionicons name={netBalanceIcon} size={14} color={netBalanceColor} />
+              <Text style={[styles.statValue, { color: netBalanceColor }]} numberOfLines={1} adjustsFontSizeToFit>
                 {formatCurrency(Math.abs(data.net_balance || 0))}
               </Text>
             </View>
@@ -466,19 +466,19 @@ const AnalyticsScreen = ({ route, navigation }) => {
         {/* Settlement Stats */}
         <View style={styles.statsGrid}>
           <CardGlass style={styles.statCard}>
-            <Text style={[styles.statValue, { color: colors.success }]}>
+            <Text style={[styles.statValue, { color: colors.success }]} numberOfLines={1} adjustsFontSizeToFit>
               {formatCurrency(data.total_settled || 0)}
             </Text>
             <Text style={styles.statLabel}>Settled</Text>
           </CardGlass>
           <CardGlass style={styles.statCard}>
-            <Text style={[styles.statValue, { color: colors.warning }]}>
+            <Text style={[styles.statValue, { color: colors.warning }]} numberOfLines={1} adjustsFontSizeToFit>
               {data.pending_count || 0}
             </Text>
             <Text style={styles.statLabel}>Pending</Text>
           </CardGlass>
           <CardGlass style={styles.statCard}>
-            <Text style={[styles.statValue, { color: colors.warning }]}>
+            <Text style={[styles.statValue, { color: colors.warning }]} numberOfLines={1} adjustsFontSizeToFit>
               {formatCurrency(data.pending_amount || 0)}
             </Text>
             <Text style={styles.statLabel}>Pending Amt</Text>
@@ -711,9 +711,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statValue: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700',
     marginBottom: 4,
+    textAlign: 'center',
   },
   statLabel: {
     fontSize: 11,
