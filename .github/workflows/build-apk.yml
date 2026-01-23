@@ -6,6 +6,7 @@ on:
       - staging
     paths:
       - 'frontend/**'
+      - '.github/workflows/build-apk.yml'
   workflow_dispatch:
     inputs:
       create_release:
