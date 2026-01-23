@@ -4,7 +4,7 @@ export default {
     slug: "hisaab",
     runtimeVersion: "1.0.1",
     updates: {
-      url: "https://u.expo.dev/ff954a4f-33c7-48de-9938-cd5bb998d8b6"
+      enabled: false  // Disable OTA - use APK updates only
     },
     scheme: "hisaab",
     version: "1.0.1",

@@ -3,6 +3,7 @@ package handlers
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"os"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -10,6 +11,11 @@ import (
 	"github.com/hisaab/backend/internal/models"
 	"github.com/hisaab/backend/internal/service"
 )
+
+func init() {
+	// Ensure group icons upload directory exists
+	os.MkdirAll("./uploads/groups", 0755)
+}
 
 type GroupHandler struct{}
 
@@ -408,4 +414,129 @@ func (h *GroupHandler) DeleteGroup(c *fiber.Ctx) error {
 	database.DB.Delete(&group)
 
 	return c.JSON(fiber.Map{"message": "group deleted successfully"})
+}
+
+// UpdateGroupIcon updates the group icon (predefined or custom upload)
+// PUT /api/v1/groups/:id/icon
+func (h *GroupHandler) UpdateGroupIcon(c *fiber.Ctx) error {
+	userID := c.Locals("user_id").(uint)
+	groupID := c.Params("id")
+
+	var group models.Group
+	if err := database.DB.First(&group, groupID).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "group not found"})
+	}
+
+	// Check if user is a member
+	var count int64
+	database.DB.Model(&models.GroupMember{}).Where("group_id = ? AND user_id = ?", group.ID, userID).Count(&count)
+	if count == 0 {
+		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "you are not a member of this group"})
+	}
+
+	// Check if this is a predefined icon update or file upload
+	iconType := c.FormValue("icon_type")
+	predefinedIcon := c.FormValue("predefined_icon")
+
+	if iconType == "predefined" && predefinedIcon != "" {
+		// Update with predefined icon
+		group.IconURL = predefinedIcon
+		group.IconType = "predefined"
+	} else if iconType == "custom" {
+		// Handle file upload
+		file, err := c.FormFile("icon")
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "no icon file provided"})
+		}
+
+		// Validate file type
+		contentType := file.Header.Get("Content-Type")
+		if contentType != "image/jpeg" && contentType != "image/png" && contentType != "image/webp" {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid file type, only jpeg, png, webp allowed"})
+		}
+
+		// Validate file size (max 2MB)
+		if file.Size > 2*1024*1024 {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "file size too large, max 2MB"})
+		}
+
+		// Generate unique filename
+		ext := ".jpg"
+		if contentType == "image/png" {
+			ext = ".png"
+		} else if contentType == "image/webp" {
+			ext = ".webp"
+		}
+		filename := "group_" + groupID + "_" + hex.EncodeToString([]byte(time.Now().String())[:8]) + ext
+
+		// Save file
+		uploadPath := "./uploads/groups/" + filename
+		if err := c.SaveFile(file, uploadPath); err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to save icon"})
+		}
+
+		// Delete old custom icon if exists
+		if group.IconType == "custom" && group.IconURL != "" {
+			os.Remove("." + group.IconURL)
+		}
+
+		group.IconURL = "/uploads/groups/" + filename
+		group.IconType = "custom"
+	} else {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid icon_type, use 'predefined' or 'custom'"})
+	}
+
+	if err := database.DB.Save(&group).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to update group icon"})
+	}
+
+	// Log activity
+	activity := models.Activity{
+		GroupID:     group.ID,
+		UserID:      userID,
+		Type:        "group_icon_updated",
+		Description: "updated the group icon",
+	}
+	database.DB.Create(&activity)
+
+	// Reload with members
+	database.DB.Preload("Members").First(&group, group.ID)
+
+	return c.JSON(group)
+}
+
+// RemoveGroupIcon removes the group icon
+// DELETE /api/v1/groups/:id/icon
+func (h *GroupHandler) RemoveGroupIcon(c *fiber.Ctx) error {
+	userID := c.Locals("user_id").(uint)
+	groupID := c.Params("id")
+
+	var group models.Group
+	if err := database.DB.First(&group, groupID).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "group not found"})
+	}
+
+	// Check if user is a member
+	var count int64
+	database.DB.Model(&models.GroupMember{}).Where("group_id = ? AND user_id = ?", group.ID, userID).Count(&count)
+	if count == 0 {
+		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "you are not a member of this group"})
+	}
+
+	// Delete custom icon file if exists
+	if group.IconType == "custom" && group.IconURL != "" {
+		os.Remove("." + group.IconURL)
+	}
+
+	group.IconURL = ""
+	group.IconType = ""
+
+	if err := database.DB.Save(&group).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to remove group icon"})
+	}
+
+	// Reload with members
+	database.DB.Preload("Members").First(&group, group.ID)
+
+	return c.JSON(group)
 }

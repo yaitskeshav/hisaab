@@ -48,6 +48,7 @@ func ConnectDB() {
 		&models.Activity{},
 		&models.Settlement{},
 		&models.GroupInvite{},
+		&models.AppVersion{},
 	)
 
 	DB = db

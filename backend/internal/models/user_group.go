@@ -35,6 +35,8 @@ type Group struct {
 	ID          uint           `gorm:"primaryKey" json:"id"`
 	Name        string         `gorm:"not null" json:"name"`
 	Description string         `json:"description"`
+	IconURL     string         `json:"icon_url"`
+	IconType    string         `json:"icon_type"` // "predefined", "custom", or ""
 	CreatedByID uint           `json:"created_by_id"`
 	CreatedBy   User           `gorm:"foreignKey:CreatedByID" json:"created_by"`
 	InviteCode  string         `gorm:"uniqueIndex" json:"invite_code"`

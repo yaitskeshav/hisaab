@@ -34,6 +34,10 @@ func SetupRoutes(app *fiber.App) {
 	// Invite routes (Public validation)
 	v1.Get("/invites/:token", inviteHandler.GetInviteDetails)
 
+	// App version route (Public - needed before login)
+	appVersionHandler := handlers.NewAppVersionHandler()
+	v1.Get("/app/version", appVersionHandler.GetLatestVersion)
+
 	// Protected routes
 	protected := v1.Group("/", middleware.AuthProtected())
 
@@ -65,6 +69,8 @@ func SetupRoutes(app *fiber.App) {
 	protected.Post("/invites", inviteHandler.CreateInvite)
 	protected.Post("/invites/:token/join", inviteHandler.JoinWithToken)
 	groups.Put("/:id", groupHandler.UpdateGroup)
+	groups.Put("/:id/icon", groupHandler.UpdateGroupIcon)
+	groups.Delete("/:id/icon", groupHandler.RemoveGroupIcon)
 	groups.Get("/:id/can-leave", groupHandler.CanLeaveGroup)
 	groups.Post("/:id/leave", groupHandler.LeaveGroup)
 	groups.Delete("/:id", groupHandler.DeleteGroup)

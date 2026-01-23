@@ -38,8 +38,9 @@ func main() {
 	}))
 
 	// NOTE: Expense attachments served through protected /api/v1/attachments/:id/download endpoint
-	// Avatar images are public and served statically
+	// Avatar and group icon images are public and served statically
 	app.Static("/uploads/avatars", "./uploads/avatars")
+	app.Static("/uploads/groups", "./uploads/groups")
 
 	// Routes
 	routes.SetupRoutes(app)
