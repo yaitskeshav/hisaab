@@ -8,7 +8,7 @@ import { hapticSuccess, hapticError, hapticWarning, hapticLight } from '../../ut
 
 const Toast = ({ message, type = 'info', visible, onHide, duration = 3000 }) => {
   const accent = useAccentColor();
-  const translateY = useRef(new Animated.Value(-100)).current;
+  const translateY = useRef(new Animated.Value(100)).current;
   const opacity = useRef(new Animated.Value(0)).current;
   const progressWidth = useRef(new Animated.Value(100)).current;
 
@@ -56,7 +56,7 @@ const Toast = ({ message, type = 'info', visible, onHide, duration = 3000 }) => 
   const hideToast = () => {
     Animated.parallel([
       Animated.timing(translateY, {
-        toValue: -100,
+        toValue: 100,
         duration: 250,
         useNativeDriver: true,
       }),
@@ -168,7 +168,7 @@ const Toast = ({ message, type = 'info', visible, onHide, duration = 3000 }) => 
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    top: Platform.OS === 'ios' ? 54 : 34,
+    bottom: Platform.OS === 'ios' ? 120 : 100,
     left: spacing.md,
     right: spacing.md,
     zIndex: 9999,

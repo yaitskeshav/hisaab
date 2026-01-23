@@ -452,7 +452,7 @@ const GroupsScreen = ({ navigation }) => {
             >
               <CardGlass style={styles.groupCard}>
                 <View style={styles.groupHeader}>
-                  <View style={[styles.groupIcon, { backgroundColor: accent.primary }]}>
+                  <View style={styles.groupIcon}>
                     {group.icon_type === 'custom' && group.icon_url ? (
                       <Image
                         source={{ uri: group.icon_url.startsWith('http') ? group.icon_url : `${BASE_URL}${group.icon_url}` }}
@@ -1104,7 +1104,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: colors.primary,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.md,
