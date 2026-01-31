@@ -7,10 +7,11 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../theme/colors';
+import { colors as staticColors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import CardGlass from './CardGlass';
 import { hapticWarning, hapticLight } from '../../utils/haptics';
+import { useThemeColors, useIsDarkMode } from '../../hooks/useThemeColors';
 
 const ConfirmModal = ({
   visible,
@@ -23,13 +24,16 @@ const ConfirmModal = ({
   type = 'default', // 'default', 'danger', 'warning'
   icon,
 }) => {
+  const colors = useThemeColors();
+  const isDark = useIsDarkMode();
+
   const getTypeConfig = () => {
     switch (type) {
       case 'danger':
         return {
           iconName: 'trash-outline',
-          iconColor: colors.error || '#ef4444',
-          confirmBg: colors.error || '#ef4444',
+          iconColor: staticColors.error || '#ef4444',
+          confirmBg: staticColors.error || '#ef4444',
         };
       case 'warning':
         return {
@@ -40,8 +44,8 @@ const ConfirmModal = ({
       default:
         return {
           iconName: 'help-circle-outline',
-          iconColor: colors.primary,
-          confirmBg: colors.primary,
+          iconColor: staticColors.primary,
+          confirmBg: staticColors.primary,
         };
     }
   };
@@ -82,19 +86,19 @@ const ConfirmModal = ({
             />
           </View>
 
-          <Text style={styles.title}>{title}</Text>
+          <Text style={[styles.title, { color: colors.textPrimary }]}>{title}</Text>
 
           {message ? (
-            <Text style={styles.message}>{message}</Text>
+            <Text style={[styles.message, { color: colors.textMuted }]}>{message}</Text>
           ) : null}
 
           <View style={styles.buttonContainer}>
             <TouchableOpacity
-              style={styles.cancelButton}
+              style={[styles.cancelButton, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)' }]}
               onPress={handleCancel}
               activeOpacity={0.7}
             >
-              <Text style={styles.cancelButtonText}>{cancelText}</Text>
+              <Text style={[styles.cancelButtonText, { color: colors.textPrimary }]}>{cancelText}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -136,13 +140,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '700',
-    color: colors.textPrimary,
     textAlign: 'center',
     marginBottom: spacing.sm,
   },
   message: {
     fontSize: 14,
-    color: colors.textMuted,
     textAlign: 'center',
     lineHeight: 20,
     marginBottom: spacing.lg,
@@ -157,14 +159,12 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: spacing.md,
     borderRadius: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   cancelButtonText: {
     fontSize: 15,
     fontWeight: '600',
-    color: colors.textPrimary,
   },
   confirmButton: {
     flex: 1,

@@ -1,12 +1,14 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Platform, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../theme/colors';
+import { useThemeColors, useIsDarkMode } from '../../hooks/useThemeColors';
 import { spacing } from '../../theme/spacing';
 import { useAccentColor } from '../../store/themeStore';
 import { hapticSuccess, hapticError, hapticWarning, hapticLight } from '../../utils/haptics';
 
 const Toast = ({ message, type = 'info', visible, onHide, duration = 3000 }) => {
+  const colors = useThemeColors();
+  const isDark = useIsDarkMode();
   const accent = useAccentColor();
   const translateY = useRef(new Animated.Value(100)).current;
   const opacity = useRef(new Animated.Value(0)).current;
@@ -14,15 +16,12 @@ const Toast = ({ message, type = 'info', visible, onHide, duration = 3000 }) => 
 
   useEffect(() => {
     if (visible) {
-      // Reset progress bar
       progressWidth.setValue(100);
 
-      // Trigger haptic based on toast type
       if (type === 'success') hapticSuccess();
       else if (type === 'error') hapticError();
       else if (type === 'warning') hapticWarning();
 
-      // Slide down and fade in
       Animated.parallel([
         Animated.spring(translateY, {
           toValue: 0,
@@ -37,14 +36,12 @@ const Toast = ({ message, type = 'info', visible, onHide, duration = 3000 }) => 
         }),
       ]).start();
 
-      // Animate progress bar
       Animated.timing(progressWidth, {
         toValue: 0,
         duration: duration,
         useNativeDriver: false,
       }).start();
 
-      // Auto hide after duration
       const timer = setTimeout(() => {
         hideToast();
       }, duration);
@@ -80,30 +77,14 @@ const Toast = ({ message, type = 'info', visible, onHide, duration = 3000 }) => 
   const getTypeConfig = () => {
     switch (type) {
       case 'success':
-        return {
-          icon: 'checkmark-circle',
-          accentColor: colors.success,
-          label: 'Success',
-        };
+        return { icon: 'checkmark-circle', accentColor: colors.success, label: 'Success' };
       case 'error':
-        return {
-          icon: 'close-circle',
-          accentColor: colors.error,
-          label: 'Error',
-        };
+        return { icon: 'close-circle', accentColor: colors.error, label: 'Error' };
       case 'warning':
-        return {
-          icon: 'warning',
-          accentColor: colors.warning,
-          label: 'Warning',
-        };
+        return { icon: 'warning', accentColor: colors.warning, label: 'Warning' };
       case 'info':
       default:
-        return {
-          icon: 'information-circle',
-          accentColor: colors.info,
-          label: 'Info',
-        };
+        return { icon: 'information-circle', accentColor: colors.info, label: 'Info' };
     }
   };
 
@@ -114,33 +95,36 @@ const Toast = ({ message, type = 'info', visible, onHide, duration = 3000 }) => 
     outputRange: ['0%', '100%'],
   });
 
+  const containerBg = isDark ? 'rgba(30, 41, 59, 0.98)' : 'rgba(255, 255, 255, 0.98)';
+  const dismissBg = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)';
+  const progressBg = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)';
+
   return (
     <Animated.View
       style={[
         styles.container,
         {
+          backgroundColor: containerBg,
+          borderColor: colors.cardBorder,
           transform: [{ translateY }],
           opacity,
         },
       ]}
     >
       <View style={styles.content}>
-        {/* Icon */}
         <View style={[styles.iconContainer, { backgroundColor: `${accent.primary}20` }]}>
           <Ionicons name={config.icon} size={20} color={accent.primary} />
         </View>
 
-        {/* Text content */}
         <View style={styles.textContainer}>
           <Text style={[styles.label, { color: accent.primary }]}>{config.label}</Text>
-          <Text style={styles.message} numberOfLines={2}>
+          <Text style={[styles.message, { color: colors.textPrimary }]} numberOfLines={2}>
             {message}
           </Text>
         </View>
 
-        {/* Dismiss button */}
         <TouchableOpacity
-          style={styles.dismissButton}
+          style={[styles.dismissButton, { backgroundColor: dismissBg }]}
           onPress={handleDismiss}
           activeOpacity={0.7}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
@@ -149,15 +133,11 @@ const Toast = ({ message, type = 'info', visible, onHide, duration = 3000 }) => 
         </TouchableOpacity>
       </View>
 
-      {/* Progress bar */}
-      <View style={styles.progressBar}>
+      <View style={[styles.progressBar, { backgroundColor: progressBg }]}>
         <Animated.View
           style={[
             styles.progress,
-            {
-              width: progressWidthInterpolated,
-              backgroundColor: accent.primary,
-            },
+            { width: progressWidthInterpolated, backgroundColor: accent.primary },
           ]}
         />
       </View>
@@ -173,10 +153,8 @@ const styles = StyleSheet.create({
     right: spacing.md,
     zIndex: 9999,
     elevation: 10,
-    backgroundColor: 'rgba(30, 41, 59, 0.98)',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: colors.cardBorder,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.5,
@@ -209,7 +187,6 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   message: {
-    color: colors.textPrimary,
     fontSize: 14,
     fontWeight: '500',
     lineHeight: 18,
@@ -218,13 +195,11 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   progressBar: {
     height: 3,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
   },
   progress: {
     height: '100%',

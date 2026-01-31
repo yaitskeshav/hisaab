@@ -12,7 +12,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { colors } from '../../theme/colors';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { spacing } from '../../theme/spacing';
 import AppInput from '../../components/common/AppInput';
 import AppButton from '../../components/common/AppButton';
@@ -25,6 +25,7 @@ import { useToast } from '../../context/ToastContext';
 import { BASE_URL } from '../../api/client';
 
 const EditProfileScreen = ({ navigation }) => {
+  const colors = useThemeColors();
   const { user, updateProfile, uploadAvatar, removeAvatar } = useAuthStore();
   const { showToast } = useToast();
   const accent = useAccentColor();
@@ -145,7 +146,7 @@ const EditProfileScreen = ({ navigation }) => {
           onPress={() => navigation.goBack()}
           variant="glass"
         />
-        <Text style={styles.title}>Edit Profile</Text>
+        <Text style={[styles.title, { color: colors.textPrimary }]}>Edit Profile</Text>
         <TouchableOpacity
           style={[
             styles.saveButton,
@@ -176,7 +177,7 @@ const EditProfileScreen = ({ navigation }) => {
               {avatarSource ? (
                 <Image source={avatarSource} style={styles.avatarImage} />
               ) : (
-                <View style={[styles.avatarImage, styles.avatarPlaceholder]}>
+                <View style={[styles.avatarImage, styles.avatarPlaceholder, { backgroundColor: colors.backgroundLight, borderColor: colors.glassBorder }]}>
                   <Ionicons name="person" size={44} color={colors.textMuted} />
                 </View>
               )}
@@ -186,7 +187,7 @@ const EditProfileScreen = ({ navigation }) => {
                 </View>
               )}
             </View>
-            <View style={[styles.editBadge, { backgroundColor: accent.primary }]}>
+            <View style={[styles.editBadge, { backgroundColor: accent.primary, borderColor: colors.background }]}>
               <Ionicons name="camera" size={14} color="#fff" />
             </View>
             <Text style={[styles.changePhotoText, { color: accent.primary }]}>Tap to change photo</Text>
@@ -209,7 +210,7 @@ const EditProfileScreen = ({ navigation }) => {
               editable={false}
             />
 
-            <Text style={styles.note}>
+            <Text style={[styles.note, { color: colors.textMuted }]}>
               Note: Email cannot be changed. Contact support if needed.
             </Text>
 
@@ -252,13 +253,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: '700',
-    color: colors.textPrimary,
   },
   saveButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -294,14 +293,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   avatarPlaceholder: {
-    backgroundColor: colors.backgroundLight,
     borderWidth: 1,
-    borderColor: colors.glassBorder,
-  },
-  avatarText: {
-    fontSize: 48,
-    fontWeight: '600',
-    color: colors.textPrimary,
   },
   avatarOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -321,22 +313,18 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 3,
-    borderColor: colors.background,
   },
   changePhotoText: {
     fontSize: 14,
-    color: colors.primary,
   },
   card: {
     padding: spacing.lg,
   },
   note: {
     fontSize: 12,
-    color: colors.textMuted,
     marginBottom: spacing.md,
     fontStyle: 'italic',
   },

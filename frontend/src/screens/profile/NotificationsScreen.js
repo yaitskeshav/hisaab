@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../theme/colors';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { spacing } from '../../theme/spacing';
 import CardGlass from '../../components/common/CardGlass';
 import IconButton from '../../components/common/IconButton';
@@ -11,6 +11,7 @@ import apiClient from '../../api/client';
 import { useAccentColor } from '../../store/themeStore';
 
 const NotificationsScreen = ({ navigation }) => {
+  const colors = useThemeColors();
   const accent = useAccentColor();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -68,7 +69,7 @@ const NotificationsScreen = ({ navigation }) => {
             onPress={() => navigation.goBack()}
             variant="glass"
           />
-          <Text style={styles.title}>Notifications</Text>
+          <Text style={[styles.title, { color: colors.textPrimary }]}>Notifications</Text>
           <View style={{ width: 40 }} />
         </View>
         <View style={styles.loadingContainer}>
@@ -89,7 +90,7 @@ const NotificationsScreen = ({ navigation }) => {
           onPress={() => navigation.goBack()}
           variant="glass"
         />
-        <Text style={styles.title}>Notifications</Text>
+        <Text style={[styles.title, { color: colors.textPrimary }]}>Notifications</Text>
         <View style={{ width: 40 }}>
           {saving && <ActivityIndicator size="small" color={accent.primary} />}
         </View>
@@ -97,12 +98,12 @@ const NotificationsScreen = ({ navigation }) => {
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <CardGlass style={styles.section}>
-          <Text style={styles.sectionTitle}>Group Activity</Text>
+          <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>Group Activity</Text>
 
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
-              <Text style={styles.settingLabel}>Member Joined</Text>
-              <Text style={styles.settingDesc}>When someone joins your group</Text>
+              <Text style={[styles.settingLabel, { color: colors.textPrimary }]}>Member Joined</Text>
+              <Text style={[styles.settingDesc, { color: colors.textMuted }]}>When someone joins your group</Text>
             </View>
             <AnimatedToggle
               value={settings.notify_member_joined}
@@ -113,12 +114,12 @@ const NotificationsScreen = ({ navigation }) => {
         </CardGlass>
 
         <CardGlass style={styles.section}>
-          <Text style={styles.sectionTitle}>Expenses</Text>
+          <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>Expenses</Text>
 
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
-              <Text style={styles.settingLabel}>Expense Added</Text>
-              <Text style={styles.settingDesc}>When an expense is added to your group</Text>
+              <Text style={[styles.settingLabel, { color: colors.textPrimary }]}>Expense Added</Text>
+              <Text style={[styles.settingDesc, { color: colors.textMuted }]}>When an expense is added to your group</Text>
             </View>
             <AnimatedToggle
               value={settings.notify_expense_added}
@@ -127,12 +128,12 @@ const NotificationsScreen = ({ navigation }) => {
             />
           </View>
 
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: colors.cardBorder }]} />
 
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
-              <Text style={styles.settingLabel}>Expense Edited</Text>
-              <Text style={styles.settingDesc}>When an expense is modified</Text>
+              <Text style={[styles.settingLabel, { color: colors.textPrimary }]}>Expense Edited</Text>
+              <Text style={[styles.settingDesc, { color: colors.textMuted }]}>When an expense is modified</Text>
             </View>
             <AnimatedToggle
               value={settings.notify_expense_edited}
@@ -143,12 +144,12 @@ const NotificationsScreen = ({ navigation }) => {
         </CardGlass>
 
         <CardGlass style={styles.section}>
-          <Text style={styles.sectionTitle}>Settlements</Text>
+          <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>Settlements</Text>
 
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
-              <Text style={styles.settingLabel}>Payment Received</Text>
-              <Text style={styles.settingDesc}>When someone records a payment to you</Text>
+              <Text style={[styles.settingLabel, { color: colors.textPrimary }]}>Payment Received</Text>
+              <Text style={[styles.settingDesc, { color: colors.textMuted }]}>When someone records a payment to you</Text>
             </View>
             <AnimatedToggle
               value={settings.notify_settlement_created}
@@ -157,12 +158,12 @@ const NotificationsScreen = ({ navigation }) => {
             />
           </View>
 
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: colors.cardBorder }]} />
 
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
-              <Text style={styles.settingLabel}>Payment Confirmed</Text>
-              <Text style={styles.settingDesc}>When your payment is confirmed</Text>
+              <Text style={[styles.settingLabel, { color: colors.textPrimary }]}>Payment Confirmed</Text>
+              <Text style={[styles.settingDesc, { color: colors.textMuted }]}>When your payment is confirmed</Text>
             </View>
             <AnimatedToggle
               value={settings.notify_settlement_confirm}
@@ -172,7 +173,7 @@ const NotificationsScreen = ({ navigation }) => {
           </View>
         </CardGlass>
 
-        <Text style={styles.footerText}>
+        <Text style={[styles.footerText, { color: colors.textMuted }]}>
           Push notifications require the app to be installed and notification permissions enabled on your device.
         </Text>
       </ScrollView>
@@ -194,7 +195,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: '700',
-    color: colors.textPrimary,
   },
   loadingContainer: {
     flex: 1,
@@ -211,7 +211,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 12,
     fontWeight: '600',
-    color: colors.textMuted,
     textTransform: 'uppercase',
     marginBottom: spacing.md,
     letterSpacing: 1,
@@ -229,21 +228,17 @@ const styles = StyleSheet.create({
   settingLabel: {
     fontSize: 16,
     fontWeight: '500',
-    color: colors.textPrimary,
     marginBottom: 4,
   },
   settingDesc: {
     fontSize: 12,
-    color: colors.textMuted,
   },
   divider: {
     height: 1,
-    backgroundColor: colors.cardBorder,
     marginVertical: spacing.sm,
   },
   footerText: {
     fontSize: 12,
-    color: colors.textMuted,
     textAlign: 'center',
     marginTop: spacing.md,
     paddingHorizontal: spacing.lg,

@@ -11,7 +11,8 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { PieChart, BarChart, LineChart } from 'react-native-chart-kit';
-import { colors } from '../../theme/colors';
+import { useThemeColors } from '../../hooks/useThemeColors';
+import { colors as staticColors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import CardGlass from '../../components/common/CardGlass';
 import Loader from '../../components/common/Loader';
@@ -38,6 +39,7 @@ const PERIOD_LABELS = {
 
 const AnalyticsScreen = ({ route, navigation }) => {
   const { groupId } = route.params || {};
+  const colors = useThemeColors();
   const accent = useAccentColor();
 
   const {
@@ -99,6 +101,7 @@ const AnalyticsScreen = ({ route, navigation }) => {
             key={section}
             style={[
               styles.tab,
+              { backgroundColor: colors.glass },
               isSelected && [styles.tabSelected, { backgroundColor: accent.primary + '20', borderColor: accent.primary }],
             ]}
             onPress={() => setSection(section)}
@@ -108,7 +111,7 @@ const AnalyticsScreen = ({ route, navigation }) => {
               size={16}
               color={isSelected ? accent.primary : colors.textMuted}
             />
-            <Text style={[styles.tabText, isSelected && { color: accent.primary }]}>
+            <Text style={[styles.tabText, { color: isSelected ? accent.primary : colors.textMuted }]}>
               {config.label}
             </Text>
           </TouchableOpacity>
@@ -127,11 +130,12 @@ const AnalyticsScreen = ({ route, navigation }) => {
             key={period}
             style={[
               styles.timeFilter,
+              { backgroundColor: colors.glass },
               isSelected && [styles.timeFilterSelected, { backgroundColor: accent.primary }],
             ]}
             onPress={() => setPeriod(selectedSection, period)}
           >
-            <Text style={[styles.timeFilterText, isSelected && styles.timeFilterTextSelected]}>
+            <Text style={[styles.timeFilterText, { color: isSelected ? '#fff' : colors.textMuted }]}>
               {PERIOD_LABELS[period]}
             </Text>
           </TouchableOpacity>
@@ -152,19 +156,19 @@ const AnalyticsScreen = ({ route, navigation }) => {
             <Text style={[styles.statValue, { color: accent.primary }]} numberOfLines={1} adjustsFontSizeToFit>
               {formatCurrency(data.total_spent || 0)}
             </Text>
-            <Text style={styles.statLabel}>Total Spent</Text>
+            <Text style={[styles.statLabel, { color: colors.textMuted }]}>Total Spent</Text>
           </CardGlass>
           <CardGlass style={styles.statCard}>
             <Text style={[styles.statValue, { color: accent.primary }]} numberOfLines={1} adjustsFontSizeToFit>
               {data.expense_count || 0}
             </Text>
-            <Text style={styles.statLabel}>Expenses</Text>
+            <Text style={[styles.statLabel, { color: colors.textMuted }]}>Expenses</Text>
           </CardGlass>
           <CardGlass style={styles.statCard}>
             <Text style={[styles.statValue, { color: accent.primary }]} numberOfLines={1} adjustsFontSizeToFit>
               {formatCurrency(data.average_expense || 0)}
             </Text>
-            <Text style={styles.statLabel}>Average</Text>
+            <Text style={[styles.statLabel, { color: colors.textMuted }]}>Average</Text>
           </CardGlass>
         </View>
 
@@ -173,9 +177,9 @@ const AnalyticsScreen = ({ route, navigation }) => {
           <CardGlass style={styles.infoCard}>
             <View style={styles.infoCardHeader}>
               <Ionicons name="arrow-up-circle" size={20} color={colors.warning} />
-              <Text style={styles.infoCardTitle}>Highest Expense</Text>
+              <Text style={[styles.infoCardTitle, { color: colors.textMuted }]}>Highest Expense</Text>
             </View>
-            <Text style={styles.infoCardValue}>{data.highest_expense.title}</Text>
+            <Text style={[styles.infoCardValue, { color: colors.textPrimary }]}>{data.highest_expense.title}</Text>
             <Text style={[styles.infoCardAmount, { color: accent.primary }]}>
               {formatCurrency(data.highest_expense.amount)}
             </Text>
@@ -187,10 +191,10 @@ const AnalyticsScreen = ({ route, navigation }) => {
           <CardGlass style={styles.infoCard}>
             <View style={styles.infoCardHeader}>
               <Text style={styles.categoryIcon}>{data.most_used_category.icon}</Text>
-              <Text style={styles.infoCardTitle}>Most Used Category</Text>
+              <Text style={[styles.infoCardTitle, { color: colors.textMuted }]}>Most Used Category</Text>
             </View>
-            <Text style={styles.infoCardValue}>{data.most_used_category.name}</Text>
-            <Text style={styles.infoCardSubtext}>{data.most_used_category.count} expenses</Text>
+            <Text style={[styles.infoCardValue, { color: colors.textPrimary }]}>{data.most_used_category.name}</Text>
+            <Text style={[styles.infoCardSubtext, { color: colors.textMuted }]}>{data.most_used_category.count} expenses</Text>
           </CardGlass>
         )}
 
@@ -199,9 +203,9 @@ const AnalyticsScreen = ({ route, navigation }) => {
           <CardGlass style={styles.infoCard}>
             <View style={styles.infoCardHeader}>
               <Ionicons name="calendar" size={20} color={colors.textMuted} />
-              <Text style={styles.infoCardTitle}>Date Range</Text>
+              <Text style={[styles.infoCardTitle, { color: colors.textMuted }]}>Date Range</Text>
             </View>
-            <Text style={styles.infoCardValue}>
+            <Text style={[styles.infoCardValue, { color: colors.textPrimary }]}>
               {new Date(data.date_range.first).toLocaleDateString()} - {new Date(data.date_range.last).toLocaleDateString()}
             </Text>
           </CardGlass>
@@ -213,14 +217,14 @@ const AnalyticsScreen = ({ route, navigation }) => {
   // Render Categories section
   const renderCategories = () => {
     if (!data || !data.categories?.length) {
-      return <EmptyState message="No category data available" />;
+      return <EmptyState message="No category data available" colors={colors} />;
     }
 
     const pieData = data.categories.slice(0, 5).map((cat, index) => ({
       name: cat.name,
       amount: cat.amount,
       color: getChartColor(index, accent.primary),
-      legendFontColor: colors.textSecondary,
+      legendFontColor: colors.textPrimary,
       legendFontSize: 11,
     }));
 
@@ -245,14 +249,14 @@ const AnalyticsScreen = ({ route, navigation }) => {
             <CardGlass key={cat.id} style={styles.listItem}>
               <Text style={styles.listItemIcon}>{cat.icon}</Text>
               <View style={styles.listItemContent}>
-                <Text style={styles.listItemTitle}>{cat.name}</Text>
-                <Text style={styles.listItemSubtext}>{cat.count} expenses</Text>
+                <Text style={[styles.listItemTitle, { color: colors.textPrimary }]}>{cat.name}</Text>
+                <Text style={[styles.listItemSubtext, { color: colors.textMuted }]}>{cat.count} expenses</Text>
               </View>
               <View style={styles.listItemRight}>
                 <Text style={[styles.listItemAmount, { color: accent.primary }]}>
                   {formatCurrency(cat.amount)}
                 </Text>
-                <Text style={styles.listItemPercent}>{cat.percentage.toFixed(1)}%</Text>
+                <Text style={[styles.listItemPercent, { color: colors.textMuted }]}>{cat.percentage.toFixed(1)}%</Text>
               </View>
             </CardGlass>
           ))}
@@ -264,7 +268,7 @@ const AnalyticsScreen = ({ route, navigation }) => {
   // Render Members section
   const renderMembers = () => {
     if (!data || !data.members?.length) {
-      return <EmptyState message="No member data available" />;
+      return <EmptyState message="No member data available" colors={colors} />;
     }
 
     const barData = {
@@ -279,8 +283,8 @@ const AnalyticsScreen = ({ route, navigation }) => {
           <CardGlass style={[styles.infoCard, styles.topSpenderCard]}>
             <Ionicons name="trophy" size={24} color="#FFD700" />
             <View style={styles.topSpenderInfo}>
-              <Text style={styles.topSpenderLabel}>Top Spender</Text>
-              <Text style={styles.topSpenderName}>{data.top_spender.name}</Text>
+              <Text style={[styles.topSpenderLabel, { color: colors.textMuted }]}>Top Spender</Text>
+              <Text style={[styles.topSpenderName, { color: colors.textPrimary }]}>{data.top_spender.name}</Text>
               <Text style={[styles.topSpenderAmount, { color: accent.primary }]}>
                 {formatCurrency(data.top_spender.paid)}
               </Text>
@@ -304,18 +308,18 @@ const AnalyticsScreen = ({ route, navigation }) => {
         <View style={styles.listContainer}>
           {data.members.map((member, index) => (
             <CardGlass key={member.id} style={styles.listItem}>
-              <View style={[styles.rankBadge, index === 0 && { backgroundColor: '#FFD700' }]}>
-                <Text style={styles.rankText}>{index + 1}</Text>
+              <View style={[styles.rankBadge, { backgroundColor: colors.glass }, index === 0 && { backgroundColor: '#FFD700' }]}>
+                <Text style={[styles.rankText, { color: colors.textPrimary }]}>{index + 1}</Text>
               </View>
               <View style={styles.listItemContent}>
-                <Text style={styles.listItemTitle}>{member.name}</Text>
-                <Text style={styles.listItemSubtext}>{member.count} expenses</Text>
+                <Text style={[styles.listItemTitle, { color: colors.textPrimary }]}>{member.name}</Text>
+                <Text style={[styles.listItemSubtext, { color: colors.textMuted }]}>{member.count} expenses</Text>
               </View>
               <View style={styles.listItemRight}>
                 <Text style={[styles.listItemAmount, { color: accent.primary }]}>
                   {formatCurrency(member.paid)}
                 </Text>
-                <Text style={styles.listItemPercent}>{member.percentage.toFixed(1)}%</Text>
+                <Text style={[styles.listItemPercent, { color: colors.textMuted }]}>{member.percentage.toFixed(1)}%</Text>
               </View>
             </CardGlass>
           ))}
@@ -326,13 +330,13 @@ const AnalyticsScreen = ({ route, navigation }) => {
 
   // Render Trends section
   const renderTrends = () => {
-    if (!data) return <EmptyState message="No trend data available" />;
+    if (!data) return <EmptyState message="No trend data available" colors={colors} />;
 
     const showDaily = currentPeriod === 'week';
     const trendData = showDaily ? data.daily : data.monthly;
 
     if (!trendData?.length) {
-      return <EmptyState message="No trend data available" />;
+      return <EmptyState message="No trend data available" colors={colors} />;
     }
 
     const lineData = {
@@ -358,7 +362,7 @@ const AnalyticsScreen = ({ route, navigation }) => {
           ) : (
             <View style={styles.noDataChart}>
               <Ionicons name="analytics-outline" size={48} color={colors.textMuted} />
-              <Text style={styles.noDataText}>No spending data for this period</Text>
+              <Text style={[styles.noDataText, { color: colors.textMuted }]}>No spending data for this period</Text>
             </View>
           )}
         </CardGlass>
@@ -367,7 +371,7 @@ const AnalyticsScreen = ({ route, navigation }) => {
         <View style={styles.listContainer}>
           {trendData.map((item, index) => (
             <CardGlass key={index} style={styles.listItem}>
-              <Text style={styles.trendLabel}>{item.label}</Text>
+              <Text style={[styles.trendLabel, { color: colors.textPrimary }]}>{item.label}</Text>
               <Text style={[styles.listItemAmount, { color: accent.primary }]}>
                 {formatCurrency(item.amount)}
               </Text>
@@ -393,13 +397,13 @@ const AnalyticsScreen = ({ route, navigation }) => {
             <Text style={[styles.statValue, { color: accent.primary }]} numberOfLines={1} adjustsFontSizeToFit>
               {formatCurrency(data.your_contribution || 0)}
             </Text>
-            <Text style={styles.statLabel}>You Paid</Text>
+            <Text style={[styles.statLabel, { color: colors.textMuted }]}>You Paid</Text>
           </CardGlass>
           <CardGlass style={styles.statCard}>
             <Text style={[styles.statValue, { color: colors.textMuted }]} numberOfLines={1} adjustsFontSizeToFit>
               {formatCurrency(data.your_share || 0)}
             </Text>
-            <Text style={styles.statLabel}>Your Share</Text>
+            <Text style={[styles.statLabel, { color: colors.textMuted }]}>Your Share</Text>
           </CardGlass>
           <CardGlass style={styles.statCard}>
             <View style={styles.balanceRow}>
@@ -408,7 +412,7 @@ const AnalyticsScreen = ({ route, navigation }) => {
                 {formatCurrency(Math.abs(data.net_balance || 0))}
               </Text>
             </View>
-            <Text style={styles.statLabel}>
+            <Text style={[styles.statLabel, { color: colors.textMuted }]}>
               {data.net_balance >= 0 ? 'You get back' : 'You owe'}
             </Text>
           </CardGlass>
@@ -417,18 +421,18 @@ const AnalyticsScreen = ({ route, navigation }) => {
         {/* You vs Average */}
         {data.you_vs_average && (
           <CardGlass style={styles.infoCard}>
-            <Text style={styles.infoCardTitle}>You vs Group Average</Text>
+            <Text style={[styles.infoCardTitle, { color: colors.textMuted }]}>You vs Group Average</Text>
             <View style={styles.compareRow}>
               <View style={styles.compareItem}>
-                <Text style={styles.compareLabel}>You</Text>
+                <Text style={[styles.compareLabel, { color: colors.textMuted }]}>You</Text>
                 <Text style={[styles.compareValue, { color: accent.primary }]}>
                   {formatCurrency(data.you_vs_average.you)}
                 </Text>
               </View>
               <Ionicons name="swap-horizontal" size={24} color={colors.textMuted} />
               <View style={styles.compareItem}>
-                <Text style={styles.compareLabel}>Average</Text>
-                <Text style={styles.compareValue}>
+                <Text style={[styles.compareLabel, { color: colors.textMuted }]}>Average</Text>
+                <Text style={[styles.compareValue, { color: colors.textPrimary }]}>
                   {formatCurrency(data.you_vs_average.group_avg)}
                 </Text>
               </View>
@@ -439,12 +443,14 @@ const AnalyticsScreen = ({ route, navigation }) => {
         {/* Your Top Categories */}
         {data.your_top_categories?.length > 0 && (
           <>
-            <Text style={styles.sectionSubtitle}>Your Top Categories</Text>
+            <Text style={[styles.sectionSubtitle, { color: colors.textMuted }]}>Your Top Categories</Text>
             <View style={styles.listContainer}>
               {data.your_top_categories.map((cat) => (
                 <CardGlass key={cat.id} style={styles.listItem}>
                   <Text style={styles.listItemIcon}>{cat.icon}</Text>
-                  <Text style={styles.listItemTitle}>{cat.name}</Text>
+                  <View style={styles.listItemContent}>
+                    <Text style={[styles.listItemTitle, { color: colors.textPrimary }]}>{cat.name}</Text>
+                  </View>
                   <Text style={[styles.listItemAmount, { color: accent.primary }]}>
                     {formatCurrency(cat.amount)}
                   </Text>
@@ -469,33 +475,33 @@ const AnalyticsScreen = ({ route, navigation }) => {
             <Text style={[styles.statValue, { color: colors.success }]} numberOfLines={1} adjustsFontSizeToFit>
               {formatCurrency(data.total_settled || 0)}
             </Text>
-            <Text style={styles.statLabel}>Settled</Text>
+            <Text style={[styles.statLabel, { color: colors.textMuted }]}>Settled</Text>
           </CardGlass>
           <CardGlass style={styles.statCard}>
             <Text style={[styles.statValue, { color: colors.warning }]} numberOfLines={1} adjustsFontSizeToFit>
               {data.pending_count || 0}
             </Text>
-            <Text style={styles.statLabel}>Pending</Text>
+            <Text style={[styles.statLabel, { color: colors.textMuted }]}>Pending</Text>
           </CardGlass>
           <CardGlass style={styles.statCard}>
             <Text style={[styles.statValue, { color: colors.warning }]} numberOfLines={1} adjustsFontSizeToFit>
               {formatCurrency(data.pending_amount || 0)}
             </Text>
-            <Text style={styles.statLabel}>Pending Amt</Text>
+            <Text style={[styles.statLabel, { color: colors.textMuted }]}>Pending Amt</Text>
           </CardGlass>
         </View>
 
         {/* Simplified Debts */}
         {data.simplified_debts?.length > 0 && (
           <>
-            <Text style={styles.sectionSubtitle}>Who Owes Who</Text>
+            <Text style={[styles.sectionSubtitle, { color: colors.textMuted }]}>Who Owes Who</Text>
             <View style={styles.listContainer}>
               {data.simplified_debts.map((debt, index) => (
                 <CardGlass key={index} style={styles.debtCard}>
                   <View style={styles.debtRow}>
-                    <Text style={styles.debtName}>{debt.from_name}</Text>
+                    <Text style={[styles.debtName, { color: colors.textPrimary }]}>{debt.from_name}</Text>
                     <Ionicons name="arrow-forward" size={16} color={accent.primary} />
-                    <Text style={styles.debtName}>{debt.to_name}</Text>
+                    <Text style={[styles.debtName, { color: colors.textPrimary }]}>{debt.to_name}</Text>
                   </View>
                   <Text style={[styles.debtAmount, { color: accent.primary }]}>
                     {formatCurrency(debt.amount)}
@@ -511,8 +517,8 @@ const AnalyticsScreen = ({ route, navigation }) => {
             <View style={styles.allSettledIconContainer}>
               <Ionicons name="checkmark-circle" size={48} color={colors.success} />
             </View>
-            <Text style={styles.allSettledTitle}>All Settled Up!</Text>
-            <Text style={styles.allSettledSubtext}>
+            <Text style={[styles.allSettledTitle, { color: colors.success }]}>All Settled Up!</Text>
+            <Text style={[styles.allSettledSubtext, { color: colors.textMuted }]}>
               No pending balances in this group
             </Text>
           </CardGlass>
@@ -531,7 +537,7 @@ const AnalyticsScreen = ({ route, navigation }) => {
       return (
         <CardGlass style={styles.errorCard}>
           <Ionicons name="alert-circle" size={32} color={colors.error} />
-          <Text style={styles.errorText}>{error}</Text>
+          <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
         </CardGlass>
       );
     }
@@ -561,10 +567,10 @@ const AnalyticsScreen = ({ route, navigation }) => {
     >
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backButton, { backgroundColor: colors.glass }]}>
           <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.title}>Analytics</Text>
+        <Text style={[styles.title, { color: colors.textPrimary }]}>Analytics</Text>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -594,23 +600,23 @@ const AnalyticsScreen = ({ route, navigation }) => {
 };
 
 // Helper components
-const EmptyState = ({ message }) => (
+const EmptyState = ({ message, colors }) => (
   <CardGlass style={styles.emptyCard}>
     <Ionicons name="analytics-outline" size={48} color={colors.textMuted} />
-    <Text style={styles.emptyText}>{message}</Text>
+    <Text style={[styles.emptyText, { color: colors.textMuted }]}>{message}</Text>
   </CardGlass>
 );
 
 // Helper function for chart colors
 const getChartColor = (index, primaryColor) => {
-  const colors = [
+  const chartColors = [
     primaryColor,
-    '#0F4C75',
-    '#3282B8',
-    '#BBE1FA',
-    '#1B262C',
+    '#22c55e', // green
+    '#f59e0b', // amber
+    '#8b5cf6', // purple
+    '#06b6d4', // cyan
   ];
-  return colors[index % colors.length];
+  return chartColors[index % chartColors.length];
 };
 
 const styles = StyleSheet.create({
@@ -628,7 +634,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.glass,
+    backgroundColor: staticColors.glass,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -636,7 +642,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 24,
     fontWeight: '700',
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
     textAlign: 'center',
   },
   headerSpacer: {
@@ -655,7 +661,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: 20,
-    backgroundColor: colors.glass,
+    backgroundColor: staticColors.glass,
     borderWidth: 1,
     borderColor: 'transparent',
     gap: spacing.xs,
@@ -666,7 +672,7 @@ const styles = StyleSheet.create({
   tabText: {
     fontSize: 13,
     fontWeight: '600',
-    color: colors.textMuted,
+    color: staticColors.textMuted,
   },
   scrollView: {
     flex: 1,
@@ -684,7 +690,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: spacing.sm,
     borderRadius: 12,
-    backgroundColor: colors.glass,
+    backgroundColor: staticColors.glass,
     alignItems: 'center',
   },
   timeFilterSelected: {
@@ -693,7 +699,7 @@ const styles = StyleSheet.create({
   timeFilterText: {
     fontSize: 12,
     fontWeight: '600',
-    color: colors.textMuted,
+    color: staticColors.textMuted,
   },
   timeFilterTextSelected: {
     color: '#fff',
@@ -718,7 +724,7 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 11,
-    color: colors.textMuted,
+    color: staticColors.textMuted,
     textAlign: 'center',
   },
   balanceRow: {
@@ -738,13 +744,13 @@ const styles = StyleSheet.create({
   infoCardTitle: {
     fontSize: 12,
     fontWeight: '600',
-    color: colors.textMuted,
+    color: staticColors.textMuted,
     textTransform: 'uppercase',
   },
   infoCardValue: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
   },
   infoCardAmount: {
     fontSize: 20,
@@ -753,7 +759,7 @@ const styles = StyleSheet.create({
   },
   infoCardSubtext: {
     fontSize: 12,
-    color: colors.textMuted,
+    color: staticColors.textMuted,
     marginTop: 2,
   },
   categoryIcon: {
@@ -774,7 +780,7 @@ const styles = StyleSheet.create({
   noDataText: {
     marginTop: spacing.md,
     fontSize: 14,
-    color: colors.textMuted,
+    color: staticColors.textMuted,
   },
   listContainer: {
     gap: spacing.sm,
@@ -794,11 +800,11 @@ const styles = StyleSheet.create({
   listItemTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
   },
   listItemSubtext: {
     fontSize: 12,
-    color: colors.textMuted,
+    color: staticColors.textMuted,
   },
   listItemRight: {
     alignItems: 'flex-end',
@@ -809,13 +815,13 @@ const styles = StyleSheet.create({
   },
   listItemPercent: {
     fontSize: 11,
-    color: colors.textMuted,
+    color: staticColors.textMuted,
   },
   rankBadge: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: colors.glass,
+    backgroundColor: staticColors.glass,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.md,
@@ -823,7 +829,7 @@ const styles = StyleSheet.create({
   rankText: {
     fontSize: 12,
     fontWeight: '700',
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
   },
   topSpenderCard: {
     flexDirection: 'row',
@@ -835,13 +841,13 @@ const styles = StyleSheet.create({
   },
   topSpenderLabel: {
     fontSize: 11,
-    color: colors.textMuted,
+    color: staticColors.textMuted,
     textTransform: 'uppercase',
   },
   topSpenderName: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
   },
   topSpenderAmount: {
     fontSize: 18,
@@ -850,12 +856,12 @@ const styles = StyleSheet.create({
   trendLabel: {
     flex: 1,
     fontSize: 14,
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
   },
   sectionSubtitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.textMuted,
+    color: staticColors.textMuted,
     marginTop: spacing.md,
     marginBottom: spacing.sm,
   },
@@ -870,13 +876,13 @@ const styles = StyleSheet.create({
   },
   compareLabel: {
     fontSize: 12,
-    color: colors.textMuted,
+    color: staticColors.textMuted,
     marginBottom: 4,
   },
   compareValue: {
     fontSize: 18,
     fontWeight: '700',
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
   },
   debtCard: {
     padding: spacing.md,
@@ -890,7 +896,7 @@ const styles = StyleSheet.create({
   debtName: {
     fontSize: 14,
     fontWeight: '500',
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
   },
   debtAmount: {
     fontSize: 18,
@@ -912,12 +918,12 @@ const styles = StyleSheet.create({
   allSettledTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: colors.success,
+    color: staticColors.success,
     marginBottom: spacing.xs,
   },
   allSettledSubtext: {
     fontSize: 14,
-    color: colors.textMuted,
+    color: staticColors.textMuted,
     textAlign: 'center',
   },
   emptyCard: {
@@ -927,7 +933,7 @@ const styles = StyleSheet.create({
   emptyText: {
     marginTop: spacing.md,
     fontSize: 14,
-    color: colors.textMuted,
+    color: staticColors.textMuted,
     textAlign: 'center',
   },
   errorCard: {
@@ -937,7 +943,7 @@ const styles = StyleSheet.create({
   errorText: {
     marginTop: spacing.md,
     fontSize: 14,
-    color: colors.error,
+    color: staticColors.error,
     textAlign: 'center',
   },
 });

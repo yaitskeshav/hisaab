@@ -11,10 +11,11 @@ import {
   RefreshControl,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../theme/colors';
+import { Image } from 'react-native';
+import { useThemeColors, useIsDarkMode } from '../../hooks/useThemeColors';
 import { spacing } from '../../theme/spacing';
 import CardGlass from '../../components/common/CardGlass';
 import Loader from '../../components/common/Loader';
@@ -23,26 +24,35 @@ import useGroupStore from '../../store/groupStore';
 import { useAccentColor } from '../../store/themeStore';
 import { getCategoryIcon } from '../../constants/categories';
 import { formatCurrency } from '../../utils/currency';
+import { PREDEFINED_GROUP_ICONS } from '../../constants/groupIcons';
+import { BASE_URL } from '../../api/client';
 
 const ACTIVITY_TYPES = [
   { key: 'all', label: 'All' },
   { key: 'expense', label: 'Expenses' },
+  { key: 'settlement', label: 'Settlements' },
   { key: 'group', label: 'Group' },
 ];
 
 // Map activity types to filter keys
 const EXPENSE_TYPES = ['expense_added', 'expense_edited', 'expense_deleted', 'expense_settled', 'expense_unsettled'];
+const SETTLEMENT_TYPES = ['settlement_created', 'settlement_confirmed', 'settlement_rejected'];
 const GROUP_TYPES = ['group_created', 'group_renamed', 'member_joined', 'member_left'];
 
 const ActivityScreen = () => {
   const navigation = useNavigation();
+  const route = useRoute();
+  const colors = useThemeColors();
+  const isDark = useIsDarkMode();
+  const initialGroupId = route.params?.groupId || null;
+
   const { groups, fetchGroups } = useGroupStore();
   const { activities, isLoading, hasMore, fetchActivities, loadMore, resetActivities } = useActivityStore();
   const accent = useAccentColor();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState('all');
-  const [selectedGroupId, setSelectedGroupId] = useState(null);
+  const [selectedGroupId, setSelectedGroupId] = useState(initialGroupId);
   const [showFilters, setShowFilters] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [fromDate, setFromDate] = useState(null);
@@ -80,6 +90,7 @@ const ActivityScreen = () => {
   const filteredActivities = activities.filter(activity => {
     // Filter by type
     if (selectedType === 'expense' && !EXPENSE_TYPES.includes(activity.type)) return false;
+    if (selectedType === 'settlement' && !SETTLEMENT_TYPES.includes(activity.type)) return false;
     if (selectedType === 'group' && !GROUP_TYPES.includes(activity.type)) return false;
 
     // Filter by date range
@@ -154,6 +165,13 @@ const ActivityScreen = () => {
         return <Ionicons name="checkmark-circle" size={20} color={colors.success || '#22c55e'} />;
       case 'expense_unsettled':
         return <Ionicons name="close-circle" size={20} color={colors.warning || '#f59e0b'} />;
+      // Settlement activities
+      case 'settlement_created':
+        return <Ionicons name="cash-outline" size={20} color="#F97316" />;
+      case 'settlement_confirmed':
+        return <Ionicons name="checkmark-done-circle" size={20} color={colors.success || '#22c55e'} />;
+      case 'settlement_rejected':
+        return <Ionicons name="close-circle-outline" size={20} color={colors.error || '#ef4444'} />;
       default:
         return <Ionicons name="ellipse" size={20} color={colors.textMuted} />;
     }
@@ -216,6 +234,14 @@ const ActivityScreen = () => {
         return `${userName} settled "${activity.expense_title || 'expense'}" in ${groupName}`;
       case 'expense_unsettled':
         return `${userName} unsettled "${activity.expense_title || 'expense'}" in ${groupName}`;
+      // Settlement activities
+      case 'settlement_created':
+        const settleAmtStr = activity.amount ? formatCurrency(activity.amount) : 'payment';
+        return activity.description || `${userName} recorded a ${settleAmtStr} payment`;
+      case 'settlement_confirmed':
+        return activity.description || `${userName} confirmed a payment`;
+      case 'settlement_rejected':
+        return activity.description || `${userName} rejected a payment`;
       default:
         return activity.description || 'Activity';
     }
@@ -224,14 +250,18 @@ const ActivityScreen = () => {
   const getActivityIconBgStyle = (activity) => {
     switch (activity.type) {
       case 'expense_deleted':
+      case 'settlement_rejected':
         return { backgroundColor: 'rgba(239, 68, 68, 0.2)' };
       case 'expense_settled':
       case 'group_created':
       case 'member_joined':
+      case 'settlement_confirmed':
         return { backgroundColor: 'rgba(34, 197, 94, 0.2)' };
       case 'member_left':
       case 'expense_unsettled':
         return { backgroundColor: 'rgba(245, 158, 11, 0.2)' };
+      case 'settlement_created':
+        return { backgroundColor: 'rgba(249, 115, 22, 0.2)' };
       default:
         return {};
     }
@@ -295,16 +325,20 @@ const ActivityScreen = () => {
       activeOpacity={0.7}
     >
       <CardGlass style={styles.activityCard}>
-        <View style={[styles.activityIconContainer, getActivityIconBgStyle(activity)]}>
+        <View style={[
+          styles.activityIconContainer,
+          { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)' },
+          getActivityIconBgStyle(activity)
+        ]}>
           {getActivityIcon(activity)}
         </View>
         <View style={styles.activityContent}>
           <View style={styles.activityHeader}>
-            <Text style={styles.activityTitle}>
+            <Text style={[styles.activityTitle, { color: colors.textPrimary }]}>
               {getActivityDescription(activity)}
             </Text>
           </View>
-          <Text style={styles.activityTime}>
+          <Text style={[styles.activityTime, { color: colors.textMuted }]}>
             {formatActivityDate(activity.created_at)}
           </Text>
         </View>
@@ -323,17 +357,17 @@ const ActivityScreen = () => {
             color={colors.textMuted}
           />
         </View>
-        <Text style={styles.emptyTitle}>
+        <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>
           {hasActiveFilters ? 'No matching activities' : 'No activities yet'}
         </Text>
-        <Text style={styles.emptyText}>
+        <Text style={[styles.emptyText, { color: colors.textMuted }]}>
           {hasActiveFilters
             ? 'Try adjusting your filters'
             : 'Activities will appear here as you use the app'}
         </Text>
         {hasActiveFilters && (
           <TouchableOpacity style={[styles.clearFiltersBtn, { backgroundColor: accent.primary }]} onPress={clearFilters}>
-            <Text style={styles.clearFiltersBtnText}>Clear Filters</Text>
+            <Text style={[styles.clearFiltersBtnText, { color: colors.textPrimary }]}>Clear Filters</Text>
           </TouchableOpacity>
         )}
       </CardGlass>
@@ -344,7 +378,7 @@ const ActivityScreen = () => {
     if (!hasMore || isLoading) return null;
     return (
       <View style={styles.loadingMore}>
-        <Text style={styles.loadingMoreText}>Loading more...</Text>
+        <Text style={[styles.loadingMoreText, { color: colors.textMuted }]}>Loading more...</Text>
       </View>
     );
   };
@@ -361,21 +395,23 @@ const ActivityScreen = () => {
       {/* Header */}
       <View style={styles.topBar}>
         <TouchableOpacity
-          style={styles.backButton}
+          style={[styles.backButton, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)' }]}
           onPress={() => navigation.goBack()}
         >
           <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.screenTitle}>All Activity</Text>
+        <Text style={[styles.screenTitle, { color: colors.textPrimary }]}>
+          {initialGroupId ? 'Group Activity' : 'All Activity'}
+        </Text>
         <View style={styles.placeholder} />
       </View>
 
       {/* Search and filters */}
       <View style={styles.filtersContainer}>
-        <View style={styles.searchContainer}>
+        <View style={[styles.searchContainer, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)' }]}>
           <Ionicons name="search-outline" size={18} color={colors.textMuted} style={styles.searchIcon} />
           <TextInput
-            style={styles.searchInput}
+            style={[styles.searchInput, { color: colors.textPrimary }]}
             placeholder="Search activities..."
             placeholderTextColor={colors.textMuted}
             value={searchQuery}
@@ -399,17 +435,30 @@ const ActivityScreen = () => {
           {ACTIVITY_TYPES.map(type => (
             <TouchableOpacity
               key={type.key}
-              style={[styles.typePill, selectedType === type.key && { backgroundColor: accent.primary }]}
+              style={[
+                styles.typePill,
+                { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)' },
+                selectedType === type.key && { backgroundColor: accent.primary }
+              ]}
               onPress={() => setSelectedType(type.key)}
             >
-              <Text style={[styles.typePillText, selectedType === type.key && styles.typePillTextActive]}>
+              <Text style={[
+                styles.typePillText,
+                { color: colors.textMuted },
+                selectedType === type.key && { color: colors.textPrimary }
+              ]}>
                 {type.label}
               </Text>
             </TouchableOpacity>
           ))}
 
           <TouchableOpacity
-            style={[styles.typePill, styles.filterPill, selectedGroupId && { backgroundColor: accent.primary }]}
+            style={[
+              styles.typePill,
+              styles.filterPill,
+              { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)' },
+              selectedGroupId && { backgroundColor: accent.primary }
+            ]}
             onPress={() => setShowFilters(true)}
           >
             <Ionicons
@@ -417,7 +466,11 @@ const ActivityScreen = () => {
               size={16}
               color={selectedGroupId ? colors.textPrimary : colors.textMuted}
             />
-            <Text style={[styles.typePillText, selectedGroupId && styles.typePillTextActive]}>
+            <Text style={[
+              styles.typePillText,
+              { color: colors.textMuted },
+              selectedGroupId && { color: colors.textPrimary }
+            ]}>
               {selectedGroupId ? groups.find(g => g.id === selectedGroupId)?.name || 'Group' : 'Group'}
             </Text>
           </TouchableOpacity>
@@ -426,11 +479,19 @@ const ActivityScreen = () => {
         {/* Date Range Filter */}
         <View style={styles.dateFilterRow}>
           <TouchableOpacity
-            style={[styles.datePill, fromDate && { backgroundColor: accent.primary }]}
+            style={[
+              styles.datePill,
+              { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)' },
+              fromDate && { backgroundColor: accent.primary }
+            ]}
             onPress={() => setShowDatePicker('from')}
           >
             <Ionicons name="calendar-outline" size={14} color={fromDate ? colors.textPrimary : colors.textMuted} />
-            <Text style={[styles.datePillText, fromDate && styles.datePillTextActive]}>
+            <Text style={[
+              styles.datePillText,
+              { color: colors.textMuted },
+              fromDate && { color: colors.textPrimary }
+            ]}>
               {fromDate ? formatDateShort(fromDate) : 'From'}
             </Text>
             {fromDate && (
@@ -443,11 +504,19 @@ const ActivityScreen = () => {
           <Ionicons name="arrow-forward" size={16} color={colors.textMuted} style={styles.dateArrowIcon} />
 
           <TouchableOpacity
-            style={[styles.datePill, toDate && { backgroundColor: accent.primary }]}
+            style={[
+              styles.datePill,
+              { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)' },
+              toDate && { backgroundColor: accent.primary }
+            ]}
             onPress={() => setShowDatePicker('to')}
           >
             <Ionicons name="calendar-outline" size={14} color={toDate ? colors.textPrimary : colors.textMuted} />
-            <Text style={[styles.datePillText, toDate && styles.datePillTextActive]}>
+            <Text style={[
+              styles.datePillText,
+              { color: colors.textMuted },
+              toDate && { color: colors.textPrimary }
+            ]}>
               {toDate ? formatDateShort(toDate) : 'To'}
             </Text>
             {toDate && (
@@ -464,7 +533,7 @@ const ActivityScreen = () => {
           </TouchableOpacity>
         )}
 
-        <Text style={styles.resultsCount}>
+        <Text style={[styles.resultsCount, { color: colors.textMuted }]}>
           {filteredActivities.length} {filteredActivities.length === 1 ? 'activity' : 'activities'}
         </Text>
       </View>
@@ -497,9 +566,9 @@ const ActivityScreen = () => {
         onRequestClose={() => setShowFilters(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Filter by Group</Text>
+          <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
+            <View style={[styles.modalHeader, { borderBottomColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)' }]}>
+              <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Filter by Group</Text>
               <TouchableOpacity onPress={() => setShowFilters(false)}>
                 <Ionicons name="close" size={24} color={colors.textMuted} />
               </TouchableOpacity>
@@ -510,32 +579,51 @@ const ActivityScreen = () => {
                 style={[styles.groupOption, !selectedGroupId && { backgroundColor: accent.primary + '30' }]}
                 onPress={() => handleGroupFilterChange(null)}
               >
-                <View style={styles.groupOptionAllIcon}>
+                <View style={[styles.groupOptionAllIcon, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)' }]}>
                   <Ionicons name="globe-outline" size={20} color={colors.textPrimary} />
                 </View>
-                <Text style={[styles.groupOptionText, !selectedGroupId && styles.groupOptionTextActive]}>
+                <Text style={[styles.groupOptionText, { color: colors.textPrimary }, !selectedGroupId && styles.groupOptionTextActive]}>
                   All Groups
                 </Text>
                 {!selectedGroupId && <Ionicons name="checkmark" size={20} color={accent.primary} />}
               </TouchableOpacity>
 
-              {groups.map(group => (
-                <TouchableOpacity
-                  key={group.id}
-                  style={[styles.groupOption, selectedGroupId === group.id && { backgroundColor: accent.primary + '30' }]}
-                  onPress={() => handleGroupFilterChange(group.id)}
-                >
-                  <View style={[styles.groupOptionIconContainer, { backgroundColor: accent.primary }]}>
-                    <Text style={styles.groupOptionIconText}>
-                      {group.name?.charAt(0).toUpperCase() || 'G'}
+              {groups.map(group => {
+                const predefinedIcon = group.icon_type === 'predefined'
+                  ? PREDEFINED_GROUP_ICONS.find(i => i.id === group.icon_url)
+                  : null;
+                const hasCustomIcon = group.icon_type === 'custom' && group.icon_url;
+
+                return (
+                  <TouchableOpacity
+                    key={group.id}
+                    style={[styles.groupOption, selectedGroupId === group.id && { backgroundColor: accent.primary + '30' }]}
+                    onPress={() => handleGroupFilterChange(group.id)}
+                  >
+                    <View style={[
+                      styles.groupOptionIconContainer,
+                      { backgroundColor: hasCustomIcon ? 'transparent' : (predefinedIcon ? 'rgba(0, 0, 0, 0.4)' : accent.primary) }
+                    ]}>
+                      {predefinedIcon ? (
+                        <Text style={styles.groupOptionEmoji}>{predefinedIcon.emoji}</Text>
+                      ) : hasCustomIcon ? (
+                        <Image
+                          source={{ uri: group.icon_url.startsWith('http') ? group.icon_url : `${BASE_URL}${group.icon_url}` }}
+                          style={styles.groupOptionImage}
+                        />
+                      ) : (
+                        <Text style={[styles.groupOptionIconText, { color: colors.textPrimary }]}>
+                          {group.name?.charAt(0).toUpperCase() || 'G'}
+                        </Text>
+                      )}
+                    </View>
+                    <Text style={[styles.groupOptionText, { color: colors.textPrimary }, selectedGroupId === group.id && styles.groupOptionTextActive]}>
+                      {group.name}
                     </Text>
-                  </View>
-                  <Text style={[styles.groupOptionText, selectedGroupId === group.id && styles.groupOptionTextActive]}>
-                    {group.name}
-                  </Text>
-                  {selectedGroupId === group.id && <Ionicons name="checkmark" size={20} color={accent.primary} />}
-                </TouchableOpacity>
-              ))}
+                    {selectedGroupId === group.id && <Ionicons name="checkmark" size={20} color={accent.primary} />}
+                  </TouchableOpacity>
+                );
+              })}
             </ScrollView>
           </View>
         </View>
@@ -571,14 +659,12 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   screenTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: colors.textPrimary,
   },
   placeholder: {
     width: 40,
@@ -595,7 +681,6 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
     borderRadius: 12,
     paddingHorizontal: spacing.md,
     marginBottom: spacing.md,
@@ -607,7 +692,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: spacing.md,
     fontSize: 16,
-    color: colors.textPrimary,
   },
   typeFilter: {
     marginBottom: spacing.sm,
@@ -619,19 +703,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
     marginRight: spacing.sm,
-  },
-  typePillActive: {
-    backgroundColor: colors.primary,
   },
   typePillText: {
     fontSize: 14,
-    color: colors.textMuted,
     fontWeight: '500',
-  },
-  typePillTextActive: {
-    color: colors.textPrimary,
   },
   filterPill: {
     flexDirection: 'row',
@@ -652,19 +728,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
     gap: spacing.xs,
-  },
-  datePillActive: {
-    backgroundColor: colors.primary,
   },
   datePillText: {
     fontSize: 14,
-    color: colors.textMuted,
     fontWeight: '500',
-  },
-  datePillTextActive: {
-    color: colors.textPrimary,
   },
   dateArrowIcon: {
     marginHorizontal: spacing.sm,
@@ -675,12 +743,10 @@ const styles = StyleSheet.create({
   },
   clearFiltersText: {
     fontSize: 13,
-    color: colors.primary,
     fontWeight: '500',
   },
   resultsCount: {
     fontSize: 13,
-    color: colors.textMuted,
     marginTop: spacing.xs,
   },
   activityCard: {
@@ -693,7 +759,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.md,
@@ -706,12 +771,10 @@ const styles = StyleSheet.create({
   },
   activityTitle: {
     fontSize: 14,
-    color: colors.textPrimary,
     lineHeight: 20,
   },
   activityTime: {
     fontSize: 12,
-    color: colors.textMuted,
     marginTop: 4,
   },
   emptyCard: {
@@ -725,24 +788,20 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.textPrimary,
     marginBottom: spacing.sm,
   },
   emptyText: {
     fontSize: 14,
-    color: colors.textMuted,
     textAlign: 'center',
   },
   clearFiltersBtn: {
     marginTop: spacing.md,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
-    backgroundColor: colors.primary,
     borderRadius: 8,
   },
   clearFiltersBtnText: {
     fontSize: 14,
-    color: colors.textPrimary,
     fontWeight: '600',
   },
   loadingMore: {
@@ -751,7 +810,6 @@ const styles = StyleSheet.create({
   },
   loadingMoreText: {
     fontSize: 14,
-    color: colors.textMuted,
   },
   modalOverlay: {
     flex: 1,
@@ -759,7 +817,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: colors.background,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '70%',
@@ -770,12 +827,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: colors.textPrimary,
   },
   groupList: {
     padding: spacing.lg,
@@ -788,14 +843,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: spacing.sm,
   },
-  groupOptionActive: {
-    backgroundColor: 'rgba(50, 130, 184, 0.2)',
-  },
   groupOptionAllIcon: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.md,
@@ -804,20 +855,25 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.md,
   },
   groupOptionIconText: {
     fontSize: 16,
-    color: colors.textPrimary,
     fontWeight: '600',
+  },
+  groupOptionEmoji: {
+    fontSize: 18,
+  },
+  groupOptionImage: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
   },
   groupOptionText: {
     flex: 1,
     fontSize: 16,
-    color: colors.textPrimary,
   },
   groupOptionTextActive: {
     fontWeight: '600',

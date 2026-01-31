@@ -19,8 +19,9 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../theme/colors';
+import { useThemeColors, useIsDarkMode } from '../../hooks/useThemeColors';
 import { spacing } from '../../theme/spacing';
+import { colors as staticColors } from '../../theme/colors';
 import CardGlass from '../../components/common/CardGlass';
 import AppButton from '../../components/common/AppButton';
 import AppInput from '../../components/common/AppInput';
@@ -58,6 +59,8 @@ const getGroupLastActivity = (group) => {
 const GroupsScreen = ({ navigation }) => {
   const { groups, isLoading, fetchGroups, createGroup, joinGroup, updateGroup, leaveGroup, deleteGroup, checkCanLeave, updateGroupIcon, uploadGroupIcon, removeGroupIcon } = useGroupStore();
   const { showToast } = useToast();
+  const colors = useThemeColors();
+  const isDark = useIsDarkMode();
   const accent = useAccentColor();
   const [refreshing, setRefreshing] = useState(false);
   const [createModalVisible, setCreateModalVisible] = useState(false);
@@ -354,7 +357,8 @@ const GroupsScreen = ({ navigation }) => {
       return bDate - aDate; // Most recent first
     });
 
-  if (isLoading && !refreshing) {
+  // Only show full screen loader on initial load when no cached data
+  if (isLoading && !refreshing && groups.length === 0) {
     return <Loader fullScreen />;
   }
 
@@ -366,10 +370,10 @@ const GroupsScreen = ({ navigation }) => {
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <Text style={styles.title}>Groups</Text>
+          <Text style={[styles.title, { color: colors.textPrimary }]}>Groups</Text>
           {groups.length > 0 && (
-            <View style={styles.countBadge}>
-              <Text style={styles.countBadgeText}>{groups.length}</Text>
+            <View style={[styles.countBadge, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
+              <Text style={[styles.countBadgeText, { color: colors.textSecondary }]}>{groups.length}</Text>
             </View>
           )}
         </View>
@@ -392,9 +396,9 @@ const GroupsScreen = ({ navigation }) => {
 
       {/* Search Bar */}
       {groups.length > 0 && (
-        <View style={styles.searchContainer}>
+        <View style={[styles.searchContainer, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}>
           <TextInput
-            style={styles.searchInput}
+            style={[styles.searchInput, { color: colors.textPrimary }]}
             placeholder="Search groups..."
             placeholderTextColor={colors.textMuted}
             value={searchQuery}
@@ -418,8 +422,8 @@ const GroupsScreen = ({ navigation }) => {
         {filteredGroups.length === 0 && searchQuery === '' ? (
           <CardGlass style={styles.emptyCard}>
             <Ionicons name="people-outline" size={48} color={colors.textMuted} style={styles.emptyIcon} />
-            <Text style={styles.emptyTitle}>No groups yet</Text>
-            <Text style={styles.emptyText}>
+            <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No groups yet</Text>
+            <Text style={[styles.emptyText, { color: colors.textMuted }]}>
               Create a new group or join an existing one to get started
             </Text>
             <View style={styles.emptyActions}>
@@ -439,8 +443,8 @@ const GroupsScreen = ({ navigation }) => {
         ) : filteredGroups.length === 0 ? (
           <CardGlass style={styles.emptyCard}>
             <Ionicons name="search-outline" size={48} color={colors.textMuted} style={styles.emptyIcon} />
-            <Text style={styles.emptyTitle}>No groups found</Text>
-            <Text style={styles.emptyText}>
+            <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No groups found</Text>
+            <Text style={[styles.emptyText, { color: colors.textMuted }]}>
               Try a different search term
             </Text>
           </CardGlass>
@@ -464,22 +468,22 @@ const GroupsScreen = ({ navigation }) => {
                         {PREDEFINED_GROUP_ICONS.find(i => i.id === group.icon_url)?.emoji || '👥'}
                       </Text>
                     ) : (
-                      <Text style={styles.groupIconText}>
+                      <Text style={[styles.groupIconText, { color: colors.textPrimary }]}>
                         {group.name?.charAt(0).toUpperCase() || 'G'}
                       </Text>
                     )}
                   </View>
                   <View style={styles.groupInfo}>
-                    <Text style={styles.groupName}>{group.name}</Text>
-                    <Text style={styles.groupDescription}>
+                    <Text style={[styles.groupName, { color: colors.textPrimary }]}>{group.name}</Text>
+                    <Text style={[styles.groupDescription, { color: colors.textMuted }]}>
                       {group.description || 'No description'}
                     </Text>
                     <View style={styles.groupStats}>
-                      <Text style={styles.groupMembers}>
+                      <Text style={[styles.groupMembers, { color: colors.textSecondary }]}>
                         {group.members?.length || 0} members
                       </Text>
-                      <Text style={styles.groupSeparator}>•</Text>
-                      <Text style={styles.groupExpenses}>
+                      <Text style={[styles.groupSeparator, { color: colors.textMuted }]}>•</Text>
+                      <Text style={[styles.groupExpenses, { color: colors.textSecondary }]}>
                         {group.expenses?.length || 0} expenses
                       </Text>
                     </View>
@@ -497,16 +501,16 @@ const GroupsScreen = ({ navigation }) => {
                     <Ionicons name="ellipsis-vertical" size={20} color={colors.textPrimary} />
                   </TouchableOpacity>
                 </View>
-                <View style={styles.groupActions}>
+                <View style={[styles.groupActions, { borderTopColor: colors.glassBorder }]}>
                   <TouchableOpacity
-                    style={styles.actionButton}
+                    style={[styles.actionButton, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}
                     onPress={(e) => {
                       e.stopPropagation();
                       handleShareInvite(group);
                     }}
                   >
                     <Ionicons name="person-add-outline" size={18} color={colors.textSecondary} style={styles.actionIcon} />
-                    <Text style={styles.actionText}>Invite</Text>
+                    <Text style={[styles.actionText, { color: colors.textPrimary }]}>Invite</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[styles.actionButton, styles.viewButton, { backgroundColor: `${accent.primary}20`, borderColor: accent.primary }]}
@@ -515,7 +519,7 @@ const GroupsScreen = ({ navigation }) => {
                       navigation.navigate('GroupDetail', { groupId: group.id });
                     }}
                   >
-                    <Text style={styles.actionText}>View</Text>
+                    <Text style={[styles.actionText, { color: colors.textPrimary }]}>View</Text>
                     <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
                   </TouchableOpacity>
                 </View>
@@ -535,8 +539,8 @@ const GroupsScreen = ({ navigation }) => {
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View style={styles.modalOverlay}>
             <TouchableWithoutFeedback>
-              <CardGlass style={styles.modalContent}>
-                <Text style={styles.modalTitle}>Create New Group</Text>
+              <CardGlass style={[styles.modalContent, { backgroundColor: colors.backgroundLight }]}>
+                <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Create New Group</Text>
                 <AppInput
                   label="Group Name"
                   value={groupName}
@@ -603,8 +607,8 @@ const GroupsScreen = ({ navigation }) => {
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View style={styles.modalOverlay}>
             <TouchableWithoutFeedback>
-              <CardGlass style={styles.modalContent}>
-                <Text style={styles.modalTitle}>Join Group</Text>
+              <CardGlass style={[styles.modalContent, { backgroundColor: colors.backgroundLight }]}>
+                <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Join Group</Text>
                 <AppInput
                   label="Invite Code"
                   value={joinCode}
@@ -671,12 +675,12 @@ const GroupsScreen = ({ navigation }) => {
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.modalOverlay}
         >
-          <CardGlass style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Edit Group</Text>
+          <CardGlass style={[styles.modalContent, { backgroundColor: colors.backgroundLight }]}>
+            <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Edit Group</Text>
 
             {/* Icon Section */}
             <TouchableOpacity
-              style={styles.editIconContainer}
+              style={[styles.editIconContainer, { borderColor: colors.glassBorder }]}
               onPress={() => {
                 setEditModalVisible(false);
                 setShowIconPicker(true);
@@ -686,8 +690,8 @@ const GroupsScreen = ({ navigation }) => {
                 {renderSelectedGroupIcon(48, 24)}
               </View>
               <View style={styles.editIconInfo}>
-                <Text style={styles.editIconLabel}>Group Icon</Text>
-                <Text style={styles.editIconHint}>Tap to change</Text>
+                <Text style={[styles.editIconLabel, { color: colors.textPrimary }]}>Group Icon</Text>
+                <Text style={[styles.editIconHint, { color: colors.textMuted }]}>Tap to change</Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
             </TouchableOpacity>
@@ -753,9 +757,9 @@ const GroupsScreen = ({ navigation }) => {
         onRequestClose={() => setConfirmModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <CardGlass style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Delete Group?</Text>
-            <Text style={styles.confirmText}>
+          <CardGlass style={[styles.modalContent, { backgroundColor: colors.backgroundLight }]}>
+            <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Delete Group?</Text>
+            <Text style={[styles.confirmText, { color: colors.textMuted }]}>
               This will permanently delete the group and all its expenses. This action cannot be undone.
             </Text>
             <View style={styles.modalActions}>
@@ -833,13 +837,13 @@ const GroupsScreen = ({ navigation }) => {
             ]}
           >
             <LinearGradient
-              colors={['rgba(30, 41, 59, 0.98)', 'rgba(15, 23, 42, 0.98)']}
+              colors={isDark ? ['rgba(30, 41, 59, 0.98)', 'rgba(15, 23, 42, 0.98)'] : ['rgba(255, 255, 255, 0.98)', 'rgba(241, 245, 249, 0.98)']}
               style={styles.leaveModalContent}
             >
               {leaveCheckLoading ? (
                 <View style={styles.leaveModalLoading}>
                   <ActivityIndicator size="large" color={accent.primary} />
-                  <Text style={styles.leaveModalLoadingText}>Checking...</Text>
+                  <Text style={[styles.leaveModalLoadingText, { color: colors.textMuted }]}>Checking...</Text>
                 </View>
               ) : (
                 <>
@@ -876,7 +880,7 @@ const GroupsScreen = ({ navigation }) => {
                   </Animated.View>
 
                   {/* Title */}
-                  <Text style={styles.leaveModalTitle}>
+                  <Text style={[styles.leaveModalTitle, { color: colors.textPrimary }]}>
                     {leaveInfo.canLeave
                       ? leaveInfo.willDelete
                         ? 'Delete Group?'
@@ -885,7 +889,7 @@ const GroupsScreen = ({ navigation }) => {
                   </Text>
 
                   {/* Message */}
-                  <Text style={styles.leaveModalMessage}>
+                  <Text style={[styles.leaveModalMessage, { color: colors.textSecondary }]}>
                     {!leaveInfo.canLeave
                       ? getLeaveBlockMessage()
                       : leaveInfo.willDelete
@@ -902,7 +906,7 @@ const GroupsScreen = ({ navigation }) => {
                           onPress={() => setShowLeaveModal(false)}
                           disabled={isLeaving}
                         >
-                          <Text style={styles.leaveModalCancelText}>Cancel</Text>
+                          <Text style={[styles.leaveModalCancelText, { color: colors.textPrimary }]}>Cancel</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                           style={[
@@ -949,7 +953,7 @@ const GroupsScreen = ({ navigation }) => {
                           style={[styles.leaveModalButton, styles.leaveModalCloseButton]}
                           onPress={() => setShowLeaveModal(false)}
                         >
-                          <Text style={styles.leaveModalCancelText}>Close</Text>
+                          <Text style={[styles.leaveModalCancelText, { color: colors.textPrimary }]}>Close</Text>
                         </TouchableOpacity>
                       </>
                     )}
@@ -996,22 +1000,22 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: '700',
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
   },
   countBadge: {
-    backgroundColor: colors.glass,
+    backgroundColor: staticColors.glass,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 8,
     minWidth: 24,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: colors.glassBorder,
+    borderColor: staticColors.glassBorder,
   },
   countBadgeText: {
     fontSize: 12,
     fontWeight: '600',
-    color: colors.textSecondary,
+    color: staticColors.textSecondary,
   },
   headerActions: {
     flexDirection: 'row',
@@ -1034,12 +1038,12 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
     marginBottom: spacing.sm,
   },
   emptyText: {
     fontSize: 14,
-    color: colors.textMuted,
+    color: staticColors.textMuted,
     textAlign: 'center',
     marginBottom: spacing.xl,
   },
@@ -1069,7 +1073,7 @@ const styles = StyleSheet.create({
   },
   groupIconText: {
     fontSize: 24,
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
     fontWeight: '600',
   },
   groupIconImage: {
@@ -1086,22 +1090,22 @@ const styles = StyleSheet.create({
   groupName: {
     fontSize: 18,
     fontWeight: '600',
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
     marginBottom: 4,
   },
   groupDescription: {
     fontSize: 13,
-    color: colors.textMuted,
+    color: staticColors.textMuted,
     marginBottom: 4,
   },
   groupMembers: {
     fontSize: 12,
-    color: colors.textSecondary,
+    color: staticColors.textSecondary,
   },
   groupActions: {
     flexDirection: 'row',
     borderTopWidth: 1,
-    borderTopColor: colors.glassBorder,
+    borderTopColor: staticColors.glassBorder,
     paddingTop: spacing.md,
     gap: spacing.md,
   },
@@ -1111,20 +1115,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: spacing.sm,
-    backgroundColor: colors.glass,
+    backgroundColor: staticColors.glass,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.glassBorder,
+    borderColor: staticColors.glassBorder,
   },
   viewButton: {
-    backgroundColor: `${colors.primary}20`,
-    borderColor: colors.primary,
+    backgroundColor: `${staticColors.primary}20`,
+    borderColor: staticColors.primary,
   },
   actionIcon: {
     marginRight: spacing.xs,
   },
   actionText: {
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
     fontSize: 14,
     fontWeight: '500',
   },
@@ -1136,12 +1140,12 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     padding: spacing.xl,
-    backgroundColor: colors.backgroundLight,
+    backgroundColor: staticColors.backgroundLight,
   },
   modalTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
     marginBottom: spacing.lg,
     textAlign: 'center',
   },
@@ -1153,7 +1157,7 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: colors.glassBorder,
+    borderColor: staticColors.glassBorder,
   },
   editIconPreview: {
     width: 48,
@@ -1170,11 +1174,11 @@ const styles = StyleSheet.create({
   editIconLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
   },
   editIconHint: {
     fontSize: 12,
-    color: colors.textMuted,
+    color: staticColors.textMuted,
     marginTop: 2,
   },
   modalActions: {
@@ -1187,7 +1191,7 @@ const styles = StyleSheet.create({
   },
   shareText: {
     fontSize: 14,
-    color: colors.textMuted,
+    color: staticColors.textMuted,
     marginBottom: spacing.lg,
     textAlign: 'center',
   },
@@ -1195,34 +1199,34 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.glass,
+    backgroundColor: staticColors.glass,
     borderRadius: 12,
     padding: spacing.md,
     marginBottom: spacing.lg,
     borderWidth: 1,
-    borderColor: colors.primary,
+    borderColor: staticColors.primary,
   },
   inviteCode: {
     fontSize: 24,
     fontWeight: '700',
-    color: colors.primary,
+    color: staticColors.primary,
     letterSpacing: 2,
     marginRight: spacing.md,
   },
   copyButton: {
-    backgroundColor: colors.primary,
+    backgroundColor: staticColors.primary,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: 8,
   },
   copyButtonText: {
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
     fontSize: 14,
     fontWeight: '600',
   },
   shareMessage: {
     fontSize: 12,
-    color: colors.textMuted,
+    color: staticColors.textMuted,
     marginBottom: spacing.lg,
     textAlign: 'center',
     fontStyle: 'italic',
@@ -1232,15 +1236,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginHorizontal: spacing.lg,
     marginBottom: spacing.md,
-    backgroundColor: colors.glass,
+    backgroundColor: staticColors.glass,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.glassBorder,
+    borderColor: staticColors.glassBorder,
     paddingHorizontal: spacing.md,
   },
   searchInput: {
     flex: 1,
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
     fontSize: 16,
     paddingVertical: spacing.md,
   },
@@ -1253,16 +1257,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   groupSeparator: {
-    color: colors.textMuted,
+    color: staticColors.textMuted,
     marginHorizontal: spacing.xs,
   },
   groupExpenses: {
     fontSize: 12,
-    color: colors.textSecondary,
+    color: staticColors.textSecondary,
   },
   groupTotal: {
     fontSize: 13,
-    color: colors.primary,
+    color: staticColors.primary,
     fontWeight: '600',
     marginTop: 4,
   },
@@ -1272,7 +1276,7 @@ const styles = StyleSheet.create({
   },
   confirmText: {
     fontSize: 14,
-    color: colors.textMuted,
+    color: staticColors.textMuted,
     marginBottom: spacing.lg,
     textAlign: 'center',
     lineHeight: 20,
@@ -1293,7 +1297,7 @@ const styles = StyleSheet.create({
   warningText: {
     flex: 1,
     fontSize: 14,
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
     lineHeight: 20,
   },
   // Leave Modal Styles
@@ -1315,7 +1319,7 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: colors.glassBorder,
+    borderColor: staticColors.glassBorder,
   },
   leaveModalLoading: {
     paddingVertical: spacing.xl,
@@ -1324,7 +1328,7 @@ const styles = StyleSheet.create({
   leaveModalLoadingText: {
     marginTop: spacing.md,
     fontSize: 14,
-    color: colors.textMuted,
+    color: staticColors.textMuted,
   },
   leaveModalIconContainer: {
     width: 80,
@@ -1343,13 +1347,13 @@ const styles = StyleSheet.create({
   leaveModalTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
     marginBottom: spacing.sm,
     textAlign: 'center',
   },
   leaveModalMessage: {
     fontSize: 15,
-    color: colors.textSecondary,
+    color: staticColors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: spacing.xl,
@@ -1375,7 +1379,7 @@ const styles = StyleSheet.create({
   },
   leaveModalConfirmButton: {
     flex: 1,
-    backgroundColor: colors.error,
+    backgroundColor: staticColors.error,
   },
   leaveModalFullButton: {
     // backgroundColor set dynamically
@@ -1390,7 +1394,7 @@ const styles = StyleSheet.create({
   leaveModalCancelText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
   },
   leaveModalConfirmText: {
     fontSize: 16,

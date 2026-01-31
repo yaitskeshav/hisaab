@@ -7,9 +7,10 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../theme/colors';
+import { colors as staticColors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import CardGlass from './CardGlass';
+import { useThemeColors, useIsDarkMode } from '../../hooks/useThemeColors';
 
 const ActionSheet = ({
   visible,
@@ -18,6 +19,9 @@ const ActionSheet = ({
   onCancel,
   cancelText = 'Cancel',
 }) => {
+  const colors = useThemeColors();
+  const isDark = useIsDarkMode();
+
   return (
     <Modal
       visible={visible}
@@ -33,7 +37,7 @@ const ActionSheet = ({
         <View style={styles.container}>
           <CardGlass style={styles.content}>
             {title ? (
-              <Text style={styles.title}>{title}</Text>
+              <Text style={[styles.title, { color: colors.textMuted, borderBottomColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)' }]}>{title}</Text>
             ) : null}
 
             {options.map((option, index) => (
@@ -41,8 +45,7 @@ const ActionSheet = ({
                 key={index}
                 style={[
                   styles.option,
-                  index === 0 && styles.optionFirst,
-                  index === options.length - 1 && styles.optionLast,
+                  { borderBottomColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)' },
                 ]}
                 onPress={() => {
                   onCancel();
@@ -54,27 +57,27 @@ const ActionSheet = ({
                   <Ionicons
                     name={option.icon}
                     size={22}
-                    color={option.destructive ? (colors.error || '#ef4444') : colors.textPrimary}
+                    color={option.destructive ? staticColors.error : colors.textPrimary}
                     style={styles.optionIcon}
                   />
                 ) : null}
                 <Text style={[
                   styles.optionText,
-                  option.destructive && styles.optionTextDestructive,
+                  { color: colors.textPrimary },
+                  option.destructive && { color: staticColors.error },
                 ]}>
                   {option.label}
                 </Text>
               </TouchableOpacity>
             ))}
-          </CardGlass>
 
-          <CardGlass style={styles.cancelContainer}>
+            {/* Cancel Button */}
             <TouchableOpacity
               style={styles.cancelButton}
               onPress={onCancel}
               activeOpacity={0.7}
             >
-              <Text style={styles.cancelText}>{cancelText}</Text>
+              <Text style={[styles.cancelText, { color: colors.textMuted }]}>{cancelText}</Text>
             </TouchableOpacity>
           </CardGlass>
         </View>
@@ -100,11 +103,9 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 13,
     fontWeight: '600',
-    color: colors.textMuted,
     textAlign: 'center',
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
   },
   option: {
     flexDirection: 'row',
@@ -112,7 +113,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
   },
   optionFirst: {},
   optionLast: {
@@ -124,14 +124,9 @@ const styles = StyleSheet.create({
   optionText: {
     fontSize: 17,
     fontWeight: '500',
-    color: colors.textPrimary,
   },
   optionTextDestructive: {
-    color: colors.error || '#ef4444',
-  },
-  cancelContainer: {
-    marginTop: spacing.sm,
-    borderRadius: 16,
+    color: staticColors.error,
   },
   cancelButton: {
     paddingVertical: spacing.lg,
@@ -141,7 +136,6 @@ const styles = StyleSheet.create({
   cancelText: {
     fontSize: 17,
     fontWeight: '600',
-    color: colors.primary,
   },
 });
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, TextInput, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { colors } from '../../theme/colors';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { useAccentColor } from '../../store/themeStore';
 
 const AppInput = ({
@@ -22,20 +22,24 @@ const AppInput = ({
   ...props
 }) => {
   const [isFocused, setIsFocused] = useState(false);
+  const colors = useThemeColors();
   const accent = useAccentColor();
 
   return (
     <View style={[styles.container, style]}>
-      {label ? <Text style={styles.label}>{label}</Text> : null}
-      <View style={[
-        styles.inputContainer,
-        isFocused && [styles.inputContainerFocused, { borderColor: accent.primary }],
-        error && styles.inputContainerError,
-        containerStyle,
-      ]}>
+      {label ? <Text style={[styles.label, { color: colors.textSecondary }]}>{label}</Text> : null}
+      <View
+        style={[
+          styles.inputContainer,
+          { backgroundColor: colors.glass, borderColor: colors.glassBorder },
+          isFocused && { backgroundColor: colors.glassLight, borderColor: accent.primary },
+          error && { borderColor: colors.error },
+          containerStyle,
+        ]}
+      >
         {leftIcon ? <View style={styles.iconLeft}>{leftIcon}</View> : null}
         <TextInput
-          style={[styles.input, multiline && styles.multiline, inputStyle]}
+          style={[styles.input, { color: colors.textPrimary }, multiline && styles.multiline, inputStyle]}
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
@@ -54,7 +58,7 @@ const AppInput = ({
           </TouchableOpacity>
         ) : null}
       </View>
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {error ? <Text style={[styles.error, { color: colors.error }]}>{error}</Text> : null}
     </View>
   );
 };
@@ -66,29 +70,19 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '500',
-    color: colors.textSecondary,
     marginBottom: 8,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.glass,
     borderWidth: 1,
-    borderColor: colors.glassBorder,
     borderRadius: 12,
     paddingHorizontal: 16,
     minHeight: 50,
   },
-  inputContainerFocused: {
-    backgroundColor: colors.glassLight,
-  },
-  inputContainerError: {
-    borderColor: colors.error,
-  },
   input: {
     flex: 1,
     fontSize: 16,
-    color: colors.textPrimary,
     paddingVertical: 12,
   },
   multiline: {
@@ -103,7 +97,6 @@ const styles = StyleSheet.create({
   },
   error: {
     fontSize: 12,
-    color: colors.error,
     marginTop: 4,
   },
 });

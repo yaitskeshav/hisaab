@@ -47,13 +47,22 @@ export const ACCENT_COLORS = {
   },
 };
 
+// Color scheme options
+export const COLOR_SCHEMES = {
+  light: { id: 'light', name: 'Light', icon: 'sunny' },
+  dark: { id: 'dark', name: 'Dark', icon: 'moon' },
+  system: { id: 'system', name: 'System', icon: 'phone-portrait' },
+};
+
 const STORAGE_KEY_ACCENT = 'accent_color';
 const STORAGE_KEY_HAPTICS = 'haptics_enabled';
+const STORAGE_KEY_COLOR_SCHEME = 'color_scheme';
 
 const useThemeStore = create((set, get) => ({
   // State
   accentColorId: 'blue',
   hapticsEnabled: true,
+  colorScheme: 'system', // 'light' | 'dark' | 'system'
   isLoaded: false,
 
   // Get current accent color object (for use outside components or with getState())
@@ -75,12 +84,20 @@ const useThemeStore = create((set, get) => ({
     await storage.setItem(STORAGE_KEY_HAPTICS, JSON.stringify(enabled));
   },
 
+  // Set color scheme
+  setColorScheme: async (scheme) => {
+    if (!COLOR_SCHEMES[scheme]) return;
+    set({ colorScheme: scheme });
+    await storage.setItem(STORAGE_KEY_COLOR_SCHEME, scheme);
+  },
+
   // Load preferences from storage
   loadPreferences: async () => {
     try {
-      const [accentColor, hapticsStr] = await Promise.all([
+      const [accentColor, hapticsStr, colorScheme] = await Promise.all([
         storage.getItem(STORAGE_KEY_ACCENT),
         storage.getItem(STORAGE_KEY_HAPTICS),
+        storage.getItem(STORAGE_KEY_COLOR_SCHEME),
       ]);
 
       const updates = { isLoaded: true };
@@ -91,6 +108,10 @@ const useThemeStore = create((set, get) => ({
 
       if (hapticsStr !== null) {
         updates.hapticsEnabled = JSON.parse(hapticsStr);
+      }
+
+      if (colorScheme && COLOR_SCHEMES[colorScheme]) {
+        updates.colorScheme = colorScheme;
       }
 
       set(updates);
@@ -106,6 +127,11 @@ const useThemeStore = create((set, get) => ({
 export const useAccentColor = () => {
   const accentColorId = useThemeStore((state) => state.accentColorId);
   return ACCENT_COLORS[accentColorId] || ACCENT_COLORS.blue;
+};
+
+// Selector hook for color scheme
+export const useColorScheme = () => {
+  return useThemeStore((state) => state.colorScheme);
 };
 
 export default useThemeStore;

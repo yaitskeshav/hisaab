@@ -1,6 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, ActivityIndicator } from 'react-native';
-import { colors as themeColors } from '../../theme/colors';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { useAccentColor } from '../../store/themeStore';
 import { hapticLight } from '../../utils/haptics';
 
@@ -15,6 +15,7 @@ const AppButton = ({
   style,
   textStyle,
 }) => {
+  const colors = useThemeColors();
   const accent = useAccentColor();
 
   const getVariantStyles = () => {
@@ -29,7 +30,14 @@ const AppButton = ({
           elevation: 6,
         };
       case 'secondary':
-        return styles.secondary;
+        return {
+          backgroundColor: colors.secondary,
+          shadowColor: colors.secondary,
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.3,
+          shadowRadius: 8,
+          elevation: 6,
+        };
       case 'outline':
         return {
           backgroundColor: 'transparent',
@@ -37,9 +45,15 @@ const AppButton = ({
           borderColor: accent.primary,
         };
       case 'ghost':
-        return styles.ghost;
+        return {
+          backgroundColor: 'transparent',
+        };
       case 'glass':
-        return styles.glass;
+        return {
+          backgroundColor: colors.cardBg,
+          borderWidth: 1,
+          borderColor: colors.cardBorder,
+        };
       default:
         return {
           backgroundColor: accent.primary,
@@ -69,7 +83,7 @@ const AppButton = ({
     if (variant === 'outline' || variant === 'ghost') {
       return accent.primary;
     }
-    return themeColors.textPrimary;
+    return colors.textPrimary;
   };
 
   const handlePress = async () => {
@@ -79,29 +93,17 @@ const AppButton = ({
 
   return (
     <TouchableOpacity
-      style={[
-        styles.button,
-        getVariantStyles(),
-        getSizeStyles(),
-        disabled && styles.disabled,
-        style,
-      ]}
+      style={[styles.button, getVariantStyles(), getSizeStyles(), disabled && styles.disabled, style]}
       onPress={handlePress}
       disabled={disabled || loading}
       activeOpacity={0.7}
     >
       {loading ? (
-        <ActivityIndicator color={variant === 'outline' ? accent.primary : themeColors.textPrimary} />
+        <ActivityIndicator color={variant === 'outline' ? accent.primary : colors.textPrimary} />
       ) : (
         <>
           {icon && icon}
-          <Text style={[
-            styles.text,
-            { color: getTextColor() },
-            textStyle,
-          ]}>
-            {title}
-          </Text>
+          <Text style={[styles.text, { color: getTextColor() }, textStyle]}>{title}</Text>
         </>
       )}
     </TouchableOpacity>
@@ -115,23 +117,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: 12,
     gap: 8,
-  },
-  // Variants
-  secondary: {
-    backgroundColor: themeColors.secondary,
-    shadowColor: themeColors.secondary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  ghost: {
-    backgroundColor: 'transparent',
-  },
-  glass: {
-    backgroundColor: themeColors.cardBg,
-    borderWidth: 1,
-    borderColor: themeColors.cardBorder,
   },
   // Sizes
   small: {

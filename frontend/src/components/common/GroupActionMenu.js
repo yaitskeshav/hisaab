@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../theme/colors';
+import { useThemeColors, useIsDarkMode } from '../../hooks/useThemeColors';
 import { spacing } from '../../theme/spacing';
 
 /**
@@ -26,6 +26,8 @@ const GroupActionMenu = ({
   actions = {},
   context = 'detail', // 'list' or 'detail'
 }) => {
+  const colors = useThemeColors();
+  const isDark = useIsDarkMode();
   const {
     onInvite,
     onEdit,
@@ -117,12 +119,12 @@ const GroupActionMenu = ({
         activeOpacity={1}
         onPress={onClose}
       >
-        <View style={styles.menuContainer}>
-          <Text style={styles.menuTitle}>{group?.name}</Text>
+        <View style={[styles.menuContainer, { backgroundColor: colors.backgroundLight, borderColor: colors.glassBorder }]}>
+          <Text style={[styles.menuTitle, { color: colors.textPrimary }]}>{group?.name}</Text>
 
           {menuItems.map((item, index) => (
             <React.Fragment key={item.key}>
-              {index > 0 && <View style={styles.divider} />}
+              {index > 0 && <View style={[styles.divider, { backgroundColor: colors.glassBorder }]} />}
               <TouchableOpacity
                 style={[
                   styles.menuItem,
@@ -132,6 +134,7 @@ const GroupActionMenu = ({
               >
                 <View style={[
                   styles.menuIconContainer,
+                  { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)' },
                   item.danger && styles.menuIconDanger,
                 ]}>
                   <Ionicons
@@ -142,7 +145,8 @@ const GroupActionMenu = ({
                 </View>
                 <Text style={[
                   styles.menuText,
-                  item.danger && styles.menuTextDanger,
+                  { color: colors.textPrimary },
+                  item.danger && { color: colors.error },
                 ]}>
                   {item.label}
                 </Text>
@@ -164,11 +168,9 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xl,
   },
   menuContainer: {
-    backgroundColor: colors.backgroundLight,
     borderRadius: 16,
     padding: spacing.lg,
     borderWidth: 1,
-    borderColor: colors.glassBorder,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -178,7 +180,6 @@ const styles = StyleSheet.create({
   menuTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: colors.textPrimary,
     marginBottom: spacing.md,
   },
   menuItem: {
@@ -186,14 +187,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing.md,
   },
-  menuItemDanger: {
-    // Optional additional styling for danger items
-  },
+  menuItemDanger: {},
   menuIconContainer: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.md,
@@ -203,14 +201,9 @@ const styles = StyleSheet.create({
   },
   menuText: {
     fontSize: 16,
-    color: colors.textPrimary,
-  },
-  menuTextDanger: {
-    color: colors.error || '#ef4444',
   },
   divider: {
     height: 1,
-    backgroundColor: colors.glassBorder,
   },
 });
 

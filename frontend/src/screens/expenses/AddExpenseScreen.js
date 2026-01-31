@@ -25,7 +25,8 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import * as IntentLauncher from 'expo-intent-launcher';
-import { colors } from '../../theme/colors';
+import { useThemeColors, useIsDarkMode } from '../../hooks/useThemeColors';
+import { colors as staticColors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import AppInput from '../../components/common/AppInput';
 import AppButton from '../../components/common/AppButton';
@@ -78,6 +79,8 @@ const CUSTOM_SPLIT_MODES = [
 ];
 
 const AddExpenseScreen = ({ route, navigation }) => {
+  const colors = useThemeColors();
+  const isDark = useIsDarkMode();
   const { groupId, expense: passedExpense } = route.params || {};
   const { user } = useAuthStore();
   const { createExpense, updateExpense, deleteExpense, isLoading } = useExpenseStore();
@@ -675,8 +678,8 @@ const AddExpenseScreen = ({ route, navigation }) => {
             )}
           </View>
           <View style={styles.headerTitleContainer}>
-            <Text style={styles.headerTitle}>{isEditMode ? 'Edit Expense' : 'New Expense'}</Text>
-            <Text style={styles.headerSubtitle}>{currentGroup?.name || 'Group'}</Text>
+            <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>{isEditMode ? 'Edit Expense' : 'New Expense'}</Text>
+            <Text style={[styles.headerSubtitle, { color: colors.textMuted }]}>{currentGroup?.name || 'Group'}</Text>
           </View>
           <TouchableOpacity
             style={[
@@ -695,7 +698,7 @@ const AddExpenseScreen = ({ route, navigation }) => {
         </View>
           {/* Amount Section - Prominent */}
           <CardGlass style={styles.amountCard}>
-            <Text style={styles.sectionLabel}>Amount</Text>
+            <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>Amount</Text>
             <View style={styles.amountInputContainer}>
               <Text style={[styles.currencySymbol, { color: accent.primary }]}>₹</Text>
               <AppInput
@@ -705,11 +708,11 @@ const AddExpenseScreen = ({ route, navigation }) => {
                 keyboardType="decimal-pad"
                 style={styles.amountInputWrapper}
                 containerStyle={styles.amountInputContainerStyle}
-                inputStyle={styles.amountInputText}
+                inputStyle={[styles.amountInputText, { color: colors.textPrimary }]}
               />
             </View>
             {amount && parseFloat(amount) > 0 && (
-              <Text style={styles.amountInWords}>
+              <Text style={[styles.amountInWords, { color: colors.textMuted }]}>
                 {parseFloat(amount).toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
               </Text>
             )}
@@ -717,7 +720,7 @@ const AddExpenseScreen = ({ route, navigation }) => {
 
           {/* Basic Info Section */}
           <CardGlass style={styles.section}>
-            <Text style={styles.sectionTitle}>Basic Information</Text>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Basic Information</Text>
 
             <AppInput
               label="Description"
@@ -728,7 +731,7 @@ const AddExpenseScreen = ({ route, navigation }) => {
             />
 
             <View style={styles.selectorGroup}>
-              <Text style={styles.fieldLabel}>Date</Text>
+              <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Date</Text>
               {Platform.OS === 'web' ? (
                 <View style={styles.selector}>
                   <Ionicons name="calendar-outline" size={24} color={colors.textPrimary} style={styles.selectorIconIon} />
@@ -770,7 +773,7 @@ const AddExpenseScreen = ({ route, navigation }) => {
                 >
                   <View style={styles.selectorContent}>
                     <Ionicons name="calendar-outline" size={24} color={colors.textPrimary} style={styles.selectorIconIon} />
-                    <Text style={styles.selectorText}>{formatDate(selectedDate)}</Text>
+                    <Text style={[styles.selectorText, { color: colors.textPrimary }]}>{formatDate(selectedDate)}</Text>
                   </View>
                   <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
                 </TouchableOpacity>
@@ -778,14 +781,14 @@ const AddExpenseScreen = ({ route, navigation }) => {
             </View>
 
             <View style={styles.selectorGroup}>
-              <Text style={styles.fieldLabel}>Category</Text>
+              <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Category</Text>
               <TouchableOpacity
                 style={styles.selector}
                 onPress={() => setCategoryModalVisible(true)}
               >
                 <View style={styles.selectorContent}>
                   <Text style={styles.selectorIcon}>{selectedCategory.icon}</Text>
-                  <Text style={styles.selectorText}>{selectedCategory.name}</Text>
+                  <Text style={[styles.selectorText, { color: colors.textPrimary }]}>{selectedCategory.name}</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
               </TouchableOpacity>
@@ -794,14 +797,14 @@ const AddExpenseScreen = ({ route, navigation }) => {
 
           {/* Order Details Section - Collapsible */}
           <TouchableOpacity
-            style={styles.collapsibleHeader}
+            style={[styles.collapsibleHeader, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)' }]}
             onPress={() => toggleSection('order')}
             activeOpacity={0.7}
           >
             <View style={styles.collapsibleLeft}>
               <Ionicons name="receipt-outline" size={20} color={colors.textPrimary} />
-              <Text style={styles.collapsibleTitle}>Order Details</Text>
-              <Text style={styles.collapsibleOptional}>(Optional)</Text>
+              <Text style={[styles.collapsibleTitle, { color: colors.textPrimary }]}>Order Details</Text>
+              <Text style={[styles.collapsibleOptional, { color: colors.textMuted }]}>(Optional)</Text>
             </View>
             <Ionicons
               name={showOrderDetails ? 'chevron-up' : 'chevron-down'}
@@ -812,7 +815,7 @@ const AddExpenseScreen = ({ route, navigation }) => {
           {showOrderDetails && (
             <CardGlass style={styles.collapsibleContent}>
               <View style={styles.selectorGroup}>
-                <Text style={styles.fieldLabel}>App/Platform</Text>
+                <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>App/Platform</Text>
                 <TouchableOpacity
                   style={styles.selector}
                   onPress={() => setAppModalVisible(true)}
@@ -829,7 +832,7 @@ const AddExpenseScreen = ({ route, navigation }) => {
                         <Ionicons name="phone-portrait-outline" size={20} color={colors.textPrimary} />
                       )}
                     </View>
-                    <Text style={styles.selectorText}>{selectedApp.name}</Text>
+                    <Text style={[styles.selectorText, { color: colors.textPrimary }]}>{selectedApp.name}</Text>
                   </View>
                   <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
                 </TouchableOpacity>
@@ -849,15 +852,15 @@ const AddExpenseScreen = ({ route, navigation }) => {
 
           {/* Split Configuration - Collapsible */}
           <TouchableOpacity
-            style={styles.collapsibleHeader}
+            style={[styles.collapsibleHeader, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)' }]}
             onPress={() => toggleSection('split')}
             activeOpacity={0.7}
           >
             <View style={styles.collapsibleLeft}>
               <Ionicons name="git-compare-outline" size={20} color={colors.textPrimary} />
-              <Text style={styles.collapsibleTitle}>Split Configuration</Text>
+              <Text style={[styles.collapsibleTitle, { color: colors.textPrimary }]}>Split Configuration</Text>
               <View style={[styles.collapsibleBadge, { backgroundColor: accent.primary }]}>
-                <Text style={styles.collapsibleBadgeText}>{SPLIT_TYPES.find(s => s.value === splitType)?.label}</Text>
+                <Text style={[styles.collapsibleBadgeText, { color: '#fff' }]}>{SPLIT_TYPES.find(s => s.value === splitType)?.label}</Text>
               </View>
             </View>
             <Ionicons
@@ -869,13 +872,13 @@ const AddExpenseScreen = ({ route, navigation }) => {
           {showSplitConfig && (
             <CardGlass style={styles.collapsibleContent}>
               <View style={styles.selectorGroup}>
-                <Text style={styles.fieldLabel}>Split Type</Text>
+                <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Split Type</Text>
                 <TouchableOpacity
-                  style={styles.selector}
+                  style={[styles.selector, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}
                   onPress={() => setSplitModalVisible(true)}
                 >
                   <View style={styles.selectorContent}>
-                    <View style={styles.selectorIconContainer}>
+                    <View style={[styles.selectorIconContainer, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)' }]}>
                       <Ionicons
                         name={splitType === 'EQUAL' ? 'git-compare-outline' : 'create-outline'}
                         size={20}
@@ -883,10 +886,10 @@ const AddExpenseScreen = ({ route, navigation }) => {
                       />
                     </View>
                     <View style={styles.selectorTextContainer}>
-                      <Text style={styles.selectorText}>
+                      <Text style={[styles.selectorText, { color: colors.textPrimary }]}>
                         {SPLIT_TYPES.find(s => s.value === splitType)?.label}
                       </Text>
-                      <Text style={styles.selectorDesc}>
+                      <Text style={[styles.selectorDesc, { color: colors.textMuted }]}>
                         {SPLIT_TYPES.find(s => s.value === splitType)?.desc}
                       </Text>
                     </View>
@@ -898,13 +901,13 @@ const AddExpenseScreen = ({ route, navigation }) => {
               {splitType === 'CUSTOM' && (
                 <>
                   <View style={styles.selectorGroup}>
-                    <Text style={styles.fieldLabel}>Split Mode</Text>
+                    <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Split Mode</Text>
                     <TouchableOpacity
-                      style={styles.selector}
+                      style={[styles.selector, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}
                       onPress={() => setCustomSplitModalVisible(true)}
                     >
                       <View style={styles.selectorContent}>
-                        <View style={styles.selectorIconContainer}>
+                        <View style={[styles.selectorIconContainer, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)' }]}>
                           <Ionicons
                             name={customSplitMode === 'AMOUNT' ? 'cash-outline' : customSplitMode === 'PERCENTAGE' ? 'pie-chart-outline' : 'person-outline'}
                             size={20}
@@ -912,10 +915,10 @@ const AddExpenseScreen = ({ route, navigation }) => {
                           />
                         </View>
                         <View style={styles.selectorTextContainer}>
-                          <Text style={styles.selectorText}>
+                          <Text style={[styles.selectorText, { color: colors.textPrimary }]}>
                             {CUSTOM_SPLIT_MODES.find(m => m.value === customSplitMode)?.label}
                           </Text>
-                          <Text style={styles.selectorDesc}>
+                          <Text style={[styles.selectorDesc, { color: colors.textMuted }]}>
                             {CUSTOM_SPLIT_MODES.find(m => m.value === customSplitMode)?.desc}
                           </Text>
                         </View>
@@ -927,7 +930,7 @@ const AddExpenseScreen = ({ route, navigation }) => {
                   {(customSplitMode === 'AMOUNT' || customSplitMode === 'PERCENTAGE') && (
                     <View style={styles.customSplitInputs}>
                       <View style={styles.splitHeaderRow}>
-                        <Text style={styles.fieldLabel}>
+                        <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>
                           Split {customSplitMode === 'AMOUNT' ? 'Amounts' : 'Percentages'}
                         </Text>
                         <View style={styles.splitActions}>
@@ -963,15 +966,22 @@ const AddExpenseScreen = ({ route, navigation }) => {
                         return (
                           <View key={member.id} style={styles.splitInputRow}>
                             <View style={styles.splitMemberInfo}>
-                              <View style={[styles.splitAvatar, { backgroundColor: accent.primary }]}>
-                                <Text style={styles.splitAvatarText}>
-                                  {member.name?.charAt(0).toUpperCase()}
-                                </Text>
-                              </View>
+                              {member.avatar_url ? (
+                                <Image
+                                  source={{ uri: member.avatar_url.startsWith('http') ? member.avatar_url : `${BASE_URL}${member.avatar_url}` }}
+                                  style={styles.splitAvatarImage}
+                                />
+                              ) : (
+                                <View style={[styles.splitAvatar, { backgroundColor: accent.primary }]}>
+                                  <Text style={[styles.splitAvatarText, { color: '#fff' }]}>
+                                    {member.name?.charAt(0).toUpperCase()}
+                                  </Text>
+                                </View>
+                              )}
                               <View style={styles.splitMemberNameContainer}>
-                                <Text style={styles.splitMemberName}>{member.name}</Text>
+                                <Text style={[styles.splitMemberName, { color: colors.textPrimary }]}>{member.name}</Text>
                                 {customSplitMode === 'PERCENTAGE' && percentage > 0 && amount && parseFloat(amount) > 0 && (
-                                  <Text style={styles.splitCalculatedAmount}>
+                                  <Text style={[styles.splitCalculatedAmount, { color: colors.textMuted }]}>
                                     = ₹{formatSplitValue(calculatedAmount)}
                                   </Text>
                                 )}
@@ -990,7 +1000,7 @@ const AddExpenseScreen = ({ route, navigation }) => {
                               )}
                               <View style={styles.splitInputContainer}>
                                 {customSplitMode === 'AMOUNT' && (
-                                  <Text style={styles.splitInputPrefix}>₹</Text>
+                                  <Text style={[styles.splitInputPrefix, { color: colors.textSecondary }]}>₹</Text>
                                 )}
                                 <AppInput
                                   value={memberValue.toString()}
@@ -998,10 +1008,10 @@ const AddExpenseScreen = ({ route, navigation }) => {
                                   placeholder="0"
                                   keyboardType="decimal-pad"
                                   style={styles.splitInput}
-                                  inputStyle={styles.splitInputText}
+                                  inputStyle={[styles.splitInputText, { color: colors.textPrimary }]}
                                 />
                                 {customSplitMode === 'PERCENTAGE' && (
-                                  <Text style={styles.splitInputSuffix}>%</Text>
+                                  <Text style={[styles.splitInputSuffix, { color: colors.textSecondary }]}>%</Text>
                                 )}
                               </View>
                             </View>
@@ -1018,10 +1028,10 @@ const AddExpenseScreen = ({ route, navigation }) => {
                           : Math.abs(total - 100) < 0.01;
 
                         return (
-                          <View style={[styles.splitSummary, isComplete && styles.splitSummaryComplete]}>
+                          <View style={[styles.splitSummary, { backgroundColor: colors.glass, borderColor: colors.glassBorder }, isComplete && styles.splitSummaryComplete]}>
                             {customSplitMode === 'AMOUNT' ? (
                               <View style={styles.splitSummaryContent}>
-                                <Text style={styles.splitSummaryText}>
+                                <Text style={[styles.splitSummaryText, { color: colors.textSecondary }]}>
                                   Total: ₹{formatSplitValue(total)} / ₹{formatSplitValue(parseFloat(amount) || 0)}
                                 </Text>
                                 {remaining && Math.abs(remaining.value) > 0.01 && (
@@ -1039,7 +1049,7 @@ const AddExpenseScreen = ({ route, navigation }) => {
                             ) : (
                               <View style={styles.splitSummaryContent}>
                                 <View style={styles.splitSummaryRow}>
-                                  <Text style={styles.splitSummaryText}>
+                                  <Text style={[styles.splitSummaryText, { color: colors.textSecondary }]}>
                                     Total: {formatSplitValue(total, true)}% / 100%
                                   </Text>
                                   {amount && parseFloat(amount) > 0 && (
@@ -1069,20 +1079,27 @@ const AddExpenseScreen = ({ route, navigation }) => {
 
                   {customSplitMode === 'SINGLE' && (
                     <View style={styles.selectorGroup}>
-                      <Text style={styles.fieldLabel}>Select Member</Text>
+                      <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Select Member</Text>
                       <TouchableOpacity
-                        style={styles.selector}
+                        style={[styles.selector, { backgroundColor: colors.glass, borderColor: colors.glassBorder }]}
                         onPress={() => setMemberModalVisible(true)}
                       >
                         <View style={styles.selectorContent}>
                           {selectedMember ? (
                             <>
-                              <View style={[styles.miniAvatar, { backgroundColor: accent.primary }]}>
-                                <Text style={styles.miniAvatarText}>
-                                  {selectedMember.name?.charAt(0).toUpperCase()}
-                                </Text>
-                              </View>
-                              <Text style={styles.selectorText}>{selectedMember.name}</Text>
+                              {selectedMember.avatar_url ? (
+                                <Image
+                                  source={{ uri: selectedMember.avatar_url.startsWith('http') ? selectedMember.avatar_url : `${BASE_URL}${selectedMember.avatar_url}` }}
+                                  style={styles.miniAvatarImage}
+                                />
+                              ) : (
+                                <View style={[styles.miniAvatar, { backgroundColor: accent.primary }]}>
+                                  <Text style={[styles.miniAvatarText, { color: '#fff' }]}>
+                                    {selectedMember.name?.charAt(0).toUpperCase()}
+                                  </Text>
+                                </View>
+                              )}
+                              <Text style={[styles.selectorText, { color: colors.textPrimary }]}>{selectedMember.name}</Text>
                             </>
                           ) : (
                             <>
@@ -1104,16 +1121,16 @@ const AddExpenseScreen = ({ route, navigation }) => {
 
           {/* Attachments - Collapsible */}
           <TouchableOpacity
-            style={styles.collapsibleHeader}
+            style={[styles.collapsibleHeader, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)' }]}
             onPress={() => toggleSection('attachments')}
             activeOpacity={0.7}
           >
             <View style={styles.collapsibleLeft}>
               <Ionicons name="attach-outline" size={20} color={colors.textPrimary} />
-              <Text style={styles.collapsibleTitle}>Attachments</Text>
+              <Text style={[styles.collapsibleTitle, { color: colors.textPrimary }]}>Attachments</Text>
               {(existingAttachments.length > 0 || attachments.length > 0) && (
-                <View style={styles.collapsibleBadge}>
-                  <Text style={styles.collapsibleBadgeText}>{existingAttachments.length + attachments.length}</Text>
+                <View style={[styles.collapsibleBadge, { backgroundColor: accent.primary }]}>
+                  <Text style={[styles.collapsibleBadgeText, { color: '#fff' }]}>{existingAttachments.length + attachments.length}</Text>
                 </View>
               )}
             </View>
@@ -1148,7 +1165,7 @@ const AddExpenseScreen = ({ route, navigation }) => {
                           color={colors.textPrimary}
                           style={styles.attachmentIconIon}
                         />
-                        <Text style={styles.attachmentName} numberOfLines={1}>
+                        <Text style={[styles.attachmentName, { color: colors.textPrimary }]} numberOfLines={1}>
                           {attachment.file_name}
                         </Text>
                       </TouchableOpacity>
@@ -1166,7 +1183,7 @@ const AddExpenseScreen = ({ route, navigation }) => {
                   {attachments.map((file, index) => (
                     <View key={`new-${index}`} style={styles.attachmentItem}>
                       <Ionicons name="attach-outline" size={20} color={colors.textPrimary} style={styles.attachmentIconIon} />
-                      <Text style={styles.attachmentName} numberOfLines={1}>
+                      <Text style={[styles.attachmentName, { color: colors.textPrimary }]} numberOfLines={1}>
                         {file.name}
                       </Text>
                       <TouchableOpacity onPress={() => confirmRemoveAttachment(index, file.name)}>
@@ -1211,7 +1228,7 @@ const AddExpenseScreen = ({ route, navigation }) => {
           <View style={styles.modalOverlay}>
             <CardGlass style={styles.categoryModalContent}>
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Select Category</Text>
+                <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Select Category</Text>
                 <TouchableOpacity onPress={() => setCategoryModalVisible(false)}>
                   <Ionicons name="close" size={24} color={colors.textMuted} />
                 </TouchableOpacity>
@@ -1262,7 +1279,7 @@ const AddExpenseScreen = ({ route, navigation }) => {
           <View style={styles.modalOverlay}>
             <CardGlass style={styles.modalContent}>
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Select App/Platform</Text>
+                <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Select App/Platform</Text>
                 <TouchableOpacity onPress={() => setAppModalVisible(false)}>
                   <Ionicons name="close" size={24} color={colors.textMuted} />
                 </TouchableOpacity>
@@ -1292,7 +1309,7 @@ const AddExpenseScreen = ({ route, navigation }) => {
                           <Text style={{ fontSize: 20 }}>📱</Text>
                         )}
                       </View>
-                      <Text style={styles.listItemText}>{app.name}</Text>
+                      <Text style={[styles.listItemText, { color: colors.textPrimary }]}>{app.name}</Text>
                     </View>
                     {selectedApp.id === app.id && <Ionicons name="checkmark" size={20} color={accent.primary} />}
                   </TouchableOpacity>
@@ -1312,7 +1329,7 @@ const AddExpenseScreen = ({ route, navigation }) => {
           <View style={styles.modalOverlay}>
             <CardGlass style={styles.modalContent}>
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Split Type</Text>
+                <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Split Type</Text>
                 <TouchableOpacity onPress={() => setSplitModalVisible(false)}>
                   <Ionicons name="close" size={24} color={colors.textMuted} />
                 </TouchableOpacity>
@@ -1330,7 +1347,7 @@ const AddExpenseScreen = ({ route, navigation }) => {
                   }}
                 >
                   <View style={styles.listItemContent}>
-                    <View style={styles.listItemIconContainer}>
+                    <View style={[styles.listItemIconContainer, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)' }]}>
                       <Ionicons
                         name={type.value === 'EQUAL' ? 'git-compare-outline' : 'create-outline'}
                         size={20}
@@ -1338,8 +1355,8 @@ const AddExpenseScreen = ({ route, navigation }) => {
                       />
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.listItemText}>{type.label}</Text>
-                      <Text style={styles.listItemDesc}>{type.desc}</Text>
+                      <Text style={[styles.listItemText, { color: colors.textPrimary }]}>{type.label}</Text>
+                      <Text style={[styles.listItemDesc, { color: colors.textMuted }]}>{type.desc}</Text>
                     </View>
                   </View>
                   {splitType === type.value && <Ionicons name="checkmark" size={20} color={accent.primary} />}
@@ -1359,7 +1376,7 @@ const AddExpenseScreen = ({ route, navigation }) => {
           <View style={styles.modalOverlay}>
             <CardGlass style={styles.modalContent}>
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Custom Split Mode</Text>
+                <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Custom Split Mode</Text>
                 <TouchableOpacity onPress={() => setCustomSplitModalVisible(false)}>
                   <Ionicons name="close" size={24} color={colors.textMuted} />
                 </TouchableOpacity>
@@ -1377,7 +1394,7 @@ const AddExpenseScreen = ({ route, navigation }) => {
                   }}
                 >
                   <View style={styles.listItemContent}>
-                    <View style={styles.listItemIconContainer}>
+                    <View style={[styles.listItemIconContainer, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)' }]}>
                       <Ionicons
                         name={mode.value === 'AMOUNT' ? 'cash-outline' : mode.value === 'PERCENTAGE' ? 'pie-chart-outline' : 'person-outline'}
                         size={20}
@@ -1385,8 +1402,8 @@ const AddExpenseScreen = ({ route, navigation }) => {
                       />
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.listItemText}>{mode.label}</Text>
-                      <Text style={styles.listItemDesc}>{mode.desc}</Text>
+                      <Text style={[styles.listItemText, { color: colors.textPrimary }]}>{mode.label}</Text>
+                      <Text style={[styles.listItemDesc, { color: colors.textMuted }]}>{mode.desc}</Text>
                     </View>
                   </View>
                   {customSplitMode === mode.value && <Ionicons name="checkmark" size={20} color={accent.primary} />}
@@ -1406,7 +1423,7 @@ const AddExpenseScreen = ({ route, navigation }) => {
           <View style={styles.modalOverlay}>
             <CardGlass style={styles.modalContent}>
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Select Member</Text>
+                <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Select Member</Text>
                 <TouchableOpacity onPress={() => setMemberModalVisible(false)}>
                   <Ionicons name="close" size={24} color={colors.textMuted} />
                 </TouchableOpacity>
@@ -1427,12 +1444,19 @@ const AddExpenseScreen = ({ route, navigation }) => {
                       }}
                     >
                       <View style={styles.memberItemContent}>
-                        <View style={[styles.memberAvatar, { backgroundColor: accent.primary }]}>
-                          <Text style={styles.memberAvatarText}>
-                            {member.name?.charAt(0).toUpperCase()}
-                          </Text>
-                        </View>
-                        <Text style={styles.memberName}>{member.name}</Text>
+                        {member.avatar_url ? (
+                          <Image
+                            source={{ uri: member.avatar_url.startsWith('http') ? member.avatar_url : `${BASE_URL}${member.avatar_url}` }}
+                            style={styles.memberAvatarImage}
+                          />
+                        ) : (
+                          <View style={[styles.memberAvatar, { backgroundColor: accent.primary }]}>
+                            <Text style={[styles.memberAvatarText, { color: '#fff' }]}>
+                              {member.name?.charAt(0).toUpperCase()}
+                            </Text>
+                          </View>
+                        )}
+                        <Text style={[styles.memberName, { color: colors.textPrimary }]}>{member.name}</Text>
                       </View>
                       {isSelected && <Ionicons name="checkmark" size={20} color={accent.primary} />}
                     </TouchableOpacity>
@@ -1601,7 +1625,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: `${colors.error || '#ef4444'}15`,
+    backgroundColor: `${staticColors.error || '#ef4444'}15`,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1609,7 +1633,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: colors.primary,
+    backgroundColor: staticColors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1625,11 +1649,11 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
   },
   headerSubtitle: {
     fontSize: 13,
-    color: colors.textMuted,
+    color: staticColors.textMuted,
     marginTop: 2,
   },
   scrollContent: {
@@ -1646,7 +1670,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 12,
     fontWeight: '600',
-    color: colors.textMuted,
+    color: staticColors.textMuted,
     textTransform: 'uppercase',
     letterSpacing: 1,
     marginBottom: spacing.sm,
@@ -1659,7 +1683,7 @@ const styles = StyleSheet.create({
   currencySymbol: {
     fontSize: 32,
     fontWeight: '700',
-    color: colors.primary,
+    color: staticColors.primary,
     marginRight: spacing.xs,
   },
   amountInputWrapper: {
@@ -1675,13 +1699,13 @@ const styles = StyleSheet.create({
   amountInputText: {
     fontSize: 40,
     fontWeight: '700',
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
     textAlign: 'center',
     minWidth: 100,
   },
   amountInWords: {
     fontSize: 13,
-    color: colors.textMuted,
+    color: staticColors.textMuted,
     marginTop: spacing.xs,
     fontWeight: '500',
   },
@@ -1692,7 +1716,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
     marginBottom: spacing.lg,
   },
   collapsibleHeader: {
@@ -1713,22 +1737,22 @@ const styles = StyleSheet.create({
   collapsibleTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
   },
   collapsibleOptional: {
     fontSize: 12,
-    color: colors.textMuted,
+    color: staticColors.textMuted,
     fontWeight: '400',
   },
   collapsibleBadge: {
-    backgroundColor: colors.primary,
+    backgroundColor: staticColors.primary,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 10,
   },
   collapsibleBadgeText: {
     fontSize: 12,
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
     fontWeight: '600',
   },
   collapsibleContent: {
@@ -1744,16 +1768,16 @@ const styles = StyleSheet.create({
   fieldLabel: {
     fontSize: 13,
     fontWeight: '600',
-    color: colors.textSecondary,
+    color: staticColors.textSecondary,
     marginBottom: spacing.sm,
   },
   selector: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.glass,
+    backgroundColor: staticColors.glass,
     borderWidth: 1,
-    borderColor: colors.glassBorder,
+    borderColor: staticColors.glassBorder,
     borderRadius: 12,
     padding: spacing.md,
     minHeight: 56,
@@ -1784,31 +1808,37 @@ const styles = StyleSheet.create({
   },
   selectorText: {
     fontSize: 16,
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
     fontWeight: '500',
   },
   selectorDesc: {
     fontSize: 12,
-    color: colors.textMuted,
+    color: staticColors.textMuted,
     marginTop: 2,
   },
   placeholderText: {
-    color: colors.textMuted,
+    color: staticColors.textMuted,
     fontWeight: '400',
   },
   miniAvatar: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: colors.primary,
+    backgroundColor: staticColors.primary,
     alignItems: 'center',
     justifyContent: 'center',
+    marginRight: spacing.sm,
+  },
+  miniAvatarImage: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     marginRight: spacing.sm,
   },
   miniAvatarText: {
     fontSize: 12,
     fontWeight: '600',
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
   },
   customSplitInputs: {
     marginTop: spacing.md,
@@ -1835,7 +1865,7 @@ const styles = StyleSheet.create({
   },
   splitActionText: {
     fontSize: 12,
-    color: colors.primary,
+    color: staticColors.primary,
     fontWeight: '600',
   },
   splitInputRow: {
@@ -1853,19 +1883,25 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: colors.primary,
+    backgroundColor: staticColors.primary,
     alignItems: 'center',
     justifyContent: 'center',
+    marginRight: spacing.sm,
+  },
+  splitAvatarImage: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     marginRight: spacing.sm,
   },
   splitAvatarText: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
   },
   splitMemberName: {
     fontSize: 14,
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
     fontWeight: '500',
   },
   splitMemberNameContainer: {
@@ -1873,7 +1909,7 @@ const styles = StyleSheet.create({
   },
   splitCalculatedAmount: {
     fontSize: 12,
-    color: colors.textMuted,
+    color: staticColors.textMuted,
     marginTop: 2,
   },
   splitInputWrapper: {
@@ -1885,13 +1921,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
-    backgroundColor: `${colors.primary}20`,
+    backgroundColor: `${staticColors.primary}20`,
     borderWidth: 1,
-    borderColor: `${colors.primary}40`,
+    borderColor: `${staticColors.primary}40`,
   },
   fillRemainingText: {
     fontSize: 11,
-    color: colors.primary,
+    color: staticColors.primary,
     fontWeight: '600',
   },
   splitInputContainer: {
@@ -1901,12 +1937,12 @@ const styles = StyleSheet.create({
   },
   splitInputPrefix: {
     fontSize: 16,
-    color: colors.textSecondary,
+    color: staticColors.textSecondary,
     marginRight: spacing.xs,
   },
   splitInputSuffix: {
     fontSize: 16,
-    color: colors.textSecondary,
+    color: staticColors.textSecondary,
     marginLeft: spacing.xs,
   },
   splitInput: {
@@ -1920,10 +1956,10 @@ const styles = StyleSheet.create({
   splitSummary: {
     marginTop: spacing.sm,
     padding: spacing.sm,
-    backgroundColor: colors.glass,
+    backgroundColor: staticColors.glass,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.glassBorder,
+    borderColor: staticColors.glassBorder,
   },
   splitSummaryComplete: {
     borderColor: '#10B98140',
@@ -1935,7 +1971,7 @@ const styles = StyleSheet.create({
   },
   splitSummaryText: {
     fontSize: 13,
-    color: colors.textSecondary,
+    color: staticColors.textSecondary,
     textAlign: 'center',
     fontWeight: '500',
   },
@@ -1947,16 +1983,16 @@ const styles = StyleSheet.create({
   },
   splitSummaryAmount: {
     fontSize: 13,
-    color: colors.primary,
+    color: staticColors.primary,
     fontWeight: '600',
   },
   splitRemainingText: {
     fontSize: 12,
-    color: colors.accent || '#F59E0B',
+    color: staticColors.accent || '#F59E0B',
     fontWeight: '500',
   },
   splitOverText: {
-    color: colors.error || '#EF4444',
+    color: staticColors.error || '#EF4444',
   },
   splitCompleteIndicator: {
     flexDirection: 'row',
@@ -1978,12 +2014,12 @@ const styles = StyleSheet.create({
   attachmentItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.glass,
+    backgroundColor: staticColors.glass,
     padding: spacing.md,
     borderRadius: 8,
     marginBottom: spacing.xs,
     borderWidth: 1,
-    borderColor: colors.glassBorder,
+    borderColor: staticColors.glassBorder,
   },
   attachmentIcon: {
     fontSize: 20,
@@ -1999,7 +2035,7 @@ const styles = StyleSheet.create({
   },
   attachmentName: {
     flex: 1,
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
     fontSize: 14,
   },
   submitButton: {
@@ -2033,7 +2069,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
   },
   categoryScrollView: {
     maxHeight: 500,
@@ -2059,9 +2095,9 @@ const styles = StyleSheet.create({
     minHeight: 85,
   },
   categoryItemSelected: {
-    borderColor: colors.primary,
+    borderColor: staticColors.primary,
     borderWidth: 2,
-    backgroundColor: `${colors.primary}15`,
+    backgroundColor: `${staticColors.primary}15`,
   },
   categoryIconContainer: {
     width: 40,
@@ -2077,7 +2113,7 @@ const styles = StyleSheet.create({
   },
   categoryName: {
     fontSize: 12,
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
     fontWeight: '600',
     textAlign: 'center',
   },
@@ -2104,14 +2140,14 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     borderRadius: 12,
     marginBottom: spacing.xs,
-    backgroundColor: colors.glass,
+    backgroundColor: staticColors.glass,
     borderWidth: 1,
-    borderColor: colors.glassBorder,
+    borderColor: staticColors.glassBorder,
   },
   listItemSelected: {
-    borderColor: colors.primary,
+    borderColor: staticColors.primary,
     borderWidth: 2,
-    backgroundColor: `${colors.primary}10`,
+    backgroundColor: `${staticColors.primary}10`,
   },
   listItemContent: {
     flexDirection: 'row',
@@ -2133,12 +2169,12 @@ const styles = StyleSheet.create({
   },
   listItemText: {
     fontSize: 16,
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
     fontWeight: '500',
   },
   listItemDesc: {
     fontSize: 12,
-    color: colors.textMuted,
+    color: staticColors.textMuted,
     marginTop: 2,
   },
   memberList: {
@@ -2151,14 +2187,14 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     borderRadius: 12,
     marginBottom: spacing.xs,
-    backgroundColor: colors.glass,
+    backgroundColor: staticColors.glass,
     borderWidth: 1,
-    borderColor: colors.glassBorder,
+    borderColor: staticColors.glassBorder,
   },
   memberItemSelected: {
-    borderColor: colors.primary,
+    borderColor: staticColors.primary,
     borderWidth: 2,
-    backgroundColor: `${colors.primary}10`,
+    backgroundColor: `${staticColors.primary}10`,
   },
   memberItemContent: {
     flexDirection: 'row',
@@ -2169,19 +2205,25 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.primary,
+    backgroundColor: staticColors.primary,
     alignItems: 'center',
     justifyContent: 'center',
+    marginRight: spacing.md,
+  },
+  memberAvatarImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     marginRight: spacing.md,
   },
   memberAvatarText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
   },
   memberName: {
     fontSize: 16,
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
     fontWeight: '500',
   },
   imagePreviewOverlay: {
@@ -2213,7 +2255,7 @@ const styles = StyleSheet.create({
   },
   pdfPreviewContainer: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: staticColors.background,
   },
   pdfPreviewHeader: {
     flexDirection: 'row',
@@ -2221,22 +2263,22 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: spacing.lg,
     paddingTop: spacing['3xl'],
-    backgroundColor: colors.glass,
+    backgroundColor: staticColors.glass,
     borderBottomWidth: 1,
-    borderBottomColor: colors.glassBorder,
+    borderBottomColor: staticColors.glassBorder,
   },
   pdfPreviewTitle: {
     flex: 1,
     fontSize: 16,
     fontWeight: '600',
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
     marginRight: spacing.md,
   },
   pdfPreviewCloseBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: colors.glass,
+    backgroundColor: staticColors.glass,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -2252,13 +2294,13 @@ const styles = StyleSheet.create({
   pdfFallbackText: {
     fontSize: 18,
     fontWeight: '600',
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
     textAlign: 'center',
     marginBottom: spacing.sm,
   },
   pdfFallbackHint: {
     fontSize: 14,
-    color: colors.textMuted,
+    color: staticColors.textMuted,
     textAlign: 'center',
   },
   loadingOverlay: {
@@ -2272,13 +2314,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingContainer: {
-    backgroundColor: colors.glass,
+    backgroundColor: staticColors.glass,
     padding: spacing.xl,
     borderRadius: 16,
   },
   loadingText: {
     fontSize: 16,
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
     fontWeight: '500',
   },
 });

@@ -11,6 +11,7 @@ import AnimatedSplashScreen from './src/components/AnimatedSplashScreen';
 import SuccessModal from './src/components/common/SuccessModal';
 import AppUpdateModal from './src/components/common/AppUpdateModal';
 import useAppUpdate from './src/hooks/useAppUpdate';
+import { useIsDarkMode } from './src/hooks/useThemeColors';
 
 export default function App() {
   const [splashData, setSplashData] = useState(null);
@@ -19,6 +20,7 @@ export default function App() {
   const verifyEmail = useAuthStore(state => state.verifyEmail);
   const navigatorRef = useRef(null);
   const { updateInfo, downloadUpdate, dismissUpdate } = useAppUpdate();
+  const isDarkMode = useIsDarkMode();
 
   // Global deep link listener
   React.useEffect(() => {
@@ -77,7 +79,7 @@ export default function App() {
           onUpdate={downloadUpdate}
           onDismiss={dismissUpdate}
         />
-        <StatusBar style="light" />
+        <StatusBar style={isDarkMode ? 'light' : 'dark'} />
       </ToastProvider>
     </ErrorBoundary>
   );

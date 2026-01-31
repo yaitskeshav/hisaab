@@ -11,8 +11,9 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import { colors } from '../../theme/colors';
+import { colors as staticColors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
+import { useThemeColors, useIsDarkMode } from '../../hooks/useThemeColors';
 import CardGlass from '../../components/common/CardGlass';
 import IconButton from '../../components/common/IconButton';
 import Loader from '../../components/common/Loader';
@@ -25,6 +26,8 @@ const SettleUpScreen = ({ route, navigation }) => {
   const { groupId, groupName } = route.params;
   const { balances, fetchGroupBalances, settlements, fetchGroupSettlements, cancelSettlement, isLoading } = useSettlementStore();
   const { user } = useAuthStore();
+  const colors = useThemeColors();
+  const isDark = useIsDarkMode();
   const accent = useAccentColor();
   const [refreshing, setRefreshing] = useState(false);
   const [toast, setToast] = useState({ visible: false, message: '', type: 'info' });
@@ -148,8 +151,8 @@ const SettleUpScreen = ({ route, navigation }) => {
           style={styles.backButton}
         />
         <View style={styles.headerTitleContainer}>
-          <Text style={styles.headerTitle}>Settle Up</Text>
-          <Text style={styles.headerSubtitle}>{groupName}</Text>
+          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Settle Up</Text>
+          <Text style={[styles.headerSubtitle, { color: colors.textMuted }]}>{groupName}</Text>
         </View>
         <IconButton
           icon={activeTab === 'balances' ? 'time-outline' : 'wallet-outline'}
@@ -172,13 +175,13 @@ const SettleUpScreen = ({ route, navigation }) => {
               {/* Summary Card */}
               <CardGlass style={styles.summaryCard} gradient>
                 <View style={styles.summaryHeader}>
-                  <View style={[styles.statusBadge, isSettledUp ? styles.settledBadge : styles.unsettledBadge]}>
+                  <View style={[styles.statusBadge, { backgroundColor: isSettledUp ? staticColors.success + '20' : staticColors.warning + '20' }]}>
                     <Ionicons
                       name={isSettledUp ? 'checkmark-circle' : 'alert-circle'}
                       size={16}
-                      color={isSettledUp ? colors.success : colors.warning}
+                      color={isSettledUp ? staticColors.success : staticColors.warning}
                     />
-                    <Text style={[styles.statusText, isSettledUp ? styles.settledText : styles.unsettledText]}>
+                    <Text style={[styles.statusText, { color: isSettledUp ? staticColors.success : staticColors.warning }]}>
                       {isSettledUp ? 'All Settled Up!' : 'Pending Settlements'}
                     </Text>
                   </View>
@@ -186,23 +189,23 @@ const SettleUpScreen = ({ route, navigation }) => {
 
                 {myBalance && Math.abs(myBalance.net_amount) >= 0.01 ? (
                   <View style={styles.myBalanceContainer}>
-                    <Text style={styles.myBalanceLabel}>Your Balance</Text>
+                    <Text style={[styles.myBalanceLabel, { color: colors.textMuted }]}>Your Balance</Text>
                     <Text style={[
                       styles.myBalanceAmount,
-                      myBalance.net_amount > 0 ? styles.positiveAmount : styles.negativeAmount
+                      { color: myBalance.net_amount > 0 ? staticColors.success : staticColors.error }
                     ]}>
                       {myBalance.net_amount > 0 ? '+' : ''}{formatCurrency(myBalance.net_amount)}
                     </Text>
-                    <Text style={styles.myBalanceHint}>
+                    <Text style={[styles.myBalanceHint, { color: colors.textMuted }]}>
                       {myBalance.net_amount > 0 ? 'Others owe you' : 'You owe others'}
                     </Text>
                   </View>
                 ) : null}
 
                 {balances?.settlements_saved > 0 ? (
-                  <View style={styles.optimizedBadge}>
-                    <Ionicons name="flash" size={14} color={colors.accent} />
-                    <Text style={styles.optimizedText}>
+                  <View style={[styles.optimizedBadge, { backgroundColor: staticColors.accent + '15' }]}>
+                    <Ionicons name="flash" size={14} color={staticColors.accent} />
+                    <Text style={[styles.optimizedText, { color: staticColors.accent }]}>
                       Simplified! Saved {balances.settlements_saved} payment{balances.settlements_saved > 1 ? 's' : ''}
                     </Text>
                   </View>
@@ -212,7 +215,7 @@ const SettleUpScreen = ({ route, navigation }) => {
               {/* Debts I Owe */}
               {myDebts.length > 0 ? (
                 <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>You Owe</Text>
+                  <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>You Owe</Text>
                   {myDebts.map((debt, index) => {
                     const pendingSettlement = getPendingSettlement(debt.to_user_id);
                     return (
@@ -229,6 +232,7 @@ const SettleUpScreen = ({ route, navigation }) => {
                         getAvatarColor={getAvatarColor}
                         isOptimized={debt.is_optimized}
                         accent={accent}
+                        colors={colors}
                       />
                     );
                   })}
@@ -238,7 +242,7 @@ const SettleUpScreen = ({ route, navigation }) => {
               {/* Debts Owed to Me */}
               {owedToMe.length > 0 ? (
                 <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Owed to You</Text>
+                  <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Owed to You</Text>
                   {owedToMe.map((debt, index) => {
                     const incomingSettlement = getIncomingPendingSettlement(debt.from_user_id);
                     return (
@@ -253,6 +257,7 @@ const SettleUpScreen = ({ route, navigation }) => {
                         getAvatarColor={getAvatarColor}
                         isOptimized={debt.is_optimized}
                         accent={accent}
+                        colors={colors}
                       />
                     );
                   })}
@@ -266,8 +271,8 @@ const SettleUpScreen = ({ route, navigation }) => {
                     style={styles.sectionHeader}
                     onPress={() => { }}
                   >
-                    <Text style={styles.sectionTitleMuted}>Other Settlements</Text>
-                    <Text style={styles.sectionCount}>{otherDebts.length}</Text>
+                    <Text style={[styles.sectionTitleMuted, { color: colors.textMuted }]}>Other Settlements</Text>
+                    <Text style={[styles.sectionCount, { color: colors.textMuted, backgroundColor: colors.glass }]}>{otherDebts.length}</Text>
                   </TouchableOpacity>
                   {otherDebts.map((debt, index) => (
                     <DebtCard
@@ -280,6 +285,7 @@ const SettleUpScreen = ({ route, navigation }) => {
                       isOptimized={debt.is_optimized}
                       compact
                       accent={accent}
+                      colors={colors}
                     />
                   ))}
                 </View>
@@ -296,8 +302,8 @@ const SettleUpScreen = ({ route, navigation }) => {
                       <Ionicons name="checkmark-done" size={40} color="#fff" />
                     </LinearGradient>
                   </View>
-                  <Text style={styles.emptyTitle}>All Settled!</Text>
-                  <Text style={styles.emptyText}>
+                  <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>All Settled!</Text>
+                  <Text style={[styles.emptyText, { color: colors.textMuted }]}>
                     Everyone in this group is squared up. No pending payments.
                   </Text>
                 </View>
@@ -306,11 +312,11 @@ const SettleUpScreen = ({ route, navigation }) => {
           ) : (
             /* History Tab */
             <View style={styles.historyContainer}>
-              <Text style={styles.sectionTitle}>Settlement History</Text>
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Settlement History</Text>
               {settlements.length === 0 ? (
                 <View style={styles.emptyHistory}>
                   <Ionicons name="receipt-outline" size={48} color={colors.textMuted} />
-                  <Text style={styles.emptyHistoryText}>No settlements yet</Text>
+                  <Text style={[styles.emptyHistoryText, { color: colors.textMuted }]}>No settlements yet</Text>
                 </View>
               ) : (
                 settlements.map((settlement) => (
@@ -321,6 +327,7 @@ const SettleUpScreen = ({ route, navigation }) => {
                     formatCurrency={formatCurrency}
                     getInitials={getInitials}
                     getAvatarColor={getAvatarColor}
+                    colors={colors}
                   />
                 ))
               )}
@@ -352,7 +359,8 @@ const DebtCard = ({
   getAvatarColor,
   isOptimized,
   compact,
-  accent
+  accent,
+  colors
 }) => {
   const person = type === 'owe' ? debt.to_user : debt.from_user;
   const showSettleButton = type === 'owe';
@@ -385,20 +393,20 @@ const DebtCard = ({
 
         <View style={styles.debtInfo}>
           <View style={styles.debtNameRow}>
-            <Text style={styles.debtName}>{person.name || 'Unknown'}</Text>
+            <Text style={[styles.debtName, { color: colors.textPrimary }]}>{person.name || 'Unknown'}</Text>
             {isOptimized ? (
-              <View style={styles.optimizedTag}>
-                <Ionicons name="flash" size={10} color={colors.accent} />
-                <Text style={styles.optimizedTagText}>Simplified</Text>
+              <View style={[styles.optimizedTag, { backgroundColor: staticColors.accent + '20' }]}>
+                <Ionicons name="flash" size={10} color={staticColors.accent} />
+                <Text style={[styles.optimizedTagText, { color: staticColors.accent }]}>Simplified</Text>
               </View>
             ) : null}
           </View>
           {type === 'other' ? (
-            <Text style={styles.debtDescription}>
+            <Text style={[styles.debtDescription, { color: colors.textMuted }]}>
               {debt.from_user?.name || 'Unknown'} → {debt.to_user?.name || 'Unknown'}
             </Text>
           ) : (
-            <Text style={styles.debtDescription}>
+            <Text style={[styles.debtDescription, { color: colors.textMuted }]}>
               {type === 'owe' ? 'You owe' : 'Owes you'}
             </Text>
           )}
@@ -407,12 +415,12 @@ const DebtCard = ({
         <View style={styles.debtAmountContainer}>
           <Text style={[
             styles.debtAmount,
-            type === 'owe' ? styles.negativeAmount : (type === 'get' ? styles.positiveAmount : styles.neutralAmount)
+            { color: type === 'owe' ? staticColors.error : (type === 'get' ? staticColors.success : colors.textPrimary) }
           ]}>
             {formatCurrency(debt.amount)}
           </Text>
           {showSettleButton && !hasPending ? (
-            <TouchableOpacity style={[styles.settleButton, { backgroundColor: accent?.primary || colors.primary }]} onPress={onSettle}>
+            <TouchableOpacity style={[styles.settleButton, { backgroundColor: accent?.primary || staticColors.primary }]} onPress={onSettle}>
               <Text style={styles.settleButtonText}>Settle</Text>
             </TouchableOpacity>
           ) : null}
@@ -430,7 +438,7 @@ const DebtCard = ({
               <Text style={styles.pendingBannerTitle}>
                 Payment of {formatCurrency(pendingSettlement.amount)} recorded
               </Text>
-              <Text style={styles.pendingBannerSubtitle}>
+              <Text style={[styles.pendingBannerSubtitle, { color: colors.textMuted }]}>
                 Waiting for {person.name} to confirm • {formatTimeAgo(pendingSettlement.created_at)}
               </Text>
             </View>
@@ -460,7 +468,7 @@ const DebtCard = ({
               <Text style={styles.incomingBannerTitle}>
                 {person.name} recorded {formatCurrency(incomingSettlement.amount)}
               </Text>
-              <Text style={styles.pendingBannerSubtitle}>
+              <Text style={[styles.pendingBannerSubtitle, { color: colors.textMuted }]}>
                 Tap to confirm you received this payment
               </Text>
             </View>
@@ -475,7 +483,7 @@ const DebtCard = ({
 };
 
 // Settlement History Card
-const SettlementHistoryCard = ({ settlement, currentUserId, formatCurrency, getInitials, getAvatarColor }) => {
+const SettlementHistoryCard = ({ settlement, currentUserId, formatCurrency, getInitials, getAvatarColor, colors }) => {
   const isPayer = settlement.payer_id === currentUserId;
   const otherPerson = isPayer ? settlement.receiver : settlement.payer;
 
@@ -483,9 +491,9 @@ const SettlementHistoryCard = ({ settlement, currentUserId, formatCurrency, getI
 
   const getStatusColor = () => {
     switch (settlement.status) {
-      case 'confirmed': return colors.success;
-      case 'rejected': return colors.error;
-      default: return colors.warning;
+      case 'confirmed': return staticColors.success;
+      case 'rejected': return staticColors.error;
+      default: return staticColors.warning;
     }
   };
 
@@ -510,17 +518,17 @@ const SettlementHistoryCard = ({ settlement, currentUserId, formatCurrency, getI
         </View>
 
         <View style={styles.historyInfo}>
-          <Text style={styles.historyTitle}>
+          <Text style={[styles.historyTitle, { color: colors.textPrimary }]}>
             {isPayer ? `You paid ${otherPerson.name || 'Unknown'}` : `${otherPerson.name || 'Unknown'} paid you`}
           </Text>
-          <Text style={styles.historyDate}>{formatDate(settlement.created_at)}</Text>
+          <Text style={[styles.historyDate, { color: colors.textMuted }]}>{formatDate(settlement.created_at)}</Text>
           {settlement.note ? (
-            <Text style={styles.historyNote}>"{settlement.note}"</Text>
+            <Text style={[styles.historyNote, { color: colors.textMuted }]}>"{settlement.note}"</Text>
           ) : null}
         </View>
 
         <View style={styles.historyRight}>
-          <Text style={[styles.historyAmount, isPayer ? styles.negativeAmount : styles.positiveAmount]}>
+          <Text style={[styles.historyAmount, { color: isPayer ? staticColors.error : staticColors.success }]}>
             {isPayer ? '-' : '+'}{formatCurrency(settlement.amount)}
           </Text>
           <View style={[styles.statusChip, { backgroundColor: `${getStatusColor()}20` }]}>
@@ -555,18 +563,16 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: colors.textPrimary,
   },
   headerSubtitle: {
     fontSize: 14,
-    color: colors.textMuted,
     marginTop: 2,
   },
   historyButton: {
     marginLeft: spacing.sm,
   },
   activeTabButton: {
-    backgroundColor: colors.primary + '30',
+    backgroundColor: staticColors.primary + '30',
   },
   scrollView: {
     flex: 1,
@@ -593,20 +599,20 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   settledBadge: {
-    backgroundColor: colors.success + '20',
+    backgroundColor: staticColors.success + '20',
   },
   unsettledBadge: {
-    backgroundColor: colors.warning + '20',
+    backgroundColor: staticColors.warning + '20',
   },
   statusText: {
     fontSize: 13,
     fontWeight: '600',
   },
   settledText: {
-    color: colors.success,
+    color: staticColors.success,
   },
   unsettledText: {
-    color: colors.warning,
+    color: staticColors.warning,
   },
   myBalanceContainer: {
     alignItems: 'center',
@@ -614,7 +620,6 @@ const styles = StyleSheet.create({
   },
   myBalanceLabel: {
     fontSize: 13,
-    color: colors.textMuted,
     marginBottom: spacing.xs,
   },
   myBalanceAmount: {
@@ -623,17 +628,16 @@ const styles = StyleSheet.create({
   },
   myBalanceHint: {
     fontSize: 13,
-    color: colors.textMuted,
     marginTop: spacing.xs,
   },
   positiveAmount: {
-    color: colors.success,
+    color: staticColors.success,
   },
   negativeAmount: {
-    color: colors.error,
+    color: staticColors.error,
   },
   neutralAmount: {
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
   },
   optimizedBadge: {
     flexDirection: 'row',
@@ -643,13 +647,11 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     paddingVertical: spacing.xs,
     paddingHorizontal: spacing.md,
-    backgroundColor: colors.accent + '15',
     borderRadius: 12,
     alignSelf: 'center',
   },
   optimizedText: {
     fontSize: 12,
-    color: colors.accent,
     fontWeight: '500',
   },
   section: {
@@ -664,18 +666,14 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.textPrimary,
     marginBottom: spacing.sm,
   },
   sectionTitleMuted: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.textMuted,
   },
   sectionCount: {
     fontSize: 12,
-    color: colors.textMuted,
-    backgroundColor: colors.glass,
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
     borderRadius: 10,
@@ -734,17 +732,14 @@ const styles = StyleSheet.create({
   debtName: {
     fontSize: 15,
     fontWeight: '600',
-    color: colors.textPrimary,
   },
   debtDescription: {
     fontSize: 13,
-    color: colors.textMuted,
     marginTop: 2,
   },
   optimizedTag: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.accent + '20',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 6,
@@ -752,7 +747,6 @@ const styles = StyleSheet.create({
   },
   optimizedTagText: {
     fontSize: 10,
-    color: colors.accent,
     fontWeight: '500',
   },
   debtAmountContainer: {
@@ -764,7 +758,7 @@ const styles = StyleSheet.create({
   },
   settleButton: {
     marginTop: spacing.xs,
-    backgroundColor: colors.primary,
+    backgroundColor: staticColors.primary,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
     borderRadius: 8,
@@ -791,12 +785,10 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: colors.textPrimary,
     marginBottom: spacing.sm,
   },
   emptyText: {
     fontSize: 14,
-    color: colors.textMuted,
     textAlign: 'center',
     paddingHorizontal: spacing.xl,
   },
@@ -817,16 +809,13 @@ const styles = StyleSheet.create({
   historyTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.textPrimary,
   },
   historyDate: {
     fontSize: 12,
-    color: colors.textMuted,
     marginTop: 2,
   },
   historyNote: {
     fontSize: 12,
-    color: colors.textMuted,
     fontStyle: 'italic',
     marginTop: 4,
   },
@@ -856,7 +845,6 @@ const styles = StyleSheet.create({
   },
   emptyHistoryText: {
     fontSize: 14,
-    color: colors.textMuted,
     marginTop: spacing.md,
   },
   // Pending settlement banner styles
@@ -898,7 +886,6 @@ const styles = StyleSheet.create({
   },
   pendingBannerSubtitle: {
     fontSize: 11,
-    color: colors.textMuted,
     marginTop: 2,
   },
   cancelPendingButton: {

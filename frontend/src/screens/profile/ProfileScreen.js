@@ -3,10 +3,11 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Modal, Dim
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
-import { colors } from '../../theme/colors';
+import { useThemeColors, useIsDarkMode } from '../../hooks/useThemeColors';
 import { spacing } from '../../theme/spacing';
 import CardGlass from '../../components/common/CardGlass';
 import AppButton from '../../components/common/AppButton';
+import ConfirmModal from '../../components/common/ConfirmModal';
 import useAuthStore from '../../store/authStore';
 import { BASE_URL } from '../../api/client';
 
@@ -15,10 +16,14 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const SUPPORT_EMAIL = process.env.EXPO_PUBLIC_SUPPORT_EMAIL || 'support@digitalhisaab.tech';
 
 const ProfileScreen = ({ navigation }) => {
+  const colors = useThemeColors();
+  const isDark = useIsDarkMode();
   const { user, logout } = useAuthStore();
   const [showFullImage, setShowFullImage] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const handleLogout = async () => {
+    setShowLogoutModal(false);
     await logout();
   };
 
@@ -50,97 +55,97 @@ const ProfileScreen = ({ navigation }) => {
                 style={styles.avatarImage}
               />
             ) : (
-              <View style={[styles.avatarImage, styles.avatarPlaceholder]}>
+              <View style={[styles.avatarImage, styles.avatarPlaceholder, { backgroundColor: colors.backgroundLight, borderColor: colors.glassBorder }]}>
                 <Ionicons name="person" size={44} color={colors.textMuted} />
               </View>
             )}
           </TouchableOpacity>
-          <Text style={styles.userName}>{user?.name || 'User'}</Text>
-          <Text style={styles.userEmail}>{user?.email || ''}</Text>
+          <Text style={[styles.userName, { color: colors.textPrimary }]}>{user?.name || 'User'}</Text>
+          <Text style={[styles.userEmail, { color: colors.textMuted }]}>{user?.email || ''}</Text>
         </View>
 
         {/* Settings */}
         <CardGlass style={styles.section}>
-          <Text style={styles.sectionTitle}>Settings</Text>
+          <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>Settings</Text>
           <TouchableOpacity
             style={styles.menuItem}
             onPress={() => navigation.navigate('EditProfile')}
           >
-            <View style={styles.menuIconContainer}>
+            <View style={[styles.menuIconContainer, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)' }]}>
               <Ionicons name="person-outline" size={20} color={colors.textPrimary} />
             </View>
-            <Text style={styles.menuText}>Edit Profile</Text>
+            <Text style={[styles.menuText, { color: colors.textPrimary }]}>Edit Profile</Text>
             <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
           </TouchableOpacity>
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: colors.glassBorder }]} />
           <TouchableOpacity
             style={styles.menuItem}
             onPress={() => navigation.navigate('Notifications')}
           >
-            <View style={styles.menuIconContainer}>
+            <View style={[styles.menuIconContainer, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)' }]}>
               <Ionicons name="notifications-outline" size={20} color={colors.textPrimary} />
             </View>
-            <Text style={styles.menuText}>Notifications</Text>
+            <Text style={[styles.menuText, { color: colors.textPrimary }]}>Notifications</Text>
             <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
           </TouchableOpacity>
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: colors.glassBorder }]} />
           <TouchableOpacity
             style={styles.menuItem}
             onPress={() => navigation.navigate('Appearance')}
           >
-            <View style={styles.menuIconContainer}>
+            <View style={[styles.menuIconContainer, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)' }]}>
               <Ionicons name="color-palette-outline" size={20} color={colors.textPrimary} />
             </View>
-            <Text style={styles.menuText}>Appearance</Text>
+            <Text style={[styles.menuText, { color: colors.textPrimary }]}>Appearance</Text>
             <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
           </TouchableOpacity>
         </CardGlass>
 
         {/* About */}
         <CardGlass style={styles.section}>
-          <Text style={styles.sectionTitle}>About</Text>
+          <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>About</Text>
           <TouchableOpacity
             style={styles.menuItem}
             onPress={() => Linking.openURL(`mailto:${SUPPORT_EMAIL}?subject=Hisaab Support Request`)}
           >
-            <View style={styles.menuIconContainer}>
+            <View style={[styles.menuIconContainer, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)' }]}>
               <Ionicons name="help-circle-outline" size={20} color={colors.textPrimary} />
             </View>
-            <Text style={styles.menuText}>Help & Support</Text>
+            <Text style={[styles.menuText, { color: colors.textPrimary }]}>Help & Support</Text>
             <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
           </TouchableOpacity>
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: colors.glassBorder }]} />
           <TouchableOpacity
             style={styles.menuItem}
             onPress={() => navigation.navigate('PrivacyPolicy')}
           >
-            <View style={styles.menuIconContainer}>
+            <View style={[styles.menuIconContainer, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)' }]}>
               <Ionicons name="shield-checkmark-outline" size={20} color={colors.textPrimary} />
             </View>
-            <Text style={styles.menuText}>Privacy Policy</Text>
+            <Text style={[styles.menuText, { color: colors.textPrimary }]}>Privacy Policy</Text>
             <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
           </TouchableOpacity>
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: colors.glassBorder }]} />
           <TouchableOpacity
             style={styles.menuItem}
             onPress={() => navigation.navigate('TermsOfService')}
           >
-            <View style={styles.menuIconContainer}>
+            <View style={[styles.menuIconContainer, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)' }]}>
               <Ionicons name="document-text-outline" size={20} color={colors.textPrimary} />
             </View>
-            <Text style={styles.menuText}>Terms of Service</Text>
+            <Text style={[styles.menuText, { color: colors.textPrimary }]}>Terms of Service</Text>
             <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
           </TouchableOpacity>
         </CardGlass>
 
         <AppButton
           title="Logout"
-          onPress={handleLogout}
+          onPress={() => setShowLogoutModal(true)}
           variant="outline"
           style={styles.logoutButton}
         />
 
-        <Text style={styles.version}>Version {Constants.expoConfig?.version || '1.0.0'}</Text>
+        <Text style={[styles.version, { color: colors.textMuted }]}>Version {Constants.expoConfig?.version || '1.0.0'}</Text>
       </ScrollView>
 
       {/* Fullscreen Image Modal */}
@@ -170,6 +175,18 @@ const ProfileScreen = ({ navigation }) => {
           )}
         </TouchableOpacity>
       </Modal>
+
+      {/* Logout Confirmation Modal */}
+      <ConfirmModal
+        visible={showLogoutModal}
+        title="Logout"
+        message="Are you sure you want to logout?"
+        confirmText="Logout"
+        cancelText="Cancel"
+        onConfirm={handleLogout}
+        onCancel={() => setShowLogoutModal(false)}
+        type="danger"
+      />
     </LinearGradient>
   );
 };
@@ -203,24 +220,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   avatarPlaceholder: {
-    backgroundColor: colors.backgroundLight,
     borderWidth: 1,
-    borderColor: colors.glassBorder,
   },
   avatarText: {
     fontSize: 40,
-    color: colors.textPrimary,
     fontWeight: '600',
   },
   userName: {
     fontSize: 24,
     fontWeight: '700',
-    color: colors.textPrimary,
     marginBottom: spacing.xs,
   },
   userEmail: {
     fontSize: 14,
-    color: colors.textMuted,
   },
   section: {
     padding: spacing.lg,
@@ -229,7 +241,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 12,
     fontWeight: '600',
-    color: colors.textMuted,
     textTransform: 'uppercase',
     marginBottom: spacing.md,
     letterSpacing: 1,
@@ -243,7 +254,6 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.md,
@@ -251,18 +261,15 @@ const styles = StyleSheet.create({
   menuText: {
     flex: 1,
     fontSize: 16,
-    color: colors.textPrimary,
   },
   divider: {
     height: 1,
-    backgroundColor: colors.glassBorder,
   },
   logoutButton: {
     marginTop: spacing.lg,
   },
   version: {
     textAlign: 'center',
-    color: colors.textMuted,
     fontSize: 12,
     marginTop: spacing.xl,
   },

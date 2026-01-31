@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Linking, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../theme/colors';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { spacing } from '../../theme/spacing';
 import CardGlass from '../../components/common/CardGlass';
 import IconButton from '../../components/common/IconButton';
@@ -10,30 +10,31 @@ import { useAccentColor } from '../../store/themeStore';
 
 const SUPPORT_EMAIL = process.env.EXPO_PUBLIC_SUPPORT_EMAIL || 'support@digitalhisaab.tech';
 
-const Section = ({ title, children }) => (
-  <View style={styles.section}>
-    <Text style={styles.sectionTitle}>{title}</Text>
-    {children}
-  </View>
-);
-
-const Paragraph = ({ children }) => (
-  <Text style={styles.paragraph}>{children}</Text>
-);
-
-const BulletList = ({ items }) => (
-  <View style={styles.bulletList}>
-    {items.map((item, index) => (
-      <View key={index} style={styles.bulletItem}>
-        <Text style={styles.bullet}>•</Text>
-        <Text style={styles.bulletText}>{item}</Text>
-      </View>
-    ))}
-  </View>
-);
-
 const PrivacyPolicyScreen = ({ navigation }) => {
+  const colors = useThemeColors();
   const accent = useAccentColor();
+
+  const Section = ({ title, children }) => (
+    <View style={styles.section}>
+      <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>{title}</Text>
+      {children}
+    </View>
+  );
+
+  const Paragraph = ({ children }) => (
+    <Text style={[styles.paragraph, { color: colors.textSecondary }]}>{children}</Text>
+  );
+
+  const BulletList = ({ items }) => (
+    <View style={styles.bulletList}>
+      {items.map((item, index) => (
+        <View key={index} style={styles.bulletItem}>
+          <Text style={[styles.bullet, { color: colors.textSecondary }]}>•</Text>
+          <Text style={[styles.bulletText, { color: colors.textSecondary }]}>{item}</Text>
+        </View>
+      ))}
+    </View>
+  );
 
   return (
     <LinearGradient
@@ -46,14 +47,14 @@ const PrivacyPolicyScreen = ({ navigation }) => {
           onPress={() => navigation.goBack()}
           variant="glass"
         />
-        <Text style={styles.headerTitle}>Privacy Policy</Text>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Privacy Policy</Text>
         <View style={{ width: 40 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <CardGlass style={styles.card}>
-          <Text style={styles.title}>Privacy Policy</Text>
-          <Text style={styles.lastUpdated}>Last updated: January 2025</Text>
+          <Text style={[styles.title, { color: colors.textPrimary }]}>Privacy Policy</Text>
+          <Text style={[styles.lastUpdated, { color: colors.textMuted }]}>Last updated: January 2025</Text>
 
           <Section title="1. Introduction">
             <Paragraph>
@@ -62,7 +63,7 @@ const PrivacyPolicyScreen = ({ navigation }) => {
           </Section>
 
           <Section title="2. Information We Collect">
-            <Text style={styles.subTitle}>2.1 Information You Provide</Text>
+            <Text style={[styles.subTitle, { color: colors.textPrimary }]}>2.1 Information You Provide</Text>
             <BulletList items={[
               'Account Information: Name, email address, and password when you create an account',
               'Profile Information: Optional profile picture and display name',
@@ -70,7 +71,7 @@ const PrivacyPolicyScreen = ({ navigation }) => {
               'Group Information: Group names, members, and related expense data',
             ]} />
 
-            <Text style={[styles.subTitle, { marginTop: spacing.md }]}>2.2 Automatically Collected Information</Text>
+            <Text style={[styles.subTitle, { color: colors.textPrimary, marginTop: spacing.md }]}>2.2 Automatically Collected Information</Text>
             <BulletList items={[
               'Device information (type, operating system, unique device identifiers)',
               'Usage data (features used, time spent in app)',
@@ -168,7 +169,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: colors.textPrimary,
   },
   scrollContent: {
     padding: spacing.lg,
@@ -180,12 +180,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: colors.textPrimary,
     marginBottom: spacing.xs,
   },
   lastUpdated: {
     fontSize: 14,
-    color: colors.textMuted,
     marginBottom: spacing.xl,
   },
   section: {
@@ -194,18 +192,15 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: colors.textPrimary,
     marginBottom: spacing.sm,
   },
   subTitle: {
     fontSize: 16,
     fontWeight: '500',
-    color: colors.textPrimary,
     marginBottom: spacing.xs,
   },
   paragraph: {
     fontSize: 15,
-    color: colors.textSecondary,
     lineHeight: 24,
     marginBottom: spacing.sm,
   },
@@ -218,19 +213,16 @@ const styles = StyleSheet.create({
   },
   bullet: {
     fontSize: 15,
-    color: colors.textSecondary,
     marginRight: spacing.sm,
     lineHeight: 24,
   },
   bulletText: {
     flex: 1,
     fontSize: 15,
-    color: colors.textSecondary,
     lineHeight: 24,
   },
   emailLink: {
     fontSize: 15,
-    color: colors.primary,
     marginTop: spacing.sm,
   },
 });

@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../theme/colors';
+import { colors as staticColors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import AppButton from '../../components/common/AppButton';
 import AppInput from '../../components/common/AppInput';
@@ -20,6 +20,7 @@ import CardGlass from '../../components/common/CardGlass';
 import Toast from '../../components/common/Toast';
 import useAuthStore from '../../store/authStore';
 import { useAccentColor } from '../../store/themeStore';
+import { useThemeColors, useIsDarkMode } from '../../hooks/useThemeColors';
 
 const { width } = Dimensions.get('window');
 
@@ -31,6 +32,8 @@ const ForgotPasswordScreen = ({ navigation }) => {
 
     const { forgotPassword, isLoading } = useAuthStore();
     const accent = useAccentColor();
+    const colors = useThemeColors();
+    const isDark = useIsDarkMode();
 
     // Animations
     const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -138,34 +141,34 @@ const ForgotPasswordScreen = ({ navigation }) => {
                             </LinearGradient>
                         </View>
 
-                        <Text style={styles.successTitle}>Check your inbox</Text>
-                        <Text style={styles.successSubtitle}>
+                        <Text style={[styles.successTitle, { color: colors.textPrimary }]}>Check your inbox</Text>
+                        <Text style={[styles.successSubtitle, { color: colors.textMuted }]}>
                             We've sent a password reset link to
                         </Text>
                         <Text style={[styles.successEmail, { color: accent.primary }]}>{email}</Text>
 
-                        <View style={styles.instructionBox}>
+                        <View style={[styles.instructionBox, { backgroundColor: isDark ? colors.glass : 'rgba(0, 0, 0, 0.04)', borderColor: colors.glassBorder }]}>
                             <View style={styles.instructionRow}>
                                 <View style={[styles.instructionNumber, { backgroundColor: accent.primary }]}>
                                     <Text style={styles.instructionNumberText}>1</Text>
                                 </View>
-                                <Text style={styles.instructionText}>Open the email on your phone or computer</Text>
+                                <Text style={[styles.instructionText, { color: colors.textSecondary }]}>Open the email on your phone or computer</Text>
                             </View>
                             <View style={styles.instructionRow}>
                                 <View style={[styles.instructionNumber, { backgroundColor: accent.primary }]}>
                                     <Text style={styles.instructionNumberText}>2</Text>
                                 </View>
-                                <Text style={styles.instructionText}>Click the reset link</Text>
+                                <Text style={[styles.instructionText, { color: colors.textSecondary }]}>Click the reset link</Text>
                             </View>
                             <View style={styles.instructionRow}>
                                 <View style={[styles.instructionNumber, { backgroundColor: accent.primary }]}>
                                     <Text style={styles.instructionNumberText}>3</Text>
                                 </View>
-                                <Text style={styles.instructionText}>Set your new password</Text>
+                                <Text style={[styles.instructionText, { color: colors.textSecondary }]}>Set your new password</Text>
                             </View>
                         </View>
 
-                        <Text style={styles.spamNote}>
+                        <Text style={[styles.spamNote, { color: colors.textMuted }]}>
                             Didn't receive it? Check your spam folder
                         </Text>
 
@@ -184,7 +187,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
                             }}
                             style={styles.resendLink}
                         >
-                            <Text style={styles.resendLinkText}>Try a different email</Text>
+                            <Text style={[styles.resendLinkText, { color: colors.textMuted }]}>Try a different email</Text>
                         </TouchableOpacity>
                     </Animated.View>
                 </View>

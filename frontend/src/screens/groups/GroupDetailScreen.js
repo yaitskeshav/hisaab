@@ -27,8 +27,9 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 }
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../theme/colors';
+import { useThemeColors, useIsDarkMode } from '../../hooks/useThemeColors';
 import { spacing } from '../../theme/spacing';
+import { colors as staticColors } from '../../theme/colors';
 import CardGlass from '../../components/common/CardGlass';
 import AppButton from '../../components/common/AppButton';
 import SectionContainer from '../../components/common/SectionContainer';
@@ -54,6 +55,8 @@ const GroupDetailScreen = ({ route, navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [toast, setToast] = useState({ visible: false, message: '', type: 'info' });
   const { user } = useAuthStore();
+  const colors = useThemeColors();
+  const isDark = useIsDarkMode();
   const accent = useAccentColor();
 
   // Collapsible sections
@@ -482,7 +485,7 @@ const GroupDetailScreen = ({ route, navigation }) => {
             >
               {renderGroupIcon(36, 18)}
             </TouchableOpacity>
-            <Text style={styles.title} numberOfLines={1}>
+            <Text style={[styles.title, { color: colors.textPrimary }]} numberOfLines={1}>
               {currentGroup?.name || 'Group'}
             </Text>
           </View>
@@ -513,36 +516,36 @@ const GroupDetailScreen = ({ route, navigation }) => {
         <CardGlass style={styles.infoCard}>
           <View style={styles.infoRow}>
             <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>Members</Text>
-              <Text style={styles.infoValue}>{currentGroup?.members?.length || 0}</Text>
+              <Text style={[styles.infoLabel, { color: colors.textMuted }]}>Members</Text>
+              <Text style={[styles.infoValue, { color: colors.textPrimary }]}>{currentGroup?.members?.length || 0}</Text>
             </View>
-            <View style={styles.dividerVertical} />
+            <View style={[styles.dividerVertical, { backgroundColor: colors.cardBorder }]} />
             <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>Expenses</Text>
-              <Text style={styles.infoValue}>{expenses.length}</Text>
+              <Text style={[styles.infoLabel, { color: colors.textMuted }]}>Expenses</Text>
+              <Text style={[styles.infoValue, { color: colors.textPrimary }]}>{expenses.length}</Text>
             </View>
-            <View style={styles.dividerVertical} />
+            <View style={[styles.dividerVertical, { backgroundColor: colors.cardBorder }]} />
             <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>Total</Text>
-              <Text style={styles.infoValue} numberOfLines={1} adjustsFontSizeToFit>
+              <Text style={[styles.infoLabel, { color: colors.textMuted }]}>Total</Text>
+              <Text style={[styles.infoValue, { color: colors.textPrimary }]} numberOfLines={1} adjustsFontSizeToFit>
                 {formatCurrency(totalExpense)}
               </Text>
             </View>
           </View>
-          <View style={[styles.infoRow, styles.infoRowSecond]}>
+          <View style={[styles.infoRow, styles.infoRowSecond, { borderTopColor: colors.cardBorder }]}>
             <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>You Paid</Text>
-              <Text style={styles.infoValue} numberOfLines={1} adjustsFontSizeToFit>
+              <Text style={[styles.infoLabel, { color: colors.textMuted }]}>You Paid</Text>
+              <Text style={[styles.infoValue, { color: colors.textPrimary }]} numberOfLines={1} adjustsFontSizeToFit>
                 {formatCurrency(amountIPaid)}
               </Text>
             </View>
-            <View style={styles.dividerVertical} />
+            <View style={[styles.dividerVertical, { backgroundColor: colors.cardBorder }]} />
             <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>{amountIOweToGet > 0 ? 'You Get' : 'You Owe'}</Text>
+              <Text style={[styles.infoLabel, { color: colors.textMuted }]}>{amountIOweToGet > 0 ? 'You Get' : 'You Owe'}</Text>
               <Text
                 style={[
                   styles.infoValue,
-                  amountIOweToGet > 0 ? styles.balanceOwed : styles.balanceOwe
+                  { color: amountIOweToGet > 0 ? colors.success : colors.error }
                 ]}
                 numberOfLines={1}
                 adjustsFontSizeToFit
@@ -580,9 +583,9 @@ const GroupDetailScreen = ({ route, navigation }) => {
         >
           <View style={styles.collapsibleLeft}>
             <Ionicons name="people-outline" size={20} color={colors.textPrimary} />
-            <Text style={styles.collapsibleTitle}>Members</Text>
+            <Text style={[styles.collapsibleTitle, { color: colors.textPrimary }]}>Members</Text>
             <View style={[styles.collapsibleBadge, { backgroundColor: accent.primary }]}>
-              <Text style={styles.collapsibleBadgeText}>{currentGroup?.members?.length || 0}</Text>
+              <Text style={[styles.collapsibleBadgeText, { color: colors.textPrimary }]}>{currentGroup?.members?.length || 0}</Text>
             </View>
           </View>
           <Ionicons
@@ -595,12 +598,12 @@ const GroupDetailScreen = ({ route, navigation }) => {
           <CardGlass style={styles.membersCard}>
             {currentGroup?.members?.map((member, index) => (
               <View key={member.id}>
-                {index > 0 && <View style={styles.divider} />}
+                {index > 0 && <View style={[styles.divider, { backgroundColor: colors.cardBorder }]} />}
                 <View style={styles.memberRow}>
                   <View style={[
                     styles.memberAvatar,
                     { backgroundColor: accent.primary },
-                    member.id === user?.id && styles.memberAvatarSelf
+                    member.id === user?.id && { backgroundColor: colors.success }
                   ]}>
                     {member.avatar_url ? (
                       <Image
@@ -612,17 +615,17 @@ const GroupDetailScreen = ({ route, navigation }) => {
                         style={styles.memberAvatarImage}
                       />
                     ) : (
-                      <Text style={styles.memberAvatarText}>
+                      <Text style={[styles.memberAvatarText, { color: colors.textPrimary }]}>
                         {member.name?.charAt(0).toUpperCase()}
                       </Text>
                     )}
                   </View>
                   <View style={styles.memberInfo}>
-                    <Text style={styles.memberName}>
+                    <Text style={[styles.memberName, { color: colors.textPrimary }]}>
                       {member.name}
-                      {member.id === user?.id && <Text style={styles.youBadge}> (You)</Text>}
+                      {member.id === user?.id && <Text style={[styles.youBadge, { color: colors.success }]}> (You)</Text>}
                     </Text>
-                    <Text style={styles.memberEmail}>{member.email}</Text>
+                    <Text style={[styles.memberEmail, { color: colors.textMuted }]}>{member.email}</Text>
                   </View>
                 </View>
               </View>
@@ -640,7 +643,7 @@ const GroupDetailScreen = ({ route, navigation }) => {
             >
               <View style={styles.collapsibleLeft}>
                 <Ionicons name="pie-chart-outline" size={20} color={colors.textPrimary} />
-                <Text style={styles.collapsibleTitle}>Payment Distribution</Text>
+                <Text style={[styles.collapsibleTitle, { color: colors.textPrimary }]}>Payment Distribution</Text>
               </View>
               <Ionicons
                 name={showChart ? 'chevron-up' : 'chevron-down'}
@@ -683,7 +686,7 @@ const GroupDetailScreen = ({ route, navigation }) => {
           <View style={styles.expenseSearchContainer}>
             <Ionicons name="search-outline" size={18} color={colors.textMuted} style={styles.searchIcon} />
             <TextInput
-              style={styles.expenseSearchInput}
+              style={[styles.expenseSearchInput, { color: colors.textPrimary }]}
               placeholder="Search expenses..."
               placeholderTextColor={colors.textMuted}
               value={searchQuery}
@@ -713,7 +716,7 @@ const GroupDetailScreen = ({ route, navigation }) => {
               >
                 <Text style={[
                   styles.filterPillText,
-                  filterStatus === filter.key && styles.filterPillTextActive
+                  { color: filterStatus === filter.key ? colors.textPrimary : colors.textMuted }
                 ]}>
                   {filter.label}
                 </Text>
@@ -732,7 +735,7 @@ const GroupDetailScreen = ({ route, navigation }) => {
                 size={14}
                 color={fromDate ? colors.textPrimary : colors.textMuted}
               />
-              <Text style={[styles.datePillText, fromDate && styles.datePillTextActive]}>
+              <Text style={[styles.datePillText, { color: fromDate ? colors.textPrimary : colors.textMuted }]}>
                 {fromDate ? formatDateShort(fromDate) : 'From'}
               </Text>
               {fromDate && (
@@ -756,7 +759,7 @@ const GroupDetailScreen = ({ route, navigation }) => {
                 size={14}
                 color={toDate ? colors.textPrimary : colors.textMuted}
               />
-              <Text style={[styles.datePillText, toDate && styles.datePillTextActive]}>
+              <Text style={[styles.datePillText, { color: toDate ? colors.textPrimary : colors.textMuted }]}>
                 {toDate ? formatDateShort(toDate) : 'To'}
               </Text>
               {toDate && (
@@ -777,7 +780,7 @@ const GroupDetailScreen = ({ route, navigation }) => {
                 <Text style={[styles.clearFiltersLink, { color: accent.primary }]}>Clear filters</Text>
               </TouchableOpacity>
             )}
-            <Text style={styles.expenseCount}>
+            <Text style={[styles.expenseCount, { color: colors.textMuted }]}>
               {filteredExpenses.length} {filteredExpenses.length === 1 ? 'expense' : 'expenses'}
             </Text>
           </View>
@@ -787,10 +790,10 @@ const GroupDetailScreen = ({ route, navigation }) => {
           ) : filteredExpenses.length === 0 ? (
             <CardGlass style={styles.emptyCard}>
               <Text style={styles.emptyIcon}>{hasActiveFilters ? '🔍' : '📝'}</Text>
-              <Text style={styles.emptyText}>
+              <Text style={[styles.emptyText, { color: colors.textPrimary }]}>
                 {hasActiveFilters ? 'No matching expenses' : 'No expenses yet'}
               </Text>
-              <Text style={styles.emptySubtext}>
+              <Text style={[styles.emptySubtext, { color: colors.textMuted }]}>
                 {hasActiveFilters
                   ? 'Try adjusting your search or filters'
                   : 'Add your first expense to get started'}
@@ -800,7 +803,7 @@ const GroupDetailScreen = ({ route, navigation }) => {
                   style={[styles.clearFiltersBtn, { backgroundColor: accent.primary }]}
                   onPress={clearAllFilters}
                 >
-                  <Text style={styles.clearFiltersBtnText}>Clear Filters</Text>
+                  <Text style={[styles.clearFiltersBtnText, { color: colors.textPrimary }]}>Clear Filters</Text>
                 </TouchableOpacity>
               )}
             </CardGlass>
@@ -821,6 +824,7 @@ const GroupDetailScreen = ({ route, navigation }) => {
                   <View style={styles.expenseHeader}>
                     <View style={[
                       styles.expenseIcon,
+                      { backgroundColor: colors.glass },
                       expense.is_settled && styles.expenseIconSettled
                     ]}>
                       <Text style={styles.expenseIconText}>
@@ -828,8 +832,8 @@ const GroupDetailScreen = ({ route, navigation }) => {
                       </Text>
                     </View>
                     <View style={styles.expenseInfo}>
-                      <Text style={styles.expenseTitle}>{expense.title}</Text>
-                      <Text style={styles.expenseDate}>
+                      <Text style={[styles.expenseTitle, { color: colors.textPrimary }]}>{expense.title}</Text>
+                      <Text style={[styles.expenseDate, { color: colors.textMuted }]}>
                         {new Date(expense.date).toLocaleDateString('en-IN', {
                           day: 'numeric',
                           month: 'short',
@@ -840,7 +844,7 @@ const GroupDetailScreen = ({ route, navigation }) => {
                     <View style={styles.expenseAmount}>
                       <Text style={[
                         styles.expenseAmountText,
-                        expense.is_settled && styles.expenseAmountSettled
+                        { color: expense.is_settled ? colors.success : colors.textPrimary }
                       ]}>
                         {formatCurrency(expense.amount)}
                       </Text>
@@ -861,11 +865,11 @@ const GroupDetailScreen = ({ route, navigation }) => {
                     </TouchableOpacity>
                   </View>
                   <View style={styles.expenseMeta}>
-                    <Text style={styles.expenseMetaText}>
+                    <Text style={[styles.expenseMetaText, { color: colors.textMuted }]}>
                       Paid by {expense.paid_by_id === user?.id ? 'you' : (expense.paid_by?.name || 'Someone')}
                     </Text>
-                    <Text style={styles.expenseMetaDot}>•</Text>
-                    <Text style={styles.expenseMetaText}>
+                    <Text style={[styles.expenseMetaDot, { color: colors.textMuted }]}>•</Text>
+                    <Text style={[styles.expenseMetaText, { color: colors.textMuted }]}>
                       {expense.split_type}
                     </Text>
                   </View>
@@ -933,14 +937,14 @@ const GroupDetailScreen = ({ route, navigation }) => {
           />
           <View style={styles.editModalContainer}>
             <LinearGradient
-              colors={['rgba(30, 41, 59, 0.98)', 'rgba(15, 23, 42, 0.98)']}
-              style={styles.editModalContent}
+              colors={isDark ? ['rgba(30, 41, 59, 0.98)', 'rgba(15, 23, 42, 0.98)'] : ['rgba(255, 255, 255, 0.98)', 'rgba(241, 245, 249, 0.98)']}
+              style={[styles.editModalContent, { borderColor: colors.glassBorder }]}
             >
-              <Text style={styles.editModalTitle}>Edit Group</Text>
+              <Text style={[styles.editModalTitle, { color: colors.textPrimary }]}>Edit Group</Text>
 
               {/* Icon Section */}
               <TouchableOpacity
-                style={styles.editIconContainer}
+                style={[styles.editIconContainer, { borderColor: colors.glassBorder }]}
                 onPress={() => {
                   setShowEditModal(false);
                   setShowIconPicker(true);
@@ -951,16 +955,16 @@ const GroupDetailScreen = ({ route, navigation }) => {
                   {renderGroupIcon(56, 28)}
                 </View>
                 <View style={styles.editIconInfo}>
-                  <Text style={styles.editIconLabel}>Group Icon</Text>
-                  <Text style={styles.editIconHint}>Tap to change</Text>
+                  <Text style={[styles.editIconLabel, { color: colors.textPrimary }]}>Group Icon</Text>
+                  <Text style={[styles.editIconHint, { color: colors.textMuted }]}>Tap to change</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
               </TouchableOpacity>
 
               <View style={styles.editInputContainer}>
-                <Text style={styles.editInputLabel}>Name</Text>
+                <Text style={[styles.editInputLabel, { color: colors.textSecondary }]}>Name</Text>
                 <TextInput
-                  style={styles.editInput}
+                  style={[styles.editInput, { color: colors.textPrimary, borderColor: colors.glassBorder }]}
                   value={editName}
                   onChangeText={setEditName}
                   placeholder="Group name"
@@ -970,9 +974,9 @@ const GroupDetailScreen = ({ route, navigation }) => {
               </View>
 
               <View style={styles.editInputContainer}>
-                <Text style={styles.editInputLabel}>Description</Text>
+                <Text style={[styles.editInputLabel, { color: colors.textSecondary }]}>Description</Text>
                 <TextInput
-                  style={[styles.editInput, styles.editInputMultiline]}
+                  style={[styles.editInput, styles.editInputMultiline, { color: colors.textPrimary, borderColor: colors.glassBorder }]}
                   value={editDescription}
                   onChangeText={setEditDescription}
                   placeholder="Group description (optional)"
@@ -989,7 +993,7 @@ const GroupDetailScreen = ({ route, navigation }) => {
                   onPress={() => setShowEditModal(false)}
                   disabled={isUpdating}
                 >
-                  <Text style={styles.editModalCancelText}>Cancel</Text>
+                  <Text style={[styles.editModalCancelText, { color: colors.textPrimary }]}>Cancel</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[
@@ -1055,13 +1059,13 @@ const GroupDetailScreen = ({ route, navigation }) => {
             ]}
           >
             <LinearGradient
-              colors={['rgba(30, 41, 59, 0.98)', 'rgba(15, 23, 42, 0.98)']}
-              style={styles.leaveModalContent}
+              colors={isDark ? ['rgba(30, 41, 59, 0.98)', 'rgba(15, 23, 42, 0.98)'] : ['rgba(255, 255, 255, 0.98)', 'rgba(241, 245, 249, 0.98)']}
+              style={[styles.leaveModalContent, { borderColor: colors.glassBorder }]}
             >
               {leaveCheckLoading ? (
                 <View style={styles.leaveModalLoading}>
                   <ActivityIndicator size="large" color={accent.primary} />
-                  <Text style={styles.leaveModalLoadingText}>Checking...</Text>
+                  <Text style={[styles.leaveModalLoadingText, { color: colors.textMuted }]}>Checking...</Text>
                 </View>
               ) : (
                 <>
@@ -1098,7 +1102,7 @@ const GroupDetailScreen = ({ route, navigation }) => {
                   </Animated.View>
 
                   {/* Title */}
-                  <Text style={styles.leaveModalTitle}>
+                  <Text style={[styles.leaveModalTitle, { color: colors.textPrimary }]}>
                     {leaveInfo.canLeave
                       ? leaveInfo.willDelete
                         ? 'Delete Group?'
@@ -1107,7 +1111,7 @@ const GroupDetailScreen = ({ route, navigation }) => {
                   </Text>
 
                   {/* Message */}
-                  <Text style={styles.leaveModalMessage}>
+                  <Text style={[styles.leaveModalMessage, { color: colors.textSecondary }]}>
                     {!leaveInfo.canLeave
                       ? getLeaveBlockMessage()
                       : leaveInfo.willDelete
@@ -1124,7 +1128,7 @@ const GroupDetailScreen = ({ route, navigation }) => {
                           onPress={() => setShowLeaveModal(false)}
                           disabled={isLeaving}
                         >
-                          <Text style={styles.leaveModalCancelText}>Cancel</Text>
+                          <Text style={[styles.leaveModalCancelText, { color: colors.textPrimary }]}>Cancel</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                           style={[
@@ -1171,7 +1175,7 @@ const GroupDetailScreen = ({ route, navigation }) => {
                           style={[styles.leaveModalButton, styles.leaveModalCloseButton]}
                           onPress={() => setShowLeaveModal(false)}
                         >
-                          <Text style={styles.leaveModalCancelText}>Close</Text>
+                          <Text style={[styles.leaveModalCancelText, { color: colors.textPrimary }]}>Close</Text>
                         </TouchableOpacity>
                       </>
                     )}
@@ -1225,7 +1229,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '700',
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
     flexShrink: 1,
   },
   scrollContent: {
@@ -1245,7 +1249,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     paddingTop: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: colors.cardBorder,
+    borderTopColor: staticColors.cardBorder,
   },
   infoItem: {
     flex: 1,
@@ -1253,24 +1257,24 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: 12,
-    color: colors.textMuted,
+    color: staticColors.textMuted,
     marginBottom: 4,
   },
   infoValue: {
     fontSize: 18,
     fontWeight: '700',
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
     textAlign: 'center',
   },
   balanceOwe: {
-    color: colors.error,
+    color: staticColors.error,
   },
   balanceOwed: {
-    color: colors.success,
+    color: staticColors.success,
   },
   dividerVertical: {
     width: 1,
-    backgroundColor: colors.cardBorder,
+    backgroundColor: staticColors.cardBorder,
     marginHorizontal: spacing.sm,
   },
   actionButtonsRow: {
@@ -1306,17 +1310,17 @@ const styles = StyleSheet.create({
   collapsibleTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
   },
   collapsibleBadge: {
-    backgroundColor: colors.primary,
+    backgroundColor: staticColors.primary,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 10,
   },
   collapsibleBadgeText: {
     fontSize: 12,
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
     fontWeight: '600',
   },
   chartCard: {
@@ -1335,23 +1339,23 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
     marginBottom: 4,
   },
   emptySubtext: {
     fontSize: 14,
-    color: colors.textMuted,
+    color: staticColors.textMuted,
   },
   clearFiltersBtn: {
     marginTop: spacing.md,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
-    backgroundColor: colors.primary,
+    backgroundColor: staticColors.primary,
     borderRadius: 8,
   },
   clearFiltersBtnText: {
     fontSize: 14,
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
     fontWeight: '600',
   },
   expenseSearchContainer: {
@@ -1369,7 +1373,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: spacing.sm,
     fontSize: 15,
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
   },
   filterRow: {
     flexDirection: 'row',
@@ -1384,15 +1388,15 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
   },
   filterPillActive: {
-    backgroundColor: colors.primary,
+    backgroundColor: staticColors.primary,
   },
   filterPillText: {
     fontSize: 13,
-    color: colors.textMuted,
+    color: staticColors.textMuted,
     fontWeight: '500',
   },
   filterPillTextActive: {
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
   },
   dateFilterRow: {
     flexDirection: 'row',
@@ -1411,15 +1415,15 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   datePillActive: {
-    backgroundColor: colors.primary,
+    backgroundColor: staticColors.primary,
   },
   datePillText: {
     fontSize: 13,
-    color: colors.textMuted,
+    color: staticColors.textMuted,
     fontWeight: '500',
   },
   datePillTextActive: {
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
   },
   dateArrowIcon: {
     marginHorizontal: spacing.sm,
@@ -1432,12 +1436,12 @@ const styles = StyleSheet.create({
   },
   clearFiltersLink: {
     fontSize: 13,
-    color: colors.primary,
+    color: staticColors.primary,
     fontWeight: '500',
   },
   expenseCount: {
     fontSize: 12,
-    color: colors.textMuted,
+    color: staticColors.textMuted,
     marginLeft: 'auto',
   },
   expenseCard: {
@@ -1456,7 +1460,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.glass,
+    backgroundColor: staticColors.glass,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.md,
@@ -1473,12 +1477,12 @@ const styles = StyleSheet.create({
   expenseTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
     marginBottom: 2,
   },
   expenseDate: {
     fontSize: 12,
-    color: colors.textMuted,
+    color: staticColors.textMuted,
   },
   expenseAmount: {
     alignItems: 'flex-end',
@@ -1486,17 +1490,17 @@ const styles = StyleSheet.create({
   expenseAmountText: {
     fontSize: 18,
     fontWeight: '700',
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
   },
   expenseAmountSettled: {
-    color: colors.success || '#22c55e',
+    color: staticColors.success || '#22c55e',
   },
   settledBadgeContainer: {
     marginTop: 4,
   },
   settledBadge: {
     fontSize: 10,
-    color: colors.success || '#22c55e',
+    color: staticColors.success || '#22c55e',
     backgroundColor: 'rgba(34, 197, 94, 0.2)',
     paddingHorizontal: 6,
     paddingVertical: 2,
@@ -1509,11 +1513,11 @@ const styles = StyleSheet.create({
   },
   expenseMetaText: {
     fontSize: 12,
-    color: colors.textMuted,
+    color: staticColors.textMuted,
   },
   expenseMetaDot: {
     fontSize: 12,
-    color: colors.textMuted,
+    color: staticColors.textMuted,
     marginHorizontal: spacing.xs,
   },
   membersCard: {
@@ -1529,18 +1533,18 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.primary,
+    backgroundColor: staticColors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.md,
   },
   memberAvatarSelf: {
-    backgroundColor: colors.success || '#22c55e',
+    backgroundColor: staticColors.success || '#22c55e',
   },
   memberAvatarText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
   },
   memberAvatarImage: {
     width: '100%',
@@ -1553,30 +1557,30 @@ const styles = StyleSheet.create({
   memberName: {
     fontSize: 15,
     fontWeight: '500',
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
   },
   memberEmail: {
     fontSize: 12,
-    color: colors.textMuted,
+    color: staticColors.textMuted,
     marginTop: 2,
   },
   youBadge: {
     fontSize: 13,
-    color: colors.success || '#22c55e',
+    color: staticColors.success || '#22c55e',
     fontWeight: '400',
   },
   deleteButton: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: `${colors.error || '#ef4444'}20`,
+    backgroundColor: `${staticColors.error || '#ef4444'}20`,
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: spacing.sm,
   },
   divider: {
     height: 1,
-    backgroundColor: colors.cardBorder,
+    backgroundColor: staticColors.cardBorder,
   },
   // Leave Modal Styles
   leaveModalOverlay: {
@@ -1597,7 +1601,7 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: colors.glassBorder,
+    borderColor: staticColors.glassBorder,
   },
   leaveModalLoading: {
     paddingVertical: spacing.xl,
@@ -1606,7 +1610,7 @@ const styles = StyleSheet.create({
   leaveModalLoadingText: {
     marginTop: spacing.md,
     fontSize: 14,
-    color: colors.textMuted,
+    color: staticColors.textMuted,
   },
   leaveModalIconContainer: {
     width: 80,
@@ -1625,13 +1629,13 @@ const styles = StyleSheet.create({
   leaveModalTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
     marginBottom: spacing.sm,
     textAlign: 'center',
   },
   leaveModalMessage: {
     fontSize: 15,
-    color: colors.textSecondary,
+    color: staticColors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: spacing.xl,
@@ -1657,10 +1661,10 @@ const styles = StyleSheet.create({
   },
   leaveModalConfirmButton: {
     flex: 1,
-    backgroundColor: colors.error,
+    backgroundColor: staticColors.error,
   },
   leaveModalFullButton: {
-    backgroundColor: colors.primary,
+    backgroundColor: staticColors.primary,
   },
   leaveModalCloseButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
@@ -1672,7 +1676,7 @@ const styles = StyleSheet.create({
   leaveModalCancelText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
   },
   leaveModalConfirmText: {
     fontSize: 16,
@@ -1697,12 +1701,12 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     padding: spacing.xl,
     borderWidth: 1,
-    borderColor: colors.glassBorder,
+    borderColor: staticColors.glassBorder,
   },
   editModalTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
     marginBottom: spacing.lg,
     textAlign: 'center',
   },
@@ -1714,7 +1718,7 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: colors.glassBorder,
+    borderColor: staticColors.glassBorder,
   },
   editIconPreview: {
     width: 56,
@@ -1731,11 +1735,11 @@ const styles = StyleSheet.create({
   editIconLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
   },
   editIconHint: {
     fontSize: 12,
-    color: colors.textMuted,
+    color: staticColors.textMuted,
     marginTop: 2,
   },
   editInputContainer: {
@@ -1744,7 +1748,7 @@ const styles = StyleSheet.create({
   editInputLabel: {
     fontSize: 14,
     fontWeight: '500',
-    color: colors.textSecondary,
+    color: staticColors.textSecondary,
     marginBottom: spacing.xs,
   },
   editInput: {
@@ -1753,9 +1757,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     fontSize: 16,
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
     borderWidth: 1,
-    borderColor: colors.glassBorder,
+    borderColor: staticColors.glassBorder,
   },
   editInputMultiline: {
     minHeight: 80,
@@ -1786,7 +1790,7 @@ const styles = StyleSheet.create({
   editModalCancelText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.textPrimary,
+    color: staticColors.textPrimary,
   },
   editModalSaveText: {
     fontSize: 16,

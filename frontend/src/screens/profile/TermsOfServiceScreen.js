@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Linking, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../theme/colors';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { spacing } from '../../theme/spacing';
 import CardGlass from '../../components/common/CardGlass';
 import IconButton from '../../components/common/IconButton';
@@ -10,30 +10,31 @@ import { useAccentColor } from '../../store/themeStore';
 
 const SUPPORT_EMAIL = process.env.EXPO_PUBLIC_SUPPORT_EMAIL || 'support@digitalhisaab.tech';
 
-const Section = ({ title, children }) => (
-  <View style={styles.section}>
-    <Text style={styles.sectionTitle}>{title}</Text>
-    {children}
-  </View>
-);
-
-const Paragraph = ({ children }) => (
-  <Text style={styles.paragraph}>{children}</Text>
-);
-
-const BulletList = ({ items }) => (
-  <View style={styles.bulletList}>
-    {items.map((item, index) => (
-      <View key={index} style={styles.bulletItem}>
-        <Text style={styles.bullet}>•</Text>
-        <Text style={styles.bulletText}>{item}</Text>
-      </View>
-    ))}
-  </View>
-);
-
 const TermsOfServiceScreen = ({ navigation }) => {
+  const colors = useThemeColors();
   const accent = useAccentColor();
+
+  const Section = ({ title, children }) => (
+    <View style={styles.section}>
+      <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>{title}</Text>
+      {children}
+    </View>
+  );
+
+  const Paragraph = ({ children }) => (
+    <Text style={[styles.paragraph, { color: colors.textSecondary }]}>{children}</Text>
+  );
+
+  const BulletList = ({ items }) => (
+    <View style={styles.bulletList}>
+      {items.map((item, index) => (
+        <View key={index} style={styles.bulletItem}>
+          <Text style={[styles.bullet, { color: colors.textSecondary }]}>•</Text>
+          <Text style={[styles.bulletText, { color: colors.textSecondary }]}>{item}</Text>
+        </View>
+      ))}
+    </View>
+  );
 
   return (
     <LinearGradient
@@ -46,14 +47,14 @@ const TermsOfServiceScreen = ({ navigation }) => {
           onPress={() => navigation.goBack()}
           variant="glass"
         />
-        <Text style={styles.headerTitle}>Terms of Service</Text>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Terms of Service</Text>
         <View style={{ width: 40 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <CardGlass style={styles.card}>
-          <Text style={styles.title}>Terms of Service</Text>
-          <Text style={styles.lastUpdated}>Last updated: January 2025</Text>
+          <Text style={[styles.title, { color: colors.textPrimary }]}>Terms of Service</Text>
+          <Text style={[styles.lastUpdated, { color: colors.textMuted }]}>Last updated: January 2025</Text>
 
           <Section title="1. Acceptance of Terms">
             <Paragraph>
@@ -72,12 +73,12 @@ const TermsOfServiceScreen = ({ navigation }) => {
           </Section>
 
           <Section title="3. User Accounts">
-            <Text style={styles.subTitle}>3.1 Account Creation</Text>
+            <Text style={[styles.subTitle, { color: colors.textPrimary }]}>3.1 Account Creation</Text>
             <Paragraph>
               You must create an account to use certain features of the App. You agree to provide accurate, current, and complete information during registration and to update such information to keep it accurate.
             </Paragraph>
 
-            <Text style={[styles.subTitle, { marginTop: spacing.md }]}>3.2 Account Security</Text>
+            <Text style={[styles.subTitle, { color: colors.textPrimary, marginTop: spacing.md }]}>3.2 Account Security</Text>
             <Paragraph>
               You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account. You agree to notify us immediately of any unauthorized use of your account.
             </Paragraph>
@@ -191,7 +192,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: colors.textPrimary,
   },
   scrollContent: {
     padding: spacing.lg,
@@ -203,12 +203,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: colors.textPrimary,
     marginBottom: spacing.xs,
   },
   lastUpdated: {
     fontSize: 14,
-    color: colors.textMuted,
     marginBottom: spacing.xl,
   },
   section: {
@@ -217,18 +215,15 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: colors.textPrimary,
     marginBottom: spacing.sm,
   },
   subTitle: {
     fontSize: 16,
     fontWeight: '500',
-    color: colors.textPrimary,
     marginBottom: spacing.xs,
   },
   paragraph: {
     fontSize: 15,
-    color: colors.textSecondary,
     lineHeight: 24,
     marginBottom: spacing.sm,
   },
@@ -241,19 +236,16 @@ const styles = StyleSheet.create({
   },
   bullet: {
     fontSize: 15,
-    color: colors.textSecondary,
     marginRight: spacing.sm,
     lineHeight: 24,
   },
   bulletText: {
     flex: 1,
     fontSize: 15,
-    color: colors.textSecondary,
     lineHeight: 24,
   },
   emailLink: {
     fontSize: 15,
-    color: colors.primary,
     marginTop: spacing.sm,
   },
 });

@@ -7,6 +7,7 @@ import * as Linking from 'expo-linking';
 import useAuthStore from '../store/authStore';
 import useInviteStore from '../store/inviteStore';
 import { useAccentColor } from '../store/themeStore';
+import { useThemeColors } from '../hooks/useThemeColors';
 import useNotifications from '../hooks/useNotifications';
 import { parseDeepLink } from '../utils/deepLink';
 import { hapticSelection } from '../utils/haptics';
@@ -51,6 +52,7 @@ const MainTabs = () => {
 
   // Get accent color for tab bar (reactive)
   const accent = useAccentColor();
+  const colors = useThemeColors();
 
   const tabListeners = {
     tabPress: () => hapticSelection(),
@@ -61,11 +63,11 @@ const MainTabs = () => {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#1B262C',
-          borderTopColor: 'rgba(255, 255, 255, 0.18)',
+          backgroundColor: colors.tabBarBg,
+          borderTopColor: colors.tabBarBorder,
         },
         tabBarActiveTintColor: accent.primary,
-        tabBarInactiveTintColor: '#7A8A95',
+        tabBarInactiveTintColor: colors.tabBarInactive,
       }}
     >
       <Tab.Screen
@@ -89,12 +91,12 @@ const MainTabs = () => {
         }}
       />
       <Tab.Screen
-        name="Profile"
+        name="Settings"
         component={ProfileScreen}
         listeners={tabListeners}
         options={{
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'person' : 'person-outline'} size={24} color={color} />
+            <Ionicons name={focused ? 'settings' : 'settings-outline'} size={24} color={color} />
           ),
         }}
       />

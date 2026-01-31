@@ -3,12 +3,15 @@ import { Modal, View, Text, StyleSheet, TouchableOpacity, Share } from 'react-na
 import * as Clipboard from 'expo-clipboard';
 import CardGlass from './common/CardGlass';
 import AppButton from './common/AppButton';
-import { colors } from '../theme/colors';
+import { useThemeColors } from '../hooks/useThemeColors';
+import { useAccentColor } from '../store/themeStore';
 import { spacing } from '../theme/spacing';
 import apiClient from '../api/client';
 import Toast from './common/Toast';
 
 const InviteModal = ({ visible, onClose, group }) => {
+    const colors = useThemeColors();
+    const accent = useAccentColor();
     const [loading, setLoading] = useState(false);
     const [toast, setToast] = useState({ visible: false, message: '', type: 'info' });
 
@@ -50,16 +53,16 @@ const InviteModal = ({ visible, onClose, group }) => {
                 onRequestClose={onClose}
             >
                 <View style={styles.modalOverlay}>
-                    <CardGlass style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>Share Invite</Text>
-                        <Text style={styles.shareText}>
+                    <CardGlass style={[styles.modalContent, { backgroundColor: colors.backgroundLight }]}>
+                        <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Share Invite</Text>
+                        <Text style={[styles.shareText, { color: colors.textMuted }]}>
                             Anyone with this link or code can join the group "{group?.name}"
                         </Text>
 
-                        <View style={styles.codeContainer}>
-                            <Text style={styles.inviteCode}>{group?.invite_code}</Text>
+                        <View style={[styles.codeContainer, { backgroundColor: colors.glass, borderColor: accent.primary }]}>
+                            <Text style={[styles.inviteCode, { color: accent.primary }]}>{group?.invite_code}</Text>
                             <TouchableOpacity
-                                style={styles.copyButton}
+                                style={[styles.copyButton, { backgroundColor: accent.primary }]}
                                 onPress={() => copyToClipboard(group?.invite_code)}
                                 activeOpacity={0.7}
                             >
@@ -98,18 +101,15 @@ const styles = StyleSheet.create({
     },
     modalContent: {
         padding: spacing.xl,
-        backgroundColor: colors.backgroundLight,
     },
     modalTitle: {
         fontSize: 24,
         fontWeight: '700',
-        color: colors.textPrimary,
         marginBottom: spacing.lg,
         textAlign: 'center',
     },
     shareText: {
         fontSize: 14,
-        color: colors.textMuted,
         marginBottom: spacing.lg,
         textAlign: 'center',
         lineHeight: 20,
@@ -118,28 +118,24 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: colors.glass,
         borderRadius: 12,
         padding: spacing.md,
         marginBottom: spacing.xl,
         borderWidth: 1,
-        borderColor: colors.primary,
     },
     inviteCode: {
         fontSize: 24,
         fontWeight: '700',
-        color: colors.primary,
         letterSpacing: 2,
         marginRight: spacing.md,
     },
     copyButton: {
-        backgroundColor: colors.primary,
         paddingHorizontal: spacing.md,
         paddingVertical: spacing.sm,
         borderRadius: 8,
     },
     copyButtonText: {
-        color: colors.textPrimary,
+        color: '#fff',
         fontSize: 14,
         fontWeight: '600',
     },

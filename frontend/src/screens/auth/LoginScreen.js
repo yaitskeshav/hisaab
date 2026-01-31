@@ -16,7 +16,7 @@ import {
   isErrorWithCode,
   statusCodes,
 } from '@react-native-google-signin/google-signin';
-import { colors } from '../../theme/colors';
+import { colors as staticColors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import AppButton from '../../components/common/AppButton';
 import AppInput from '../../components/common/AppInput';
@@ -24,6 +24,7 @@ import CardGlass from '../../components/common/CardGlass';
 import Toast from '../../components/common/Toast';
 import useAuthStore from '../../store/authStore';
 import { useAccentColor } from '../../store/themeStore';
+import { useThemeColors, useIsDarkMode } from '../../hooks/useThemeColors';
 
 // Configure Google Sign-In
 const GOOGLE_WEB_CLIENT_ID = '573451044630-8s9kl8ir5eu2scq2rbm45en40cc22dqp.apps.googleusercontent.com';
@@ -37,6 +38,8 @@ const LoginScreen = ({ navigation }) => {
 
   const { login, googleLogin, isLoading } = useAuthStore();
   const accent = useAccentColor();
+  const colors = useThemeColors();
+  const isDark = useIsDarkMode();
 
   useEffect(() => {
     GoogleSignin.configure({
@@ -114,8 +117,8 @@ const LoginScreen = ({ navigation }) => {
         >
           <View style={styles.header}>
             <Text style={styles.logo}>💰</Text>
-            <Text style={styles.title}>Hisaab</Text>
-            <Text style={styles.subtitle}>Welcome back! Sign in to continue</Text>
+            <Text style={[styles.title, { color: colors.textPrimary }]}>Hisaab</Text>
+            <Text style={[styles.subtitle, { color: colors.textMuted }]}>Welcome back! Sign in to continue</Text>
           </View>
 
           <CardGlass style={styles.card}>
@@ -158,9 +161,9 @@ const LoginScreen = ({ navigation }) => {
             />
 
             <View style={styles.divider}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>OR</Text>
-              <View style={styles.dividerLine} />
+              <View style={[styles.dividerLine, { backgroundColor: colors.glassBorder }]} />
+              <Text style={[styles.dividerText, { color: colors.textMuted }]}>OR</Text>
+              <View style={[styles.dividerLine, { backgroundColor: colors.glassBorder }]} />
             </View>
 
             <AppButton
@@ -173,7 +176,7 @@ const LoginScreen = ({ navigation }) => {
           </CardGlass>
 
           <View style={styles.footer}>
-            <Text style={styles.footerText}>Don't have an account? </Text>
+            <Text style={[styles.footerText, { color: colors.textMuted }]}>Don't have an account? </Text>
             <TouchableOpacity onPress={() => navigation.navigate('Register')}>
               <Text style={[styles.signupLink, { color: accent.primary }]}>Sign Up</Text>
             </TouchableOpacity>
@@ -212,12 +215,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: '700',
-    color: colors.textPrimary,
     marginBottom: spacing.sm,
   },
   subtitle: {
     fontSize: 14,
-    color: colors.textMuted,
   },
   card: {
     padding: spacing.lg,
@@ -227,7 +228,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   forgotPasswordText: {
-    color: colors.primary,
     fontSize: 14,
   },
   loginButton: {
@@ -241,10 +241,8 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: colors.glassBorder,
   },
   dividerText: {
-    color: colors.textMuted,
     paddingHorizontal: spacing.md,
     fontSize: 12,
   },
@@ -257,11 +255,9 @@ const styles = StyleSheet.create({
     marginTop: spacing.xl,
   },
   footerText: {
-    color: colors.textMuted,
     fontSize: 14,
   },
   signupLink: {
-    color: colors.primary,
     fontSize: 14,
     fontWeight: '600',
   },

@@ -11,7 +11,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../theme/colors';
+import { useThemeColors, useIsDarkMode } from '../../hooks/useThemeColors';
 import { spacing } from '../../theme/spacing';
 import CardGlass from '../../components/common/CardGlass';
 import SectionContainer from '../../components/common/SectionContainer';
@@ -27,31 +27,30 @@ import { formatCurrency } from '../../utils/currency';
 
 const MAX_DASHBOARD_ACTIVITIES = 5;
 
-// Get the most recent activity date for a group (group update or expense activity)
 const getGroupLastActivity = (group) => {
   const groupUpdated = new Date(group.updated_at || group.created_at || 0);
-
-  // Find the most recent expense date
   let latestExpenseDate = new Date(0);
   if (group.expenses?.length > 0) {
-    group.expenses.forEach(expense => {
+    group.expenses.forEach((expense) => {
       const expenseDate = new Date(expense.updated_at || expense.date || expense.created_at || 0);
       if (expenseDate > latestExpenseDate) {
         latestExpenseDate = expenseDate;
       }
     });
   }
-
   return groupUpdated > latestExpenseDate ? groupUpdated : latestExpenseDate;
 };
 
 const DashboardScreen = () => {
   const navigation = useNavigation();
   const { user } = useAuthStore();
+  const colors = useThemeColors();
+  const isDark = useIsDarkMode();
   const accent = useAccentColor();
   const { groups, fetchGroups } = useGroupStore();
   const { activities, fetchActivities } = useActivityStore();
-  const { pendingSettlements, fetchPendingSettlements, userTotalBalances, fetchUserTotalBalances } = useSettlementStore();
+  const { pendingSettlements, fetchPendingSettlements, userTotalBalances, fetchUserTotalBalances } =
+    useSettlementStore();
   const [refreshing, setRefreshing] = useState(false);
 
   const loadData = useCallback(async () => {
@@ -63,12 +62,10 @@ const DashboardScreen = () => {
     ]);
   }, [fetchGroups, fetchActivities, fetchPendingSettlements, fetchUserTotalBalances]);
 
-  // Load data on initial mount
   useEffect(() => {
     loadData();
   }, []);
 
-  // Refresh data when screen comes into focus (returning from other screens)
   useFocusEffect(
     useCallback(() => {
       loadData();
@@ -81,30 +78,32 @@ const DashboardScreen = () => {
     setRefreshing(false);
   };
 
-  // Sort groups by most recent activity - memoized for stable reference
   const sortedGroups = useMemo(() => {
     if (!groups || groups.length === 0) return [];
     return [...groups].sort((a, b) => {
       const aDate = getGroupLastActivity(a);
       const bDate = getGroupLastActivity(b);
-      return bDate - aDate; // Most recent first
+      return bDate - aDate;
     });
   }, [groups]);
 
-  // Memoize displayed activities for stable reference
   const displayedActivities = useMemo(() => {
     if (!activities || activities.length === 0) return [];
     return activities.slice(0, MAX_DASHBOARD_ACTIVITIES);
   }, [activities]);
 
-  // Memoize user balances to prevent unnecessary re-renders
-  const balanceData = useMemo(() => ({
-    totalSpent: userTotalBalances?.total_spent || 0,
-    netBalance: userTotalBalances?.net_balance || 0,
-  }), [userTotalBalances?.total_spent, userTotalBalances?.net_balance]);
+  const balanceData = useMemo(
+    () => ({
+      totalSpent: userTotalBalances?.total_spent || 0,
+      netBalance: userTotalBalances?.net_balance || 0,
+    }),
+    [userTotalBalances?.total_spent, userTotalBalances?.net_balance]
+  );
 
-  // Memoize pending count
-  const pendingCount = useMemo(() => pendingSettlements?.length || 0, [pendingSettlements?.length]);
+  const pendingCount = useMemo(
+    () => pendingSettlements?.length || 0,
+    [pendingSettlements?.length]
+  );
 
   const formatActivityDate = (dateStr) => {
     const date = new Date(dateStr);
@@ -119,44 +118,39 @@ const DashboardScreen = () => {
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays < 7) return `${diffDays}d ago`;
 
-    return date.toLocaleDateString('en-IN', {
-      day: 'numeric',
-      month: 'short'
-    });
+    return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
   };
 
   const getActivityIcon = (activity) => {
-    // Show category icon for expense activities
     if (['expense_added', 'expense_edited'].includes(activity.type) && activity.category_id) {
       return <Text style={{ fontSize: 20 }}>{getCategoryIcon(activity.category_id)}</Text>;
     }
 
     switch (activity.type) {
       case 'group_created':
-        return <Ionicons name="add-circle" size={20} color={colors.success || '#22c55e'} />;
+        return <Ionicons name="add-circle" size={20} color={colors.success} />;
       case 'group_renamed':
         return <Ionicons name="create-outline" size={20} color={accent.primary} />;
       case 'member_joined':
-        return <Ionicons name="person-add" size={20} color={colors.success || '#22c55e'} />;
+        return <Ionicons name="person-add" size={20} color={colors.success} />;
       case 'member_left':
-        return <Ionicons name="exit-outline" size={20} color={colors.warning || '#f59e0b'} />;
+        return <Ionicons name="exit-outline" size={20} color={colors.warning} />;
       case 'expense_added':
         return <Ionicons name="add" size={20} color={accent.primary} />;
       case 'expense_edited':
         return <Ionicons name="create-outline" size={20} color={accent.primary} />;
       case 'expense_deleted':
-        return <Ionicons name="trash-outline" size={20} color={colors.error || '#ef4444'} />;
+        return <Ionicons name="trash-outline" size={20} color={colors.error} />;
       case 'expense_settled':
-        return <Ionicons name="checkmark-circle" size={20} color={colors.success || '#22c55e'} />;
+        return <Ionicons name="checkmark-circle" size={20} color={colors.success} />;
       case 'expense_unsettled':
-        return <Ionicons name="close-circle" size={20} color={colors.warning || '#f59e0b'} />;
-      // Settlement activities
+        return <Ionicons name="close-circle" size={20} color={colors.warning} />;
       case 'settlement_created':
         return <Ionicons name="cash-outline" size={20} color="#F97316" />;
       case 'settlement_confirmed':
-        return <Ionicons name="checkmark-done-circle" size={20} color={colors.success || '#22c55e'} />;
+        return <Ionicons name="checkmark-done-circle" size={20} color={colors.success} />;
       case 'settlement_rejected':
-        return <Ionicons name="close-circle-outline" size={20} color={colors.error || '#ef4444'} />;
+        return <Ionicons name="close-circle-outline" size={20} color={colors.error} />;
       default:
         return <Ionicons name="ellipse" size={20} color={colors.textMuted} />;
     }
@@ -179,7 +173,6 @@ const DashboardScreen = () => {
         const amtStr = activity.amount ? ` of ${formatCurrency(activity.amount)}` : '';
         return `${userName} added "${activity.expense_title || 'expense'}"${amtStr}`;
       case 'expense_edited':
-        // Parse description for specific changes (pipe-separated)
         if (activity.description) {
           const parts = activity.description.split('|');
           for (const part of parts) {
@@ -189,10 +182,7 @@ const DashboardScreen = () => {
                 return `${userName} changed amount ${formatCurrency(vals[1])} → ${formatCurrency(vals[2])}`;
               }
             } else if (part.startsWith('category_changed:')) {
-              const vals = part.split(':');
-              if (vals.length === 3) {
-                return `${userName} changed category`;
-              }
+              return `${userName} changed category`;
             }
           }
         }
@@ -204,7 +194,6 @@ const DashboardScreen = () => {
         return `${userName} settled expense in ${groupName}`;
       case 'expense_unsettled':
         return `${userName} unsettled expense in ${groupName}`;
-      // Settlement activities
       case 'settlement_created':
         const settleAmtStr = activity.amount ? formatCurrency(activity.amount) : 'payment';
         return activity.description || `${userName} recorded a ${settleAmtStr} payment`;
@@ -221,43 +210,42 @@ const DashboardScreen = () => {
     switch (activity.type) {
       case 'expense_deleted':
       case 'settlement_rejected':
-        return styles.activityIconDeleted;
+        return { backgroundColor: 'rgba(239, 68, 68, 0.2)' };
       case 'expense_settled':
       case 'group_created':
       case 'member_joined':
       case 'settlement_confirmed':
-        return styles.activityIconSettled;
+        return { backgroundColor: 'rgba(34, 197, 94, 0.2)' };
       case 'member_left':
       case 'expense_unsettled':
-        return styles.activityIconWarning;
+        return { backgroundColor: 'rgba(245, 158, 11, 0.2)' };
       case 'settlement_created':
-        return styles.activityIconSettlementPending;
+        return { backgroundColor: 'rgba(249, 115, 22, 0.2)' };
       default:
         return {};
     }
   };
 
+  const dividerColor = isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)';
+  const iconBgDefault = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)';
+  const groupIconBg = isDark ? 'rgba(0, 0, 0, 0.4)' : 'rgba(0, 0, 0, 0.08)';
+
   return (
-    <LinearGradient
-      colors={[colors.background, colors.backgroundDark]}
-      style={styles.container}
-    >
+    <LinearGradient colors={[colors.background, colors.backgroundDark]} style={styles.container}>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={accent.primary}
-          />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={accent.primary} />
         }
       >
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.greeting}>Hello,</Text>
-            <Text style={styles.userName}>{user?.name || 'User'}</Text>
+            <Text style={[styles.greeting, { color: colors.textMuted }]}>Hello,</Text>
+            <Text style={[styles.userName, { color: colors.textPrimary }]}>
+              {user?.name || 'User'}
+            </Text>
           </View>
           <TouchableOpacity
             style={styles.avatarContainer}
@@ -268,26 +256,33 @@ const DashboardScreen = () => {
                 source={{
                   uri: user.avatar_url.startsWith('http')
                     ? user.avatar_url
-                    : `${BASE_URL}${user.avatar_url}`
+                    : `${BASE_URL}${user.avatar_url}`,
                 }}
                 style={styles.avatarImage}
               />
             ) : (
-              <View style={[styles.avatarImage, styles.avatarPlaceholder]}>
+              <View
+                style={[
+                  styles.avatarImage,
+                  styles.avatarPlaceholder,
+                  { backgroundColor: colors.backgroundLight, borderColor: colors.glassBorder },
+                ]}
+              >
                 <Ionicons name="person" size={24} color={colors.textMuted} />
               </View>
             )}
           </TouchableOpacity>
         </View>
 
-        {/* Overview - Simplified */}
+        {/* Overview */}
         <CardGlass style={styles.overviewCard} gradient>
           <View style={styles.overviewMain}>
-            {/* Total Spent */}
             <View style={styles.overviewSpent}>
-              <Text style={styles.overviewSpentLabel}>Total Spent</Text>
+              <Text style={[styles.overviewSpentLabel, { color: colors.textMuted }]}>
+                Total Spent
+              </Text>
               <Text
-                style={styles.overviewSpentAmount}
+                style={[styles.overviewSpentAmount, { color: colors.textPrimary }]}
                 numberOfLines={1}
                 adjustsFontSizeToFit
                 minimumFontScale={0.6}
@@ -296,10 +291,8 @@ const DashboardScreen = () => {
               </Text>
             </View>
 
-            {/* Divider */}
-            <View style={styles.overviewDivider} />
+            <View style={[styles.overviewDivider, { backgroundColor: dividerColor }]} />
 
-            {/* Net Balance */}
             <View style={styles.overviewBalance}>
               {(() => {
                 const netBalance = balanceData.netBalance;
@@ -309,25 +302,29 @@ const DashboardScreen = () => {
 
                 return (
                   <>
-                    <View style={[
-                      styles.overviewBalanceIcon,
-                      isPositive && styles.overviewBalanceIconPositive,
-                      isNegative && styles.overviewBalanceIconNegative,
-                      isSettled && styles.overviewBalanceIconSettled,
-                    ]}>
+                    <View
+                      style={[
+                        styles.overviewBalanceIcon,
+                        { backgroundColor: iconBgDefault },
+                        isPositive && styles.overviewBalanceIconPositive,
+                        isNegative && styles.overviewBalanceIconNegative,
+                        isSettled && styles.overviewBalanceIconSettled,
+                      ]}
+                    >
                       <Ionicons
-                        name={isSettled ? 'checkmark-circle' : (isPositive ? 'arrow-down' : 'arrow-up')}
+                        name={isSettled ? 'checkmark-circle' : isPositive ? 'arrow-down' : 'arrow-up'}
                         size={20}
-                        color={isSettled ? '#10B981' : (isPositive ? '#10B981' : '#EF4444')}
+                        color={isSettled ? '#10B981' : isPositive ? '#10B981' : '#EF4444'}
                       />
                     </View>
                     <View style={styles.overviewBalanceText}>
-                      <Text style={styles.overviewBalanceLabel} numberOfLines={1}>
-                        {isSettled ? 'All Settled' : (isPositive ? 'You get' : 'You owe')}
+                      <Text style={[styles.overviewBalanceLabel, { color: colors.textMuted }]} numberOfLines={1}>
+                        {isSettled ? 'All Settled' : isPositive ? 'You get' : 'You owe'}
                       </Text>
                       <Text
                         style={[
                           styles.overviewBalanceAmount,
+                          { color: colors.textPrimary },
                           isPositive && styles.overviewBalancePositive,
                           isNegative && styles.overviewBalanceNegative,
                           isSettled && styles.overviewBalanceSettled,
@@ -345,15 +342,16 @@ const DashboardScreen = () => {
             </View>
           </View>
 
-          {/* Groups count badge - clickable */}
           <TouchableOpacity
-            style={styles.overviewGroupsBadge}
+            style={[styles.overviewGroupsBadge, { borderTopColor: dividerColor }]}
             onPress={() => navigation.navigate('Groups')}
             activeOpacity={0.7}
           >
             <View style={styles.overviewGroupsLeft}>
               <Ionicons name="people" size={14} color={colors.textMuted} />
-              <Text style={styles.overviewGroupsText}>{groups.length} group{groups.length !== 1 ? 's' : ''}</Text>
+              <Text style={[styles.overviewGroupsText, { color: colors.textMuted }]}>
+                {groups.length} group{groups.length !== 1 ? 's' : ''}
+              </Text>
             </View>
             <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
           </TouchableOpacity>
@@ -377,7 +375,7 @@ const DashboardScreen = () => {
                 <Text style={styles.pendingTitle}>
                   {pendingCount} Payment{pendingCount > 1 ? 's' : ''} Awaiting Confirmation
                 </Text>
-                <Text style={styles.pendingSubtitle}>
+                <Text style={[styles.pendingSubtitle, { color: colors.textMuted }]}>
                   Tap to review and confirm
                 </Text>
               </View>
@@ -402,8 +400,8 @@ const DashboardScreen = () => {
               <View style={styles.emptyIconContainer}>
                 <Ionicons name="people-outline" size={48} color={colors.textMuted} />
               </View>
-              <Text style={styles.emptyTitle}>No groups yet</Text>
-              <Text style={styles.emptyText}>
+              <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No groups yet</Text>
+              <Text style={[styles.emptyText, { color: colors.textMuted }]}>
                 Create or join a group to start tracking expenses
               </Text>
             </CardGlass>
@@ -414,35 +412,44 @@ const DashboardScreen = () => {
                 onPress={() => navigation.navigate('GroupDetail', { groupId: group.id })}
               >
                 <CardGlass style={styles.groupCard}>
-                  <View style={styles.groupIcon}>
+                  <View style={[styles.groupIcon, { backgroundColor: groupIconBg }]}>
                     {group.icon_type === 'custom' && group.icon_url ? (
                       <Image
-                        source={{ uri: group.icon_url.startsWith('http') ? group.icon_url : `${BASE_URL}${group.icon_url}` }}
+                        source={{
+                          uri: group.icon_url.startsWith('http')
+                            ? group.icon_url
+                            : `${BASE_URL}${group.icon_url}`,
+                        }}
                         style={styles.groupIconImage}
                       />
                     ) : group.icon_type === 'predefined' && group.icon_url ? (
                       <Text style={styles.groupIconEmoji}>
-                        {PREDEFINED_GROUP_ICONS.find(i => i.id === group.icon_url)?.emoji || '👥'}
+                        {PREDEFINED_GROUP_ICONS.find((i) => i.id === group.icon_url)?.emoji || '👥'}
                       </Text>
                     ) : (
-                      <Text style={styles.groupIconText}>
+                      <Text style={[styles.groupIconText, { color: colors.textPrimary }]}>
                         {group.name?.charAt(0).toUpperCase() || 'G'}
                       </Text>
                     )}
                   </View>
                   <View style={styles.groupInfo}>
-                    <Text style={styles.groupName}>{group.name}</Text>
+                    <Text style={[styles.groupName, { color: colors.textPrimary }]}>
+                      {group.name}
+                    </Text>
                     <View style={styles.groupStats}>
-                      <Text style={styles.groupMembers}>
+                      <Text style={[styles.groupMembers, { color: colors.textMuted }]}>
                         {group.members?.length || 0} members
                       </Text>
-                      <Text style={styles.groupSeparator}>•</Text>
-                      <Text style={styles.groupExpenses}>
+                      <Text style={[styles.groupSeparator, { color: colors.textMuted }]}>•</Text>
+                      <Text style={[styles.groupExpenses, { color: colors.textMuted }]}>
                         {group.expenses?.length || 0} expenses
                       </Text>
                     </View>
                     <Text style={[styles.groupTotal, { color: accent.primary }]}>
-                      {formatCurrency(group.expenses?.reduce((sum, exp) => sum + (exp.amount || 0), 0) || 0)} total
+                      {formatCurrency(
+                        group.expenses?.reduce((sum, exp) => sum + (exp.amount || 0), 0) || 0
+                      )}{' '}
+                      total
                     </Text>
                   </View>
                   <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
@@ -468,8 +475,10 @@ const DashboardScreen = () => {
               <View style={styles.emptyIconContainer}>
                 <Ionicons name="pulse-outline" size={48} color={colors.textMuted} />
               </View>
-              <Text style={styles.emptyTitle}>No recent activity</Text>
-              <Text style={styles.emptyText}>
+              <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>
+                No recent activity
+              </Text>
+              <Text style={[styles.emptyText, { color: colors.textMuted }]}>
                 Your activities will appear here
               </Text>
             </CardGlass>
@@ -479,7 +488,12 @@ const DashboardScreen = () => {
                 <TouchableOpacity
                   key={`activity-${activity.id}`}
                   onPress={() => {
-                    const isExpenseActivity = ['expense_added', 'expense_edited', 'expense_settled', 'expense_unsettled'].includes(activity.type);
+                    const isExpenseActivity = [
+                      'expense_added',
+                      'expense_edited',
+                      'expense_settled',
+                      'expense_unsettled',
+                    ].includes(activity.type);
                     if (isExpenseActivity && activity.expense_id) {
                       navigation.navigate('AddExpense', {
                         groupId: activity.group_id,
@@ -491,26 +505,34 @@ const DashboardScreen = () => {
                   }}
                   activeOpacity={0.7}
                 >
-                  <CardGlass style={[
-                    styles.activityCard,
-                    index === displayedActivities.length - 1 && styles.activityCardLast
-                  ]}>
-                    <View style={[
-                      styles.activityIconContainer,
-                      getActivityIconBgStyle(activity)
-                    ]}>
+                  <CardGlass
+                    style={[
+                      styles.activityCard,
+                      index === displayedActivities.length - 1 && styles.activityCardLast,
+                    ]}
+                  >
+                    <View
+                      style={[
+                        styles.activityIconContainer,
+                        { backgroundColor: iconBgDefault },
+                        getActivityIconBgStyle(activity),
+                      ]}
+                    >
                       {getActivityIcon(activity)}
                     </View>
                     <View style={styles.activityContent}>
                       <View style={styles.activityHeader}>
-                        <Text style={styles.activityTitle}>
-                          {activity.expense_title || activity.new_value || activity.group_name || 'Activity'}
+                        <Text style={[styles.activityTitle, { color: colors.textPrimary }]}>
+                          {activity.expense_title ||
+                            activity.new_value ||
+                            activity.group_name ||
+                            'Activity'}
                         </Text>
-                        <Text style={styles.activityTime}>
+                        <Text style={[styles.activityTime, { color: colors.textMuted }]}>
                           {formatActivityDate(activity.created_at)}
                         </Text>
                       </View>
-                      <Text style={styles.activityDescription}>
+                      <Text style={[styles.activityDescription, { color: colors.textMuted }]}>
                         {getActivityDescription(activity)}
                       </Text>
                     </View>
@@ -544,12 +566,10 @@ const styles = StyleSheet.create({
   },
   greeting: {
     fontSize: 16,
-    color: colors.textMuted,
   },
   userName: {
     fontSize: 28,
     fontWeight: '700',
-    color: colors.textPrimary,
   },
   avatarContainer: {
     width: 50,
@@ -559,11 +579,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     overflow: 'hidden',
   },
-  avatar: {
-    fontSize: 24,
-    color: colors.textPrimary,
-    fontWeight: '600',
-  },
   avatarImage: {
     width: 50,
     height: 50,
@@ -572,11 +587,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   avatarPlaceholder: {
-    backgroundColor: colors.backgroundLight,
     borderWidth: 1,
-    borderColor: colors.glassBorder,
   },
-  // Overview Card Styles
   overviewCard: {
     padding: spacing.lg,
     marginBottom: spacing.lg,
@@ -591,7 +603,6 @@ const styles = StyleSheet.create({
   },
   overviewSpentLabel: {
     fontSize: 11,
-    color: colors.textMuted,
     marginBottom: 4,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -599,12 +610,10 @@ const styles = StyleSheet.create({
   overviewSpentAmount: {
     fontSize: 26,
     fontWeight: '700',
-    color: colors.textPrimary,
   },
   overviewDivider: {
     width: 1,
     height: 50,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
     marginHorizontal: spacing.md,
   },
   overviewBalance: {
@@ -616,7 +625,6 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.sm,
@@ -637,13 +645,11 @@ const styles = StyleSheet.create({
   },
   overviewBalanceLabel: {
     fontSize: 11,
-    color: colors.textMuted,
     marginBottom: 2,
   },
   overviewBalanceAmount: {
     fontSize: 22,
     fontWeight: '700',
-    color: colors.textPrimary,
   },
   overviewBalancePositive: {
     color: '#10B981',
@@ -661,7 +667,6 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     paddingTop: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.1)',
   },
   overviewGroupsLeft: {
     flexDirection: 'row',
@@ -670,7 +675,6 @@ const styles = StyleSheet.create({
   },
   overviewGroupsText: {
     fontSize: 13,
-    color: colors.textMuted,
   },
   pendingCard: {
     marginBottom: spacing.lg,
@@ -705,10 +709,8 @@ const styles = StyleSheet.create({
   },
   pendingSubtitle: {
     fontSize: 13,
-    color: colors.textMuted,
   },
   seeAll: {
-    color: colors.primary,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -722,14 +724,12 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.md,
   },
   groupIconText: {
     fontSize: 20,
-    color: colors.textPrimary,
     fontWeight: '600',
   },
   groupIconImage: {
@@ -746,7 +746,6 @@ const styles = StyleSheet.create({
   groupName: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.textPrimary,
     marginBottom: 4,
   },
   groupStats: {
@@ -756,20 +755,16 @@ const styles = StyleSheet.create({
   },
   groupMembers: {
     fontSize: 12,
-    color: colors.textMuted,
   },
   groupSeparator: {
     fontSize: 12,
-    color: colors.textMuted,
     marginHorizontal: spacing.xs,
   },
   groupExpenses: {
     fontSize: 12,
-    color: colors.textMuted,
   },
   groupTotal: {
     fontSize: 13,
-    color: colors.primary,
     fontWeight: '600',
   },
   emptyCard: {
@@ -782,12 +777,10 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.textPrimary,
     marginBottom: spacing.sm,
   },
   emptyText: {
     fontSize: 14,
-    color: colors.textMuted,
     textAlign: 'center',
   },
   activityCard: {
@@ -803,22 +796,9 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.md,
-  },
-  activityIconSettled: {
-    backgroundColor: 'rgba(34, 197, 94, 0.2)',
-  },
-  activityIconDeleted: {
-    backgroundColor: 'rgba(239, 68, 68, 0.2)',
-  },
-  activityIconWarning: {
-    backgroundColor: 'rgba(245, 158, 11, 0.2)',
-  },
-  activityIconSettlementPending: {
-    backgroundColor: 'rgba(249, 115, 22, 0.2)',
   },
   activityContent: {
     flex: 1,
@@ -832,17 +812,14 @@ const styles = StyleSheet.create({
   activityTitle: {
     fontSize: 15,
     fontWeight: '600',
-    color: colors.textPrimary,
     flex: 1,
     marginRight: spacing.sm,
   },
   activityTime: {
     fontSize: 12,
-    color: colors.textMuted,
   },
   activityDescription: {
     fontSize: 13,
-    color: colors.textMuted,
   },
 });
 

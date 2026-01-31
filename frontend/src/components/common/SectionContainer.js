@@ -1,16 +1,18 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors } from '../../theme/colors';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { spacing } from '../../theme/spacing';
 
 const SectionContainer = ({ title, subtitle, children, rightAction, style }) => {
+  const colors = useThemeColors();
+
   return (
     <View style={[styles.container, style]}>
       {(title || rightAction) ? (
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            {title ? <Text style={styles.title}>{title}</Text> : null}
-            {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+            {title ? <Text style={[styles.title, { color: colors.textPrimary }]}>{title}</Text> : null}
+            {subtitle ? <Text style={[styles.subtitle, { color: colors.textMuted }]}>{subtitle}</Text> : null}
           </View>
           {rightAction ? <View style={styles.headerRight}>{rightAction}</View> : null}
         </View>
@@ -39,12 +41,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '700',
-    color: colors.textPrimary,
     marginBottom: 4,
   },
   subtitle: {
     fontSize: 14,
-    color: colors.textMuted,
   },
   content: {},
 });

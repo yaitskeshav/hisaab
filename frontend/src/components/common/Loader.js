@@ -1,17 +1,19 @@
 import React from 'react';
 import { View, ActivityIndicator, Text, StyleSheet } from 'react-native';
-import { colors } from '../../theme/colors';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 const Loader = ({ size = 'large', text, fullScreen = false }) => {
+  const colors = useThemeColors();
+
   const content = (
     <View style={[styles.container, fullScreen && styles.fullScreen]}>
       <ActivityIndicator size={size} color={colors.primary} />
-      {text && <Text style={styles.text}>{text}</Text>}
+      {text && <Text style={[styles.text, { color: colors.textSecondary }]}>{text}</Text>}
     </View>
   );
 
   if (fullScreen) {
-    return <View style={styles.overlay}>{content}</View>;
+    return <View style={[styles.overlay, { backgroundColor: colors.overlay }]}>{content}</View>;
   }
 
   return content;
@@ -28,11 +30,9 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: colors.overlay,
     zIndex: 999,
   },
   text: {
-    color: colors.textSecondary,
     fontSize: 14,
     marginTop: 12,
   },

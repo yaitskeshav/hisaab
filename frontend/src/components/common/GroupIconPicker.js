@@ -13,10 +13,11 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../theme/colors';
+import { colors as staticColors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { PREDEFINED_GROUP_ICONS } from '../../constants/groupIcons';
 import { useAccentColor } from '../../store/themeStore';
+import { useThemeColors, useIsDarkMode } from '../../hooks/useThemeColors';
 import { BASE_URL } from '../../api/client';
 
 const GroupIconPicker = ({
@@ -30,6 +31,8 @@ const GroupIconPicker = ({
   isLoading,
 }) => {
   const accent = useAccentColor();
+  const colors = useThemeColors();
+  const isDark = useIsDarkMode();
 
   const handlePickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -95,13 +98,13 @@ const GroupIconPicker = ({
       <TouchableWithoutFeedback onPress={onClose}>
         <View style={styles.overlay}>
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-            <View style={styles.container}>
-              <View style={styles.handle} />
+            <View style={[styles.container, { backgroundColor: colors.backgroundLight }]}>
+              <View style={[styles.handle, { backgroundColor: colors.textMuted }]} />
 
               {/* Header */}
-              <View style={styles.header}>
-                <Text style={styles.title}>Group Icon</Text>
-                <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+              <View style={[styles.header, { borderBottomColor: colors.glassBorder }]}>
+                <Text style={[styles.title, { color: colors.textPrimary }]}>Group Icon</Text>
+                <TouchableOpacity onPress={onClose} style={[styles.closeButton, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)' }]}>
                   <Ionicons name="close" size={24} color={colors.textMuted} />
                 </TouchableOpacity>
               </View>
@@ -109,7 +112,7 @@ const GroupIconPicker = ({
               {isLoading ? (
                 <View style={styles.loadingContainer}>
                   <ActivityIndicator size="large" color={accent.primary} />
-                  <Text style={styles.loadingText}>Updating...</Text>
+                  <Text style={[styles.loadingText, { color: colors.textMuted }]}>Updating...</Text>
                 </View>
               ) : (
                 <ScrollView
@@ -119,7 +122,7 @@ const GroupIconPicker = ({
                 >
                   {/* Current Icon Preview */}
                   <View style={styles.previewContainer}>
-                    <View style={[styles.previewIcon, { borderColor: accent.primary }]}>
+                    <View style={[styles.previewIcon, { borderColor: accent.primary, backgroundColor: colors.glass }]}>
                       {renderCurrentIcon()}
                     </View>
                     {(currentIcon || currentIconType) && (
@@ -128,36 +131,36 @@ const GroupIconPicker = ({
                         onPress={onRemove}
                         disabled={isLoading}
                       >
-                        <Ionicons name="trash-outline" size={16} color={colors.error} />
-                        <Text style={styles.removeText}>Remove</Text>
+                        <Ionicons name="trash-outline" size={16} color={staticColors.error} />
+                        <Text style={[styles.removeText, { color: staticColors.error }]}>Remove</Text>
                       </TouchableOpacity>
                     )}
                   </View>
 
                   {/* Custom Photo Options */}
                   <View style={styles.customSection}>
-                    <Text style={styles.sectionTitle}>Use Custom Photo</Text>
+                    <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>Use Custom Photo</Text>
                     <View style={styles.customButtons}>
                       <TouchableOpacity
-                        style={[styles.customButton, { borderColor: accent.primary }]}
+                        style={[styles.customButton, { borderColor: accent.primary, backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)' }]}
                         onPress={handlePickImage}
                       >
                         <Ionicons name="images-outline" size={24} color={accent.primary} />
-                        <Text style={styles.customButtonText}>Gallery</Text>
+                        <Text style={[styles.customButtonText, { color: colors.textPrimary }]}>Gallery</Text>
                       </TouchableOpacity>
                       <TouchableOpacity
-                        style={[styles.customButton, { borderColor: accent.primary }]}
+                        style={[styles.customButton, { borderColor: accent.primary, backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)' }]}
                         onPress={handleTakePhoto}
                       >
                         <Ionicons name="camera-outline" size={24} color={accent.primary} />
-                        <Text style={styles.customButtonText}>Camera</Text>
+                        <Text style={[styles.customButtonText, { color: colors.textPrimary }]}>Camera</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
 
                   {/* Predefined Icons */}
                   <View style={styles.iconsSection}>
-                    <Text style={styles.sectionTitle}>Choose an Icon</Text>
+                    <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>Choose an Icon</Text>
                     <View style={styles.iconsGrid}>
                       {PREDEFINED_GROUP_ICONS.map(icon => (
                         <TouchableOpacity
@@ -172,7 +175,7 @@ const GroupIconPicker = ({
                           onPress={() => onSelectPredefined(icon.id)}
                         >
                           <Text style={styles.iconEmoji}>{icon.emoji}</Text>
-                          <Text style={styles.iconLabel}>{icon.label}</Text>
+                          <Text style={[styles.iconLabel, { color: colors.textMuted }]}>{icon.label}</Text>
                         </TouchableOpacity>
                       ))}
                     </View>
@@ -194,7 +197,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   container: {
-    backgroundColor: colors.backgroundLight,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: '85%',
@@ -204,7 +206,6 @@ const styles = StyleSheet.create({
   handle: {
     width: 40,
     height: 4,
-    backgroundColor: colors.textMuted,
     borderRadius: 2,
     alignSelf: 'center',
     marginTop: spacing.sm,
@@ -217,18 +218,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: colors.glassBorder,
   },
   title: {
     fontSize: 20,
     fontWeight: '700',
-    color: colors.textPrimary,
   },
   closeButton: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -246,7 +244,6 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: colors.glass,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 3,
@@ -269,7 +266,6 @@ const styles = StyleSheet.create({
   },
   removeText: {
     fontSize: 14,
-    color: colors.error,
   },
   loadingContainer: {
     padding: spacing.xl * 2,
@@ -278,12 +274,10 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: spacing.md,
     fontSize: 14,
-    color: colors.textMuted,
   },
   sectionTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.textMuted,
     marginBottom: spacing.sm,
     paddingHorizontal: spacing.lg,
   },
@@ -301,7 +295,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: spacing.md,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 12,
     borderWidth: 1,
     borderStyle: 'dashed',
@@ -310,7 +303,6 @@ const styles = StyleSheet.create({
   customButtonText: {
     fontSize: 14,
     fontWeight: '500',
-    color: colors.textPrimary,
   },
   iconsSection: {
     flex: 1,
@@ -337,7 +329,6 @@ const styles = StyleSheet.create({
   },
   iconLabel: {
     fontSize: 11,
-    color: colors.textMuted,
   },
 });
 
